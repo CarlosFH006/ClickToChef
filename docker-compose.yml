@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db_app:
+    image: mysql:8.0
+    container_name: clicktochef_mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: adminDB
+      MYSQL_DATABASE: clicktochef
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/init.sql:/docker-entrypoint-initdb.d/clicktochef.sql
+      - ./data/mysql_data:/var/lib/mysql
+
+  db_odoo:
+    image: postgres:15
+    container_name: odoo_db_postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+    volumes:
+      - ./data/odoo_db_data:/var/lib/postgresql/data
+
+  odoo:
+    image: odoo:latest
+    container_name: clicktochef_odoo
+    depends_on:
+      - db_odoo
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=db_odoo
+      - USER=odoo
+      - PASSWORD=odoo
+    volumes:
+      - ./data/odoo_web_data:/var/lib/odoo
+      - ./extra-addons:/mnt/extra-addons
