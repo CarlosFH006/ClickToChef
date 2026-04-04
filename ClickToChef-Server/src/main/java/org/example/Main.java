@@ -24,6 +24,7 @@ import org.example.DTO.Recetas;
 import org.example.DTO.RolUsuario;
 import org.example.DTO.Tickets;
 import org.example.DTO.Usuarios;
+import org.example.Odoo.CargaInicial;
 
 import java.sql.Timestamp;
 
@@ -40,6 +41,8 @@ public class Main {
         IngredientesDAO ingredientesDAO = new IngredientesDAO();
         RecetasDAO recetasDAO = new RecetasDAO();
         TicketsDAO ticketsDAO = new TicketsDAO();
+
+        CargaInicial.cargaInicialDatos();
 
         try {
             if (INSERTAR_DATOS_PRUEBA) {

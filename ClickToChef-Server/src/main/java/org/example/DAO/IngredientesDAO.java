@@ -7,7 +7,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class IngredientesDAO {
 
@@ -51,5 +50,19 @@ public class IngredientesDAO {
         }
 
         return ingredientes;
+    }
+
+    public boolean actualizarOdooProductId(int ingredienteId, int odooProductId) {
+        String sql = "UPDATE ingredientes SET odoo_product_id = ? WHERE id = ?";
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+
+            statement.setInt(1, odooProductId);
+            statement.setInt(2, ingredienteId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar el odoo_product_id del ingrediente", e);
+        }
     }
 }
