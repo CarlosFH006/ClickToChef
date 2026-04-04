@@ -1,0 +1,58 @@
+package org.example.DAO;
+
+import org.example.DTO.DetallesPedido;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DetallesPedidoDAO {
+
+    public boolean insertarDetallePedido(DetallesPedido detallePedido) {
+        String sql = "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, notas_especiales, estado, hora_pedido) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+
+            statement.setInt(1, detallePedido.getPedidoId());
+            statement.setInt(2, detallePedido.getProductoId());
+            statement.setInt(3, detallePedido.getCantidad());
+            statement.setString(4, detallePedido.getNotasEspeciales());
+            statement.setString(5, detallePedido.getEstado());
+            statement.setTimestamp(6, detallePedido.getHoraPedido());
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al insertar el detalle del pedido", e);
+        }
+    }
+
+    public ArrayList<DetallesPedido> obtenerTodos() {
+        String sql = "SELECT id, pedido_id, producto_id, cantidad, notas_especiales, estado, hora_pedido FROM detalles_pedido";
+        ArrayList<DetallesPedido> detalles = new ArrayList<>();
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                DetallesPedido detalle = new DetallesPedido(
+                        resultSet.getInt("id"),
+                        resultSet.getInt("pedido_id"),
+                        resultSet.getInt("producto_id"),
+                        resultSet.getInt("cantidad"),
+                        resultSet.getString("notas_especiales"),
+                        resultSet.getString("estado"),
+                        resultSet.getTimestamp("hora_pedido")
+                );
+                detalles.add(detalle);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener los detalles del pedido", e);
+        }
+
+        return detalles;
+    }
+}
