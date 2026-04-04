@@ -1,0 +1,7 @@
+data/mysql_data/
+data/odoo_db_data/
+data/odoo_web_data/
+*.log
+.DS_Store
+node_modules/
+.env
