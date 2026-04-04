@@ -32,7 +32,7 @@ public class Recetas {
         return cantidadNecesaria;
     }
 
-    public void setCantidadNecesaria(BigDecimal cantidadNecesaria) {
+    public void setCantidadNecesaria(double cantidadNecesaria) {
         this.cantidadNecesaria = cantidadNecesaria;
     }
 
