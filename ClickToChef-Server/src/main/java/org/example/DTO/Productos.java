@@ -1,16 +1,15 @@
 package org.example.DTO;
 
-import java.math.BigDecimal;
 
 public class Productos {
     private int id;
     private String nombre;
     private String descripcion;
-    private BigDecimal precio;
-    private Integer categoriaId;
+    private double precio;
+    private int categoriaId;
     private String imagenUrl;
 
-    public Productos(int id, String nombre, String descripcion, BigDecimal precio, Integer categoriaId, String imagenUrl) {
+    public Productos(int id, String nombre, String descripcion, double precio, int categoriaId, String imagenUrl) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -19,7 +18,7 @@ public class Productos {
         this.imagenUrl = imagenUrl;
     }
 
-    public Productos(String nombre, String descripcion, BigDecimal precio, Integer categoriaId, String imagenUrl) {
+    public Productos(String nombre, String descripcion, double precio, int categoriaId, String imagenUrl) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
@@ -51,19 +50,19 @@ public class Productos {
         this.descripcion = descripcion;
     }
 
-    public BigDecimal getPrecio() {
+    public double getPrecio() {
         return precio;
     }
 
-    public void setPrecio(BigDecimal precio) {
+    public void setPrecio(double precio) {
         this.precio = precio;
     }
 
-    public Integer getCategoriaId() {
+    public int getCategoriaId() {
         return categoriaId;
     }
 
-    public void setCategoriaId(Integer categoriaId) {
+    public void setCategoriaId(int categoriaId) {
         this.categoriaId = categoriaId;
     }
 

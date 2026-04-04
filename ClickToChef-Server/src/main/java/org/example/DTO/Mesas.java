@@ -4,16 +4,16 @@ public class Mesas {
     private int id;
     private int numero;
     private int capacidad;
-    private String estado;
+    private EstadoMesa estado;
 
-    public Mesas(int id, int numero, int capacidad, String estado) {
+    public Mesas(int id, int numero, int capacidad, EstadoMesa estado) {
         this.id = id;
         this.numero = numero;
         this.capacidad = capacidad;
         this.estado = estado;
     }
 
-    public Mesas(int numero, int capacidad, String estado) {
+    public Mesas(int numero, int capacidad, EstadoMesa estado) {
         this.numero = numero;
         this.capacidad = capacidad;
         this.estado = estado;
@@ -43,11 +43,11 @@ public class Mesas {
         this.capacidad = capacidad;
     }
 
-    public String getEstado() {
+    public EstadoMesa getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoMesa estado) {
         this.estado = estado;
     }
 

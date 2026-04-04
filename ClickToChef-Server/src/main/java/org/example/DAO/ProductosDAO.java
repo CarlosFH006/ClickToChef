@@ -20,13 +20,8 @@ public class ProductosDAO {
 
             statement.setString(1, producto.getNombre());
             statement.setString(2, producto.getDescripcion());
-            statement.setBigDecimal(3, producto.getPrecio());
-
-            if (producto.getCategoriaId() != null) {
-                statement.setInt(4, producto.getCategoriaId());
-            } else {
-                statement.setNull(4, Types.INTEGER);
-            }
+            statement.setDouble(3, producto.getPrecio());
+            statement.setInt(4, producto.getCategoriaId());
 
             statement.setString(5, producto.getImagenUrl());
             return statement.executeUpdate() > 0;
@@ -48,7 +43,7 @@ public class ProductosDAO {
                         resultSet.getInt("id"),
                         resultSet.getString("nombre"),
                         resultSet.getString("descripcion"),
-                        resultSet.getBigDecimal("precio"),
+                        resultSet.getDouble("precio"),
                         (Integer) resultSet.getObject("categoria_id"),
                         resultSet.getString("imagen_url")
                 );

@@ -1,6 +1,7 @@
 package org.example.DAO;
 
 import org.example.DTO.Pedidos;
+import org.example.DTO.EstadoPedido;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,7 +21,7 @@ public class PedidosDAO {
             statement.setInt(1, pedido.getMesaId());
             statement.setInt(2, pedido.getUsuarioId());
             statement.setTimestamp(3, pedido.getFechaCreacion());
-            statement.setString(4, pedido.getEstado());
+            statement.setString(4, convertirEstadoPedidoADB(pedido.getEstado()));
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el pedido", e);
@@ -41,7 +42,7 @@ public class PedidosDAO {
                         resultSet.getInt("mesa_id"),
                         resultSet.getInt("usuario_id"),
                         resultSet.getTimestamp("fecha_creacion"),
-                        resultSet.getString("estado")
+                        convertirEstadoPedidoAEnum(resultSet.getString("estado"))
                 );
                 pedidos.add(pedido);
             }
@@ -50,5 +51,13 @@ public class PedidosDAO {
         }
 
         return pedidos;
+    }
+
+    private String convertirEstadoPedidoADB(EstadoPedido estadoPedido) {
+        return estadoPedido.name().toLowerCase();
+    }
+
+    private EstadoPedido convertirEstadoPedidoAEnum(String valorBD) {
+        return EstadoPedido.valueOf(valorBD.toUpperCase());
     }
 }

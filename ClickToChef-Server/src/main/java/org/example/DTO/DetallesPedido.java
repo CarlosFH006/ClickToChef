@@ -8,10 +8,10 @@ public class DetallesPedido {
     private int productoId;
     private int cantidad;
     private String notasEspeciales;
-    private String estado;
+    private EstadoDetallePedido estado;
     private Timestamp horaPedido;
 
-    public DetallesPedido(int id, int pedidoId, int productoId, int cantidad, String notasEspeciales, String estado, Timestamp horaPedido) {
+    public DetallesPedido(int id, int pedidoId, int productoId, int cantidad, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
         this.id = id;
         this.pedidoId = pedidoId;
         this.productoId = productoId;
@@ -21,7 +21,7 @@ public class DetallesPedido {
         this.horaPedido = horaPedido;
     }
 
-    public DetallesPedido(int pedidoId, int productoId, int cantidad, String notasEspeciales, String estado, Timestamp horaPedido) {
+    public DetallesPedido(int pedidoId, int productoId, int cantidad, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
         this.pedidoId = pedidoId;
         this.productoId = productoId;
         this.cantidad = cantidad;
@@ -70,11 +70,11 @@ public class DetallesPedido {
         this.notasEspeciales = notasEspeciales;
     }
 
-    public String getEstado() {
+    public EstadoDetallePedido getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoDetallePedido estado) {
         this.estado = estado;
     }
 

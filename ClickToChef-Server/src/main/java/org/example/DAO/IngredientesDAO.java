@@ -18,14 +18,9 @@ public class IngredientesDAO {
              PreparedStatement statement = conexion.prepareStatement(sql)) {
 
             statement.setString(1, ingrediente.getNombre());
-            statement.setBigDecimal(2, ingrediente.getStockActual());
+            statement.setDouble(2, ingrediente.getStockActual());
             statement.setString(3, ingrediente.getUnidadMedida());
-
-            if (ingrediente.getOdooProductId() != null) {
-                statement.setInt(4, ingrediente.getOdooProductId());
-            } else {
-                statement.setNull(4, java.sql.Types.INTEGER);
-            }
+            statement.setInt(4, ingrediente.getOdooProductId());
 
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -45,7 +40,7 @@ public class IngredientesDAO {
                 Ingredientes ingrediente = new Ingredientes(
                         resultSet.getInt("id"),
                         resultSet.getString("nombre"),
-                        resultSet.getBigDecimal("stock_actual"),
+                        resultSet.getDouble("stock_actual"),
                         resultSet.getString("unidad_medida"),
                         (Integer) resultSet.getObject("odoo_product_id")
                 );

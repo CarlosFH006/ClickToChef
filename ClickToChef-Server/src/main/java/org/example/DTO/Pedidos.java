@@ -7,9 +7,9 @@ public class Pedidos {
     private int mesaId;
     private int usuarioId;
     private Timestamp fechaCreacion;
-    private String estado;
+    private EstadoPedido estado;
 
-    public Pedidos(int id, int mesaId, int usuarioId, Timestamp fechaCreacion, String estado) {
+    public Pedidos(int id, int mesaId, int usuarioId, Timestamp fechaCreacion, EstadoPedido estado) {
         this.id = id;
         this.mesaId = mesaId;
         this.usuarioId = usuarioId;
@@ -17,7 +17,7 @@ public class Pedidos {
         this.estado = estado;
     }
 
-    public Pedidos(int mesaId, int usuarioId, Timestamp fechaCreacion, String estado) {
+    public Pedidos(int mesaId, int usuarioId, Timestamp fechaCreacion, EstadoPedido estado) {
         this.mesaId = mesaId;
         this.usuarioId = usuarioId;
         this.fechaCreacion = fechaCreacion;
@@ -56,11 +56,11 @@ public class Pedidos {
         this.fechaCreacion = fechaCreacion;
     }
 
-    public String getEstado() {
+    public EstadoPedido getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoPedido estado) {
         this.estado = estado;
     }
 

@@ -5,11 +5,11 @@ import java.math.BigDecimal;
 public class Ingredientes {
     private int id;
     private String nombre;
-    private BigDecimal stockActual;
+    private double stockActual;
     private String unidadMedida;
-    private Integer odooProductId;
+    private int odooProductId;
 
-    public Ingredientes(int id, String nombre, BigDecimal stockActual, String unidadMedida, Integer odooProductId) {
+    public Ingredientes(int id, String nombre, double stockActual, String unidadMedida, int odooProductId) {
         this.id = id;
         this.nombre = nombre;
         this.stockActual = stockActual;
@@ -17,7 +17,7 @@ public class Ingredientes {
         this.odooProductId = odooProductId;
     }
 
-    public Ingredientes(String nombre, BigDecimal stockActual, String unidadMedida, Integer odooProductId) {
+    public Ingredientes(String nombre, double stockActual, String unidadMedida, int odooProductId) {
         this.nombre = nombre;
         this.stockActual = stockActual;
         this.unidadMedida = unidadMedida;
@@ -40,11 +40,11 @@ public class Ingredientes {
         this.nombre = nombre;
     }
 
-    public BigDecimal getStockActual() {
+    public double getStockActual() {
         return stockActual;
     }
 
-    public void setStockActual(BigDecimal stockActual) {
+    public void setStockActual(double stockActual) {
         this.stockActual = stockActual;
     }
 
@@ -56,11 +56,11 @@ public class Ingredientes {
         this.unidadMedida = unidadMedida;
     }
 
-    public Integer getOdooProductId() {
+    public int getOdooProductId() {
         return odooProductId;
     }
 
-    public void setOdooProductId(Integer odooProductId) {
+    public void setOdooProductId(int odooProductId) {
         this.odooProductId = odooProductId;
     }
 

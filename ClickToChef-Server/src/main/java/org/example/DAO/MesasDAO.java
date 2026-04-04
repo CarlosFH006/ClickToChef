@@ -1,6 +1,7 @@
 package org.example.DAO;
 
 import org.example.DTO.Mesas;
+import org.example.DTO.EstadoMesa;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,7 +20,7 @@ public class MesasDAO {
 
             statement.setInt(1, mesa.getNumero());
             statement.setInt(2, mesa.getCapacidad());
-            statement.setString(3, mesa.getEstado());
+            statement.setString(3, convertirEstadoMesaADB(mesa.getEstado()));
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar la mesa", e);
@@ -39,7 +40,7 @@ public class MesasDAO {
                         resultSet.getInt("id"),
                         resultSet.getInt("numero"),
                         resultSet.getInt("capacidad"),
-                        resultSet.getString("estado")
+                        convertirEstadoMesaAEnum(resultSet.getString("estado"))
                 );
                 mesas.add(mesa);
             }
@@ -48,5 +49,13 @@ public class MesasDAO {
         }
 
         return mesas;
+    }
+
+    private String convertirEstadoMesaADB(EstadoMesa estadoMesa) {
+        return estadoMesa.name().toLowerCase();
+    }
+
+    private EstadoMesa convertirEstadoMesaAEnum(String valorBD) {
+        return EstadoMesa.valueOf(valorBD.toUpperCase());
     }
 }

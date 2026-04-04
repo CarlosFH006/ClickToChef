@@ -5,9 +5,9 @@ public class Usuarios {
     private String username;
     private String passwordHash;
     private String nombreCompleto;
-    private String rol;
+    private RolUsuario rol;
 
-    public Usuarios(int id, String username, String passwordHash, String nombreCompleto, String rol) {
+    public Usuarios(int id, String username, String passwordHash, String nombreCompleto, RolUsuario rol) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
@@ -15,7 +15,7 @@ public class Usuarios {
         this.rol = rol;
     }
 
-    public Usuarios(String username, String passwordHash, String nombreCompleto, String rol) {
+    public Usuarios(String username, String passwordHash, String nombreCompleto, RolUsuario rol) {
         this.username = username;
         this.passwordHash = passwordHash;
         this.nombreCompleto = nombreCompleto;
@@ -54,11 +54,11 @@ public class Usuarios {
         this.nombreCompleto = nombreCompleto;
     }
 
-    public String getRol() {
+    public RolUsuario getRol() {
         return rol;
     }
 
-    public void setRol(String rol) {
+    public void setRol(RolUsuario rol) {
         this.rol = rol;
     }
 

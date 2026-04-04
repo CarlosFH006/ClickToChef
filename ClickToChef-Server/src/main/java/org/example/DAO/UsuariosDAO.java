@@ -1,6 +1,7 @@
 package org.example.DAO;
 
 import org.example.DTO.Usuarios;
+import org.example.DTO.RolUsuario;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,7 +21,7 @@ public class UsuariosDAO {
             statement.setString(1, usuario.getUsername());
             statement.setString(2, usuario.getPasswordHash());
             statement.setString(3, usuario.getNombreCompleto());
-            statement.setString(4, usuario.getRol());
+            statement.setString(4, convertirRolUsuarioADB(usuario.getRol()));
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el usuario", e);
@@ -41,7 +42,7 @@ public class UsuariosDAO {
                         resultSet.getString("username"),
                         resultSet.getString("password_hash"),
                         resultSet.getString("nombre_completo"),
-                        resultSet.getString("rol")
+                        convertirRolUsuarioAEnum(resultSet.getString("rol"))
                 );
                 usuarios.add(usuario);
             }
@@ -50,5 +51,13 @@ public class UsuariosDAO {
         }
 
         return usuarios;
+    }
+
+    private String convertirRolUsuarioADB(RolUsuario rolUsuario) {
+        return rolUsuario.name().toLowerCase();
+    }
+
+    private RolUsuario convertirRolUsuarioAEnum(String valorBD) {
+        return RolUsuario.valueOf(valorBD.toUpperCase());
     }
 }

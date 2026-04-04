@@ -1,17 +1,16 @@
 package org.example.DTO;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class Tickets {
     private int id;
     private int pedidoId;
-    private BigDecimal totalImporte;
+    private double totalImporte;
     private Timestamp fechaPago;
     private String referenciaFacturaOdoo;
-    private String metodoPago;
+    private MetodoPago metodoPago;
 
-    public Tickets(int id, int pedidoId, BigDecimal totalImporte, Timestamp fechaPago, String referenciaFacturaOdoo, String metodoPago) {
+    public Tickets(int id, int pedidoId, double totalImporte, Timestamp fechaPago, String referenciaFacturaOdoo, MetodoPago metodoPago) {
         this.id = id;
         this.pedidoId = pedidoId;
         this.totalImporte = totalImporte;
@@ -20,7 +19,7 @@ public class Tickets {
         this.metodoPago = metodoPago;
     }
 
-    public Tickets(int pedidoId, BigDecimal totalImporte, Timestamp fechaPago, String referenciaFacturaOdoo, String metodoPago) {
+    public Tickets(int pedidoId, double totalImporte, Timestamp fechaPago, String referenciaFacturaOdoo, MetodoPago metodoPago) {
         this.pedidoId = pedidoId;
         this.totalImporte = totalImporte;
         this.fechaPago = fechaPago;
@@ -44,11 +43,11 @@ public class Tickets {
         this.pedidoId = pedidoId;
     }
 
-    public BigDecimal getTotalImporte() {
+    public double getTotalImporte() {
         return totalImporte;
     }
 
-    public void setTotalImporte(BigDecimal totalImporte) {
+    public void setTotalImporte(double totalImporte) {
         this.totalImporte = totalImporte;
     }
 
@@ -68,11 +67,11 @@ public class Tickets {
         this.referenciaFacturaOdoo = referenciaFacturaOdoo;
     }
 
-    public String getMetodoPago() {
+    public MetodoPago getMetodoPago() {
         return metodoPago;
     }
 
-    public void setMetodoPago(String metodoPago) {
+    public void setMetodoPago(MetodoPago metodoPago) {
         this.metodoPago = metodoPago;
     }
 

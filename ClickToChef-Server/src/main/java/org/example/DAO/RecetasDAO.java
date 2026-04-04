@@ -19,7 +19,7 @@ public class RecetasDAO {
 
             statement.setInt(1, receta.getProductoId());
             statement.setInt(2, receta.getIngredienteId());
-            statement.setBigDecimal(3, receta.getCantidadNecesaria());
+            statement.setDouble(3, receta.getCantidadNecesaria());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar la receta", e);
@@ -38,7 +38,7 @@ public class RecetasDAO {
                 Recetas receta = new Recetas(
                         resultSet.getInt("producto_id"),
                         resultSet.getInt("ingrediente_id"),
-                        resultSet.getBigDecimal("cantidad_necesaria")
+                        resultSet.getDouble("cantidad_necesaria")
                 );
                 recetas.add(receta);
             }

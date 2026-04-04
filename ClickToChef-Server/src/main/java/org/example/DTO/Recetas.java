@@ -1,13 +1,12 @@
 package org.example.DTO;
 
-import java.math.BigDecimal;
 
 public class Recetas {
     private int productoId;
     private int ingredienteId;
-    private BigDecimal cantidadNecesaria;
+    private double cantidadNecesaria;
 
-    public Recetas(int productoId, int ingredienteId, BigDecimal cantidadNecesaria) {
+    public Recetas(int productoId, int ingredienteId, double cantidadNecesaria) {
         this.productoId = productoId;
         this.ingredienteId = ingredienteId;
         this.cantidadNecesaria = cantidadNecesaria;
@@ -29,7 +28,7 @@ public class Recetas {
         this.ingredienteId = ingredienteId;
     }
 
-    public BigDecimal getCantidadNecesaria() {
+    public double getCantidadNecesaria() {
         return cantidadNecesaria;
     }
 

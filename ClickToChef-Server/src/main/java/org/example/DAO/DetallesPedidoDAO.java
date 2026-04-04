@@ -1,6 +1,7 @@
 package org.example.DAO;
 
 import org.example.DTO.DetallesPedido;
+import org.example.DTO.EstadoDetallePedido;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,7 +22,7 @@ public class DetallesPedidoDAO {
             statement.setInt(2, detallePedido.getProductoId());
             statement.setInt(3, detallePedido.getCantidad());
             statement.setString(4, detallePedido.getNotasEspeciales());
-            statement.setString(5, detallePedido.getEstado());
+            statement.setString(5, convertirEstadoDetalleADB(detallePedido.getEstado()));
             statement.setTimestamp(6, detallePedido.getHoraPedido());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -44,7 +45,7 @@ public class DetallesPedidoDAO {
                         resultSet.getInt("producto_id"),
                         resultSet.getInt("cantidad"),
                         resultSet.getString("notas_especiales"),
-                        resultSet.getString("estado"),
+                        convertirEstadoDetalleAEnum(resultSet.getString("estado")),
                         resultSet.getTimestamp("hora_pedido")
                 );
                 detalles.add(detalle);
@@ -54,5 +55,13 @@ public class DetallesPedidoDAO {
         }
 
         return detalles;
+    }
+
+    private String convertirEstadoDetalleADB(EstadoDetallePedido estadoDetallePedido) {
+        return estadoDetallePedido.name().toLowerCase().replace('_', ' ');
+    }
+
+    private EstadoDetallePedido convertirEstadoDetalleAEnum(String valorBD) {
+        return EstadoDetallePedido.valueOf(valorBD.toUpperCase().replace(' ', '_'));
     }
 }

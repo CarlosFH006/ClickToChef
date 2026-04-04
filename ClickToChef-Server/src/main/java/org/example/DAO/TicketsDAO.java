@@ -1,6 +1,7 @@
 package org.example.DAO;
 
 import org.example.DTO.Tickets;
+import org.example.DTO.MetodoPago;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,10 +19,10 @@ public class TicketsDAO {
              PreparedStatement statement = conexion.prepareStatement(sql)) {
 
             statement.setInt(1, ticket.getPedidoId());
-            statement.setBigDecimal(2, ticket.getTotalImporte());
+            statement.setDouble(2, ticket.getTotalImporte());
             statement.setTimestamp(3, ticket.getFechaPago());
             statement.setString(4, ticket.getReferenciaFacturaOdoo());
-            statement.setString(5, ticket.getMetodoPago());
+            statement.setString(5, convertirMetodoPagoADB(ticket.getMetodoPago()));
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el ticket", e);
@@ -40,10 +41,10 @@ public class TicketsDAO {
                 Tickets ticket = new Tickets(
                         resultSet.getInt("id"),
                         resultSet.getInt("pedido_id"),
-                        resultSet.getBigDecimal("total_importe"),
+                        resultSet.getDouble("total_importe"),
                         resultSet.getTimestamp("fecha_pago"),
                         resultSet.getString("referencia_factura_odoo"),
-                        resultSet.getString("metodo_pago")
+                        convertirMetodoPagoAEnum(resultSet.getString("metodo_pago"))
                 );
                 tickets.add(ticket);
             }
@@ -52,5 +53,13 @@ public class TicketsDAO {
         }
 
         return tickets;
+    }
+
+    private String convertirMetodoPagoADB(MetodoPago metodoPago) {
+        return metodoPago.name().toLowerCase();
+    }
+
+    private MetodoPago convertirMetodoPagoAEnum(String valorBD) {
+        return MetodoPago.valueOf(valorBD.toUpperCase());
     }
 }
