@@ -12,7 +12,7 @@ import java.util.List;
 
 public class UsuariosDAO {
 
-    public boolean insertarUsuario(Usuarios usuario) {
+    public static boolean insertarUsuario(Usuarios usuario) {
         String sql = "INSERT INTO usuarios (username, password_hash, nombre_completo, rol) VALUES (?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -28,7 +28,7 @@ public class UsuariosDAO {
         }
     }
 
-    public ArrayList<Usuarios> obtenerTodos() {
+    public static ArrayList<Usuarios> obtenerTodos() {
         String sql = "SELECT id, username, password_hash, nombre_completo, rol FROM usuarios";
         ArrayList<Usuarios> usuarios = new ArrayList<>();
 
@@ -53,11 +53,11 @@ public class UsuariosDAO {
         return usuarios;
     }
 
-    private String convertirRolUsuarioADB(RolUsuario rolUsuario) {
+    private static String convertirRolUsuarioADB(RolUsuario rolUsuario) {
         return rolUsuario.name().toLowerCase();
     }
 
-    private RolUsuario convertirRolUsuarioAEnum(String valorBD) {
+    private static RolUsuario convertirRolUsuarioAEnum(String valorBD) {
         return RolUsuario.valueOf(valorBD.toUpperCase());
     }
 }

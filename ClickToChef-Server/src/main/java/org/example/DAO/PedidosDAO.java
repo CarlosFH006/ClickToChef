@@ -12,7 +12,7 @@ import java.util.List;
 
 public class PedidosDAO {
 
-    public boolean insertarPedido(Pedidos pedido) {
+    public static boolean insertarPedido(Pedidos pedido) {
         String sql = "INSERT INTO pedidos (mesa_id, usuario_id, fecha_creacion, estado) VALUES (?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -28,7 +28,7 @@ public class PedidosDAO {
         }
     }
 
-    public ArrayList<Pedidos> obtenerTodos() {
+    public static ArrayList<Pedidos> obtenerTodos() {
         String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos";
         ArrayList<Pedidos> pedidos = new ArrayList<>();
 
@@ -53,11 +53,11 @@ public class PedidosDAO {
         return pedidos;
     }
 
-    private String convertirEstadoPedidoADB(EstadoPedido estadoPedido) {
+    private static String convertirEstadoPedidoADB(EstadoPedido estadoPedido) {
         return estadoPedido.name().toLowerCase();
     }
 
-    private EstadoPedido convertirEstadoPedidoAEnum(String valorBD) {
+    private static EstadoPedido convertirEstadoPedidoAEnum(String valorBD) {
         return EstadoPedido.valueOf(valorBD.toUpperCase());
     }
 }

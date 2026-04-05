@@ -12,7 +12,7 @@ import java.util.List;
 
 public class DetallesPedidoDAO {
 
-    public boolean insertarDetallePedido(DetallesPedido detallePedido) {
+    public static boolean insertarDetallePedido(DetallesPedido detallePedido) {
         String sql = "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, notas_especiales, estado, hora_pedido) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -30,7 +30,7 @@ public class DetallesPedidoDAO {
         }
     }
 
-    public ArrayList<DetallesPedido> obtenerTodos() {
+    public static ArrayList<DetallesPedido> obtenerTodos() {
         String sql = "SELECT id, pedido_id, producto_id, cantidad, notas_especiales, estado, hora_pedido FROM detalles_pedido";
         ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
@@ -57,11 +57,11 @@ public class DetallesPedidoDAO {
         return detalles;
     }
 
-    private String convertirEstadoDetalleADB(EstadoDetallePedido estadoDetallePedido) {
+    private static String convertirEstadoDetalleADB(EstadoDetallePedido estadoDetallePedido) {
         return estadoDetallePedido.name().toLowerCase().replace('_', ' ');
     }
 
-    private EstadoDetallePedido convertirEstadoDetalleAEnum(String valorBD) {
+    private static EstadoDetallePedido convertirEstadoDetalleAEnum(String valorBD) {
         return EstadoDetallePedido.valueOf(valorBD.toUpperCase().replace(' ', '_'));
     }
 }

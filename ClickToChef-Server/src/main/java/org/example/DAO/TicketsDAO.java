@@ -12,7 +12,7 @@ import java.util.List;
 
 public class TicketsDAO {
 
-    public boolean insertarTicket(Tickets ticket) {
+    public static boolean insertarTicket(Tickets ticket) {
         String sql = "INSERT INTO tickets (pedido_id, total_importe, fecha_pago, referencia_factura_odoo, metodo_pago) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -29,7 +29,7 @@ public class TicketsDAO {
         }
     }
 
-    public ArrayList<Tickets> obtenerTodos() {
+    public static ArrayList<Tickets> obtenerTodos() {
         String sql = "SELECT id, pedido_id, total_importe, fecha_pago, referencia_factura_odoo, metodo_pago FROM tickets";
         ArrayList<Tickets> tickets = new ArrayList<>();
 
@@ -55,11 +55,11 @@ public class TicketsDAO {
         return tickets;
     }
 
-    private String convertirMetodoPagoADB(MetodoPago metodoPago) {
+    private static String convertirMetodoPagoADB(MetodoPago metodoPago) {
         return metodoPago.name().toLowerCase();
     }
 
-    private MetodoPago convertirMetodoPagoAEnum(String valorBD) {
+    private static MetodoPago convertirMetodoPagoAEnum(String valorBD) {
         return MetodoPago.valueOf(valorBD.toUpperCase());
     }
 }

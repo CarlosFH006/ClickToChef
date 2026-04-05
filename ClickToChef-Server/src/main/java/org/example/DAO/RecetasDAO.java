@@ -11,7 +11,7 @@ import java.util.List;
 
 public class RecetasDAO {
 
-    public boolean insertarReceta(Recetas receta) {
+    public static boolean insertarReceta(Recetas receta) {
         String sql = "INSERT INTO recetas (producto_id, ingrediente_id, cantidad_necesaria) VALUES (?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -26,7 +26,7 @@ public class RecetasDAO {
         }
     }
 
-    public ArrayList<Recetas> obtenerTodas() {
+    public static ArrayList<Recetas> obtenerTodas() {
         String sql = "SELECT producto_id, ingrediente_id, cantidad_necesaria FROM recetas";
         ArrayList<Recetas> recetas = new ArrayList<>();
 

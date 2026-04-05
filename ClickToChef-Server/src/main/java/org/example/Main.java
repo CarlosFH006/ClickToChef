@@ -25,6 +25,7 @@ import org.example.DTO.RolUsuario;
 import org.example.DTO.Tickets;
 import org.example.DTO.Usuarios;
 import org.example.Odoo.CargaInicial;
+import org.example.Servidor.Servidor;
 
 import java.sql.Timestamp;
 
@@ -32,72 +33,45 @@ public class Main {
     private static final boolean INSERTAR_DATOS_PRUEBA = false;
 
     public static void main(String[] args) {
-        CategoriasDAO categoriasDAO = new CategoriasDAO();
-        ProductosDAO productosDAO = new ProductosDAO();
-        MesasDAO mesasDAO = new MesasDAO();
-        UsuariosDAO usuariosDAO = new UsuariosDAO();
-        PedidosDAO pedidosDAO = new PedidosDAO();
-        DetallesPedidoDAO detallesPedidoDAO = new DetallesPedidoDAO();
-        IngredientesDAO ingredientesDAO = new IngredientesDAO();
-        RecetasDAO recetasDAO = new RecetasDAO();
-        TicketsDAO ticketsDAO = new TicketsDAO();
-
         CargaInicial.cargaInicialDatos();
 
         try {
             if (INSERTAR_DATOS_PRUEBA) {
-                insertarDatosPrueba(
-                        categoriasDAO,
-                        productosDAO,
-                        mesasDAO,
-                        usuariosDAO,
-                        pedidosDAO,
-                        detallesPedidoDAO,
-                        ingredientesDAO,
-                        recetasDAO,
-                        ticketsDAO
-                );
+                insertarDatosPrueba();
             }
 
-            mostrarDatos("Categorias", categoriasDAO.obtenerTodas());
-            mostrarDatos("Productos", productosDAO.obtenerTodos());
-            mostrarDatos("Mesas", mesasDAO.obtenerTodas());
-            mostrarDatos("Usuarios", usuariosDAO.obtenerTodos());
-            mostrarDatos("Pedidos", pedidosDAO.obtenerTodos());
-            mostrarDatos("Detalles de pedido", detallesPedidoDAO.obtenerTodos());
-            mostrarDatos("Ingredientes", ingredientesDAO.obtenerTodos());
-            mostrarDatos("Recetas", recetasDAO.obtenerTodas());
-            mostrarDatos("Tickets", ticketsDAO.obtenerTodos());
+            mostrarDatos("Categorias", CategoriasDAO.obtenerTodas());
+            mostrarDatos("Productos", ProductosDAO.obtenerTodos());
+            mostrarDatos("Mesas", MesasDAO.obtenerTodas());
+            mostrarDatos("Usuarios", UsuariosDAO.obtenerTodos());
+            mostrarDatos("Pedidos", PedidosDAO.obtenerTodos());
+            mostrarDatos("Detalles de pedido", DetallesPedidoDAO.obtenerTodos());
+            mostrarDatos("Ingredientes", IngredientesDAO.obtenerTodos());
+            mostrarDatos("Recetas", RecetasDAO.obtenerTodas());
+            mostrarDatos("Tickets", TicketsDAO.obtenerTodos());
         } catch (RuntimeException e) {
             System.err.println("Error durante la prueba: " + e.getMessage());
             e.printStackTrace();
         } finally {
             ConexionDB.cerrarConexion();
         }
+
+        Servidor.server();
+
     }
 
-    private static void insertarDatosPrueba(
-            CategoriasDAO categoriasDAO,
-            ProductosDAO productosDAO,
-            MesasDAO mesasDAO,
-            UsuariosDAO usuariosDAO,
-            PedidosDAO pedidosDAO,
-            DetallesPedidoDAO detallesPedidoDAO,
-            IngredientesDAO ingredientesDAO,
-            RecetasDAO recetasDAO,
-            TicketsDAO ticketsDAO
-    ) {
+    private static void insertarDatosPrueba() {
         Timestamp ahora = new Timestamp(System.currentTimeMillis());
 
-        categoriasDAO.insertarCategoria(new Categorias("Bebidas"));
-        productosDAO.insertarProducto(new Productos("Coca-Cola", "Refresco frio", 2.50, 1, "https://ejemplo.com/cocacola.jpg"));
-        mesasDAO.insertarMesa(new Mesas(1, 4, EstadoMesa.LIBRE));
-        usuariosDAO.insertarUsuario(new Usuarios("camarero1", "hash123", "Carlos Lopez", RolUsuario.CAMARERO));
-        pedidosDAO.insertarPedido(new Pedidos(1, 1, ahora, EstadoPedido.ABIERTA));
-        detallesPedidoDAO.insertarDetallePedido(new DetallesPedido(1, 1, 2, "Sin hielo", EstadoDetallePedido.PENDIENTE, ahora));
-        ingredientesDAO.insertarIngrediente(new Ingredientes("Azucar", 10.0, "kg", 1001));
-        recetasDAO.insertarReceta(new Recetas(1, 1, 0.25));
-        ticketsDAO.insertarTicket(new Tickets(1, 5.00, ahora, "FAC-0001", MetodoPago.TARJETA));
+        CategoriasDAO.insertarCategoria(new Categorias("Bebidas"));
+        ProductosDAO.insertarProducto(new Productos("Coca-Cola", "Refresco frio", 2.50, 1, "https://ejemplo.com/cocacola.jpg"));
+        MesasDAO.insertarMesa(new Mesas(1, 4, EstadoMesa.LIBRE));
+        UsuariosDAO.insertarUsuario(new Usuarios("camarero1", "hash123", "Carlos Lopez", RolUsuario.CAMARERO));
+        PedidosDAO.insertarPedido(new Pedidos(1, 1, ahora, EstadoPedido.ABIERTA));
+        DetallesPedidoDAO.insertarDetallePedido(new DetallesPedido(1, 1, 2, "Sin hielo", EstadoDetallePedido.PENDIENTE, ahora));
+        IngredientesDAO.insertarIngrediente(new Ingredientes("Azucar", 10.0, "kg", 1001));
+        RecetasDAO.insertarReceta(new Recetas(1, 1, 0.25));
+        TicketsDAO.insertarTicket(new Tickets(1, 5.00, ahora, "FAC-0001", MetodoPago.TARJETA));
     }
 
     private static void mostrarDatos(String titulo, Iterable<?> elementos) {

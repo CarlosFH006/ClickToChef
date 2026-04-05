@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ProductosDAO {
 
-    public boolean insertarProducto(Productos producto) {
+    public static boolean insertarProducto(Productos producto) {
         String sql = "INSERT INTO productos (nombre, descripcion, precio, categoria_id, imagen_url) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -30,7 +30,7 @@ public class ProductosDAO {
         }
     }
 
-    public ArrayList<Productos> obtenerTodos() {
+    public static ArrayList<Productos> obtenerTodos() {
         String sql = "SELECT id, nombre, descripcion, precio, categoria_id, imagen_url FROM productos";
         ArrayList<Productos> productos = new ArrayList<>();
 

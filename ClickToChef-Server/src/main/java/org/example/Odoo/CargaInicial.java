@@ -20,8 +20,6 @@ import java.util.Properties;
 public class CargaInicial {
     private static final String CONFIG_PATH = "config.properties";
 
-    private CargaInicial() {
-    }
 
     // Sincroniza ingredientes y platos desde MySQL hacia Odoo.
 
@@ -125,8 +123,7 @@ public class CargaInicial {
 
     private static void cargarIngredientes(XmlRpcClient objectClient, String db, int uid, String apiKey) {
         try {
-            IngredientesDAO ingredientesDAO = new IngredientesDAO();
-            ArrayList<Ingredientes> ingredientes = ingredientesDAO.obtenerTodos();
+            ArrayList<Ingredientes> ingredientes = IngredientesDAO.obtenerTodos();
 
             for (Ingredientes ingrediente : ingredientes) {
                 // En Odoo 17 los almacenables se modelan como consumibles con is_storable=true.
@@ -153,7 +150,7 @@ public class CargaInicial {
                 );
 
                 int odooProductId = ((Number) result).intValue();
-                ingredientesDAO.actualizarOdooProductId(ingrediente.getId(), odooProductId);
+                IngredientesDAO.actualizarOdooProductId(ingrediente.getId(), odooProductId);
             }
         } catch (XmlRpcException e) {
             throw new RuntimeException("Error al cargar ingredientes en Odoo.", e);
@@ -162,8 +159,7 @@ public class CargaInicial {
 
     private static void cargarPlatos(XmlRpcClient objectClient, String db, int uid, String apiKey) {
         try {
-            ProductosDAO productosDAO = new ProductosDAO();
-            ArrayList<Productos> productos = productosDAO.obtenerTodos();
+            ArrayList<Productos> productos = ProductosDAO.obtenerTodos();
 
             for (Productos producto : productos) {
                 // Los platos del KDS se representan como servicios en Odoo.

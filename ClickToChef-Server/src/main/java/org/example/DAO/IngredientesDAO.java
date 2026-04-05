@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 public class IngredientesDAO {
 
-    public boolean insertarIngrediente(Ingredientes ingrediente) {
+    public static boolean insertarIngrediente(Ingredientes ingrediente) {
         String sql = "INSERT INTO ingredientes (nombre, stock_actual, unidad_medida, odoo_product_id) VALUES (?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -27,7 +27,7 @@ public class IngredientesDAO {
         }
     }
 
-    public ArrayList<Ingredientes> obtenerTodos() {
+    public static ArrayList<Ingredientes> obtenerTodos() {
         String sql = "SELECT id, nombre, stock_actual, unidad_medida, odoo_product_id FROM ingredientes";
         ArrayList<Ingredientes> ingredientes = new ArrayList<>();
 
@@ -52,7 +52,7 @@ public class IngredientesDAO {
         return ingredientes;
     }
 
-    public boolean actualizarOdooProductId(int ingredienteId, int odooProductId) {
+    public static boolean actualizarOdooProductId(int ingredienteId, int odooProductId) {
         String sql = "UPDATE ingredientes SET odoo_product_id = ? WHERE id = ?";
 
         try (Connection conexion = ConexionDB.getConexion();

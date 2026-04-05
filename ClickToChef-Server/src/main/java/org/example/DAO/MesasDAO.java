@@ -12,7 +12,7 @@ import java.util.List;
 
 public class MesasDAO {
 
-    public boolean insertarMesa(Mesas mesa) {
+    public static boolean insertarMesa(Mesas mesa) {
         String sql = "INSERT INTO mesas (numero, capacidad, estado) VALUES (?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -27,7 +27,7 @@ public class MesasDAO {
         }
     }
 
-    public ArrayList<Mesas> obtenerTodas() {
+    public static ArrayList<Mesas> obtenerTodas() {
         String sql = "SELECT id, numero, capacidad, estado FROM mesas";
         ArrayList<Mesas> mesas = new ArrayList<>();
 
@@ -51,11 +51,11 @@ public class MesasDAO {
         return mesas;
     }
 
-    private String convertirEstadoMesaADB(EstadoMesa estadoMesa) {
+    private static String convertirEstadoMesaADB(EstadoMesa estadoMesa) {
         return estadoMesa.name().toLowerCase();
     }
 
-    private EstadoMesa convertirEstadoMesaAEnum(String valorBD) {
+    private static EstadoMesa convertirEstadoMesaAEnum(String valorBD) {
         return EstadoMesa.valueOf(valorBD.toUpperCase());
     }
 }

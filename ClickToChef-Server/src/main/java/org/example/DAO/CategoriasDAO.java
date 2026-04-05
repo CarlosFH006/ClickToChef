@@ -11,7 +11,7 @@ import java.util.List;
 
 public class CategoriasDAO {
 
-    public boolean insertarCategoria(Categorias categoria) {
+    public static boolean insertarCategoria(Categorias categoria) {
         String sql = "INSERT INTO categorias (nombre) VALUES (?)";
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -24,7 +24,7 @@ public class CategoriasDAO {
         }
     }
 
-    public ArrayList<Categorias> obtenerTodas() {
+    public static ArrayList<Categorias> obtenerTodas() {
         String sql = "SELECT id, nombre FROM categorias";
         ArrayList<Categorias> categorias = new ArrayList<>();
 
