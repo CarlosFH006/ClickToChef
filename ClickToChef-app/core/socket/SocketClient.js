@@ -1,121 +1,101 @@
 import TcpSocket from 'react-native-tcp-socket';
+// Eliminamos la importación estática de useAuthStore para evitar el Require Cycle
 
 class SocketClient {
   constructor() {
     this.client = null;
-    this.listeners = [];
+    this.host = '10.0.2.2'; // IP para el emulador Android por defecto
+    this.port = 5000;       // Puerto de tu servidor Java
   }
 
-  /**
-   * Inicia la conexión con el servidor TCP.
-   * @param {number} port - El puerto del servidor
-   * @param {string} host - La dirección IP del servidor (por defecto '10.0.2.2' para el emulador Android)
-   */
-  connect(port, host = '10.0.2.2') {
-    if (this.client) {
-      console.log('[SocketClient] La conexión ya está activa o en proceso.');
-      return;
-    }
+  connect() {
+    if (this.client) return;
 
-    const options = {
-      port: port,
-      host: host,
-    };
-
-    console.log(`[SocketClient] Conectando a ${host}:${port}...`);
-
-    this.client = TcpSocket.createConnection(options, () => {
-      console.log(`[SocketClient] Conectado exitosamente a ${host}:${port}`);
+    console.log(`[Socket] Conectando a ${this.host}:${this.port}...`);
+    this.client = TcpSocket.createConnection({ port: this.port, host: this.host }, () => {
+      console.log(`[Socket] Conectado a ${this.host}:${this.port}`);
     });
 
     this.client.on('data', (data) => {
-      const message = data.toString();
-      // console.log('[SocketClient] Datos recibidos (crudo):', message);
-
-      // Los mensajes del servidor Java usando PrintWriter.println() u otros pueden venir 
-      // separados por saltos de línea, así que los separamos y parseamos individualmente.
-      const messages = message.split('\n').filter(msg => msg.trim() !== '');
-      
+      // Los mensajes del servidor Java usando PrintWriter vienen separados por \n
+      const messages = data.toString().split('\n').filter(Boolean);
       messages.forEach(msg => {
         try {
           const parsedData = JSON.parse(msg);
-          this._notifyListeners(parsedData);
+          this.handleServerMessage(parsedData);
         } catch (error) {
-          console.error('[SocketClient] Error al parsear JSON recibido:', error, 'Mensaje:', msg);
+          console.error('[Socket] Error JSON:', error, msg);
         }
       });
     });
 
     this.client.on('error', (error) => {
-      console.error('[SocketClient] Error en el socket:', error);
+      console.error('[Socket] Error:', error);
       this.disconnect();
     });
 
     this.client.on('close', () => {
-      console.log('[SocketClient] Conexión cerrada');
+      console.log('[Socket] Conexión cerrada');
       this.client = null;
     });
   }
 
-  /**
-   * Envía un objeto JSON al servidor. Añade un '\n' al final para 
-   * asegurar su compatibilidad con el BufferedReader de Java.
-   * @param {object} data - Objeto JSON con la información a enviar.
-   */
-  send(data) {
-    if (!this.client) {
-      console.error('[SocketClient] No se puede enviar datos. El socket no está conectado.');
-      return;
-    }
+  // Centralizamos aquí las respuestas del servidor para toda la app
+  handleServerMessage(data) {
+    console.log('[Socket] Recibido:', data.type);
+    
+    // Requerimos el store aquí (lazy load) para romper el Require Cycle
+    const { useAuthStore } = require('../../presentation/auth/store/useAuthStore');
 
-    try {
-      const jsonString = JSON.stringify(data);
-      // El salto de línea es crucial para que Java (BufferedReader) lea la línea completa
-      this.client.write(jsonString + '\n');
-      console.log('[SocketClient] Enviado:', jsonString);
-    } catch (error) {
-      console.error('[SocketClient] Error al serializar o enviar el JSON:', error);
+    switch (data.type) {
+      case 'LOGIN_RESPONSE':
+        const { success, user, pass } = data.payload || {};
+        // Llamamos directamente a la acción de nuestro store (renombrada a changeStatus)
+        if (success) {
+            useAuthStore.getState().changeStatus(user, pass);
+        } else {
+            // Si el login falla, mandamos undefined para que se ponga unauthenticated
+            useAuthStore.getState().changeStatus(); 
+        }
+        break;
+      
+      // Aquí irás añadiendo más endpoints y stores de tu servidor Java:
+      // case 'PRODUCTS_RESPONSE': 
+      //   useProductStore.getState().setProducts(data.payload);
+      //   break;
+
+      default:
+        console.warn('[Socket] Tipo de mensaje no manejado:', data.type);
     }
   }
 
-  /**
-   * Desconecta el cliente del servidor de forma limpia.
-   */
+  send(data) {
+    if (!this.client) {
+      // Intentamos autoconectar si el socket estaba caído
+      console.warn('[Socket] No conectado. Intentando reconectar...');
+      this.connect();
+      // Retrasamos el envío para darle 1 seg a la conexión
+      setTimeout(() => {
+         if (this.client) {
+            this.client.write(JSON.stringify(data) + '\n');
+            console.log('[Socket] Enviado (tras reconexión):', data.type);
+         }
+      }, 1000);
+      return;
+    }
+
+    this.client.write(JSON.stringify(data) + '\n');
+    console.log('[Socket] Enviado:', data.type);
+  }
+
   disconnect() {
     if (this.client) {
       this.client.destroy();
       this.client = null;
-      console.log('[SocketClient] Desconectado del servidor.');
+      console.log('[Socket] Desconectado manualmente.');
     }
-  }
-
-  /**
-   * Suscribe un callback a los mensajes entrantes.
-   * @param {function} callback - Función que manejará el objeto JSON recibido
-   */
-  subscribe(callback) {
-    if (typeof callback === 'function' && !this.listeners.includes(callback)) {
-      this.listeners.push(callback);
-    }
-  }
-
-  /**
-   * Desinscribe un callback previamente suscrito.
-   * @param {function} callback - La función que se desea eliminar
-   */
-  unsubscribe(callback) {
-    this.listeners = this.listeners.filter(listener => listener !== callback);
-  }
-
-  /**
-   * Notifica a todos los listeners suscritos sobre un nuevo mensaje.
-   * @param {object} data - El objeto JSON parseado
-   */
-  _notifyListeners(data) {
-    this.listeners.forEach(listener => listener(data));
   }
 }
 
-// Exportamos una única instancia (Singleton)
-const instance = new SocketClient();
-export default instance;
+const socketClient = new SocketClient();
+export default socketClient;
