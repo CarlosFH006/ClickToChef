@@ -60,4 +60,32 @@ public class UsuariosDAO {
     private static RolUsuario convertirRolUsuarioAEnum(String valorBD) {
         return RolUsuario.valueOf(valorBD.toUpperCase());
     }
+
+    public static Usuarios login(String username, String password) {
+        String sql = "SELECT id, username, password_hash, nombre_completo, rol FROM usuarios WHERE username = ? AND password_hash = ?";
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+
+            statement.setString(1, username);
+            statement.setString(2, password);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Si hay coincidencia, devolvemos el DTO completo
+                    return new Usuarios(
+                            resultSet.getInt("id"),
+                            resultSet.getString("username"),
+                            resultSet.getString("password_hash"),
+                            resultSet.getString("nombre_completo"),
+                            convertirRolUsuarioAEnum(resultSet.getString("rol"))
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error en el proceso de login", e);
+        }
+
+        return null;
+    }
 }
