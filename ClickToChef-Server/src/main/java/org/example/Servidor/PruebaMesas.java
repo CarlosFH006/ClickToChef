@@ -19,7 +19,7 @@ public class PruebaMesas {
     static class SimuladorCliente implements Runnable {
         private final int idCliente;
         private final Random random = new Random();
-        private final String[] estados = {"LIBRE", "OCUPADA", "RESERVADA"};
+        private final String[] estados = {"LIBRE"};
 
         public SimuladorCliente(int id) {
             this.idCliente = id;

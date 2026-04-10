@@ -16,7 +16,7 @@ interface ClientMessage {
 
 class SocketClient {
   private client: TcpSocket.Socket | null = null;
-  private readonly host: string = '10.0.2.2';
+  private readonly host: string = '192.168.3.54';
   private readonly port: number = 5000;
 
   constructor() {
