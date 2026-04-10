@@ -1,21 +1,22 @@
 import { View, Text, ActivityIndicator } from 'react-native'
 import React, { useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Redirect, Stack } from 'expo-router'
+import { Redirect, Tabs } from 'expo-router'
 import { useAuthStore } from '../../presentation/auth/store/useAuthStore'
 import { useThemeColor } from '../../presentation/theme/hooks/use-theme-color'
-import LogOutIconButton from '../../presentation/auth/components/LogOutIconButton'
+import { Ionicons } from '@expo/vector-icons'
 
 const CheckAuthenticationLayout = () => {
-  
-    const { status,checkStatus } = useAuthStore()
+
+    const { status, checkStatus } = useAuthStore()
 
     const backgroundColor = useThemeColor({}, 'background');
-    
+    const primaryColor = useThemeColor({}, 'primary');
+
     useEffect(() => {
-      checkStatus();
+        checkStatus();
     }, [])
-    
+
     if (status === 'checking') {
         return (
             <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 5 }}>
@@ -30,20 +31,27 @@ const CheckAuthenticationLayout = () => {
     }
 
     return (
-        <Stack screenOptions={{
+        <Tabs screenOptions={{
             headerShadowVisible: false,
             headerStyle: {
                 backgroundColor: backgroundColor
             },
-            contentStyle: {
-                backgroundColor: backgroundColor
-            }
+            tabBarStyle: {
+                backgroundColor: backgroundColor,
+                borderTopWidth: 0,
+                elevation: 0,
+            },
+            tabBarActiveTintColor: primaryColor,
         }}>
-            <Stack.Screen name="(home)/index" options={{ 
-                title: "Productos", 
-                headerLeft: () => <LogOutIconButton/>
+            <Tabs.Screen name="mesas/index" options={{
+                title: "Mesas",
+                tabBarIcon: ({ color }) => <Ionicons name="restaurant-outline" size={24} color={color} />
             }} />
-        </Stack>
+            <Tabs.Screen name="pedido/index" options={{
+                title: "Pedido",
+                tabBarIcon: ({ color }) => <Ionicons name="list-outline" size={24} color={color} />
+            }} />
+        </Tabs>
     )
 }
 

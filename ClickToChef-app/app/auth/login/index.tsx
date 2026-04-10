@@ -16,7 +16,7 @@ const LoginScreen = () => {
   // Navegación reactiva: cuando el status cambia a 'authenticated' (vía socket), redirigimos
   useEffect(() => {
     if (status === 'authenticated') {
-      router.replace('/');
+      router.replace('/(clicktochef-app)/mesas');
     }
   }, [status]);
 
