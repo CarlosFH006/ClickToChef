@@ -1,15 +1,22 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-import { useFonts } from 'expo-font'
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme } from 'react-native';
-import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { useColorScheme,LogBox } from 'react-native';
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import 'react-native-reanimated';
 import { useThemeColor } from '../presentation/theme/hooks/use-theme-color';
 
+// Evita que la SplashScreen se oculte automáticamente
+SplashScreen.preventAutoHideAsync();
+
+LogBox.ignoreAllLogs(true);
+
 export default function RootLayout() {
+
+
   const colorScheme = useColorScheme();
 
   const backgroundColor = useThemeColor({}, 'background');
@@ -21,7 +28,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      // SplashScreen.hideAsync();
+      SplashScreen.hideAsync();
     }
   }, [loaded]);
 

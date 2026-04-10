@@ -1,10 +1,10 @@
-import { View, KeyboardAvoidingView, ScrollView, useWindowDimensions, Alert } from 'react-native'
-import React, { useState } from 'react'
 import { router } from 'expo-router';
-import { ThemedText } from '../../../presentation/theme/components/themed-text';
-import ThemedTextInput from '../../../presentation/theme/components/ThemedTextInput';
-import ThemedButton from '../../../presentation/theme/components/ThemedButton';
+import React, { useEffect, useState } from 'react';
+import { Alert, KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';
 import { useAuthStore } from '../../../presentation/auth/store/useAuthStore';
+import { ThemedText } from '../../../presentation/theme/components/themed-text';
+import ThemedButton from '../../../presentation/theme/components/ThemedButton';
+import ThemedTextInput from '../../../presentation/theme/components/ThemedTextInput';
 
 const LoginScreen = () => {
   const { height } = useWindowDimensions();
@@ -12,6 +12,13 @@ const LoginScreen = () => {
   // Traemos las propiedades del store actualizado
   const login = useAuthStore((state) => state.login);
   const status = useAuthStore((state) => state.status);
+
+  // Navegación reactiva: cuando el status cambia a 'authenticated' (vía socket), redirigimos
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/');
+    }
+  }, [status]);
 
   // Cambiamos 'email' por 'username' para coincidir con tu DAO de Java
   const [form, setForm] = useState({ username: '', pass: '' })
@@ -27,12 +34,7 @@ const LoginScreen = () => {
     // El store ahora maneja el estado 'checking' (isPosting)
     const success = await login(username, pass);
 
-    if (success) {
-      // Nota: Con Sockets, la navegación suele hacerse cuando 
-      // el status cambia a 'authenticated' via un useEffect,
-      // pero por ahora lo dejamos aquí para tu flujo actual.
-      router.replace('/');
-    } else {
+    if (!success) {
       Alert.alert("Error", "No se pudo conectar con el servidor");
     }
   }

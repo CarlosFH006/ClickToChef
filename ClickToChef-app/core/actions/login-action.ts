@@ -8,9 +8,8 @@ export const authLogin = async (username: string, pass: string) => {
       payload: { username, pass }
     });
 
-    // Nota: Como los Sockets son asíncronos, aquí podrías implementar 
-    // una Promise que espere la respuesta o simplemente dejar que 
-    // el listener global del Socket actualice el Store.
+    // Nota: El Store y la UI reaccionarán automáticamente cuando 
+    // llegue la respuesta del Socket a través del listener global.
     return true; 
   } catch (error) {
     console.error("Error en authLogin Action:", error);

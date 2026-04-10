@@ -30,54 +30,12 @@ import org.example.Servidor.Servidor;
 import java.sql.Timestamp;
 
 public class Main {
-    private static final boolean INSERTAR_DATOS_PRUEBA = false;
-
     public static void main(String[] args) {
         CargaInicial.cargaInicialDatos();
-
-        try {
-            if (INSERTAR_DATOS_PRUEBA) {
-                insertarDatosPrueba();
-            }
-
-            mostrarDatos("Categorias", CategoriasDAO.obtenerTodas());
-            mostrarDatos("Productos", ProductosDAO.obtenerTodos());
-            mostrarDatos("Mesas", MesasDAO.obtenerTodas());
-            mostrarDatos("Usuarios", UsuariosDAO.obtenerTodos());
-            mostrarDatos("Pedidos", PedidosDAO.obtenerTodos());
-            mostrarDatos("Detalles de pedido", DetallesPedidoDAO.obtenerTodos());
-            mostrarDatos("Ingredientes", IngredientesDAO.obtenerTodos());
-            mostrarDatos("Recetas", RecetasDAO.obtenerTodas());
-            mostrarDatos("Tickets", TicketsDAO.obtenerTodos());
-        } catch (RuntimeException e) {
-            System.err.println("Error durante la prueba: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            ConexionDB.cerrarConexion();
-        }
 
         Servidor.server();
 
     }
 
-    private static void insertarDatosPrueba() {
-        Timestamp ahora = new Timestamp(System.currentTimeMillis());
 
-        CategoriasDAO.insertarCategoria(new Categorias("Bebidas"));
-        ProductosDAO.insertarProducto(new Productos("Coca-Cola", "Refresco frio", 2.50, 1, "https://ejemplo.com/cocacola.jpg"));
-        MesasDAO.insertarMesa(new Mesas(1, 4, EstadoMesa.LIBRE));
-        UsuariosDAO.insertarUsuario(new Usuarios("camarero1", "hash123", "Carlos Lopez", RolUsuario.CAMARERO));
-        PedidosDAO.insertarPedido(new Pedidos(1, 1, ahora, EstadoPedido.ABIERTA));
-        DetallesPedidoDAO.insertarDetallePedido(new DetallesPedido(1, 1, 2, "Sin hielo", EstadoDetallePedido.PENDIENTE, ahora));
-        IngredientesDAO.insertarIngrediente(new Ingredientes("Azucar", 10.0, "kg", 1001));
-        RecetasDAO.insertarReceta(new Recetas(1, 1, 0.25));
-        TicketsDAO.insertarTicket(new Tickets(1, 5.00, ahora, "FAC-0001", MetodoPago.TARJETA));
-    }
-
-    private static void mostrarDatos(String titulo, Iterable<?> elementos) {
-        System.out.println("\n=== " + titulo + " ===");
-        for (Object elemento : elementos) {
-            System.out.println(elemento);
-        }
-    }
 }

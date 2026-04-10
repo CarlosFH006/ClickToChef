@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import TcpSocket from 'react-native-tcp-socket';
 // Eliminamos la importación estática de useAuthStore para evitar el Require Cycle
 
@@ -43,27 +44,29 @@ class SocketClient {
   // Centralizamos aquí las respuestas del servidor para toda la app
   handleServerMessage(data) {
     console.log('[Socket] Recibido:', data.type);
-    
+
     // Requerimos el store aquí (lazy load) para romper el Require Cycle
     const { useAuthStore } = require('../../presentation/auth/store/useAuthStore');
 
     switch (data.type) {
       case 'LOGIN_RESPONSE':
-        const { success, user, pass } = data.payload || {};
-        // Llamamos directamente a la acción de nuestro store (renombrada a changeStatus)
+        const { success, user } = data.payload || {};
+
         if (success) {
-            useAuthStore.getState().changeStatus(user, pass);
+          // Verificamos si el usuario tiene el rol de camarero
+          if (user.rol === 'CAMARERO') {
+            useAuthStore.getState().changeStatus(user);
+          } else {
+            // Si no es camarero, reseteamos el estado y mostramos error de rol
+            useAuthStore.getState().changeStatus();
+            Alert.alert("Acceso denegado", "Debe ser Camarero para acceder a esta aplicacion.");
+          }
         } else {
-            // Si el login falla, mandamos undefined para que se ponga unauthenticated
-            useAuthStore.getState().changeStatus(); 
+          useAuthStore.getState().changeStatus();
+
+          Alert.alert("Error", "Usuario o contraseña incorrectos");
         }
         break;
-      
-      // Aquí irás añadiendo más endpoints y stores de tu servidor Java:
-      // case 'PRODUCTS_RESPONSE': 
-      //   useProductStore.getState().setProducts(data.payload);
-      //   break;
-
       default:
         console.warn('[Socket] Tipo de mensaje no manejado:', data.type);
     }
@@ -76,10 +79,10 @@ class SocketClient {
       this.connect();
       // Retrasamos el envío para darle 1 seg a la conexión
       setTimeout(() => {
-         if (this.client) {
-            this.client.write(JSON.stringify(data) + '\n');
-            console.log('[Socket] Enviado (tras reconexión):', data.type);
-         }
+        if (this.client) {
+          this.client.write(JSON.stringify(data) + '\n');
+          console.log('[Socket] Enviado (tras reconexión):', data.type);
+        }
       }, 1000);
       return;
     }

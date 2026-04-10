@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { Usuario } from '../../../type/usuario-interface';
 import { authLogin } from '../../../core/actions/login-action';
 import { SecureStorage } from '../../../helpers/adapters/secure-storage';
+import { Usuario } from '../../../type/usuario-interface';
 
 export type AuthStatus = 'authenticated' | 'unauthenticated' | 'checking';
 
@@ -12,12 +12,12 @@ export interface AuthState {
     // Acciones de estado
     login: (username: string, pass: string) => Promise<boolean>;
     changeStatus: (user?: Usuario, pass?: string) => Promise<void>;
-    checkStatus: () => Promise<void>; // <-- Añadida a la interfaz
+    checkStatus: () => Promise<void>;
     logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
-    status: 'unauthenticated',
+    status: 'checking',
     user: undefined,
 
     login: async (username: string, pass: string) => {
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     checkStatus: async () => {
         try {
             const session = await SecureStorage.getItem('user_session');
-            
+
             if (!session) {
                 set({ status: 'unauthenticated', user: undefined });
                 return;
@@ -48,9 +48,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
             // Si existe la sesión, parseamos los datos
             const { user } = JSON.parse(session);
-            
-            // Aquí podrías disparar una validación silenciosa con el Socket si quisieras,
-            // pero para el RA2, con restaurar el estado local es suficiente.
+
             set({ status: 'authenticated', user: user });
 
         } catch (error) {
