@@ -1,28 +1,46 @@
 import { Alert } from 'react-native';
 import TcpSocket from 'react-native-tcp-socket';
-// Eliminamos la importación estática de useAuthStore para evitar el Require Cycle
+import { useMesaStore } from '../../store/mesa-store';
+
+// Interfaces para definir la estructura de los mensajes
+interface ServerMessage {
+  type: string;
+  payload?: any;
+  status?: 'success' | 'error';
+}
+
+interface ClientMessage {
+  type: string;
+  payload?: any;
+}
 
 class SocketClient {
+  private client: TcpSocket.Socket | null = null;
+  private readonly host: string = '10.0.2.2';
+  private readonly port: number = 5000;
+
   constructor() {
     this.client = null;
-    this.host = '10.0.2.2'; // IP para el emulador Android por defecto
-    this.port = 5000;       // Puerto de tu servidor Java
   }
 
-  connect() {
+  public connect(): void {
     if (this.client) return;
 
     console.log(`[Socket] Conectando a ${this.host}:${this.port}...`);
-    this.client = TcpSocket.createConnection({ port: this.port, host: this.host }, () => {
+    
+    this.client = TcpSocket.createConnection({ 
+      port: this.port, 
+      host: this.host 
+    }, () => {
       console.log(`[Socket] Conectado a ${this.host}:${this.port}`);
     });
 
-    this.client.on('data', (data) => {
-      // Los mensajes del servidor Java usando PrintWriter vienen separados por \n
+    this.client.on('data', (data: Buffer | string) => {
       const messages = data.toString().split('\n').filter(Boolean);
+      
       messages.forEach(msg => {
         try {
-          const parsedData = JSON.parse(msg);
+          const parsedData: ServerMessage = JSON.parse(msg);
           this.handleServerMessage(parsedData);
         } catch (error) {
           console.error('[Socket] Error JSON:', error, msg);
@@ -30,7 +48,7 @@ class SocketClient {
       });
     });
 
-    this.client.on('error', (error) => {
+    this.client.on('error', (error: Error) => {
       console.error('[Socket] Error:', error);
       this.disconnect();
     });
@@ -41,11 +59,10 @@ class SocketClient {
     });
   }
 
-  // Centralizamos aquí las respuestas del servidor para toda la app
-  handleServerMessage(data) {
+  private handleServerMessage(data: ServerMessage): void {
     console.log('[Socket] Recibido:', data.type);
 
-    // Requerimos el store aquí (lazy load) para romper el Require Cycle
+    // Tipamos el require para mantener la seguridad
     const { useAuthStore } = require('../../presentation/auth/store/useAuthStore');
 
     switch (data.type) {
@@ -53,31 +70,43 @@ class SocketClient {
         const { success, user } = data.payload || {};
 
         if (success) {
-          // Verificamos si el usuario tiene el rol de camarero
           if (user.rol === 'CAMARERO') {
             useAuthStore.getState().changeStatus(user);
           } else {
-            // Si no es camarero, reseteamos el estado y mostramos error de rol
             useAuthStore.getState().changeStatus();
-            Alert.alert("Acceso denegado", "Debe ser Camarero para acceder a esta aplicacion.");
+            Alert.alert("Acceso denegado", "Debe ser Camarero para acceder a esta aplicación.");
           }
         } else {
           useAuthStore.getState().changeStatus();
-
           Alert.alert("Error", "Usuario o contraseña incorrectos");
         }
         break;
+
+      case 'MESAS_RESPONSE':
+        if (data.payload?.mesas) {
+          console.log('[Socket] Mesas recibidas:', data.payload.mesas.length);
+          useMesaStore.getState().setMesas(data.payload.mesas);
+        }
+        break;
+
+      case 'MESA_UPDATED':
+        if (data.payload) {
+          const { id, estado } = data.payload;
+          console.log(`[Socket] Mesa ${id} actualizada a ${estado}`);
+          useMesaStore.getState().updateMesaStatus(id, estado);
+        }
+        break;
+
       default:
         console.warn('[Socket] Tipo de mensaje no manejado:', data.type);
     }
   }
 
-  send(data) {
+  public send(data: ClientMessage): void {
     if (!this.client) {
-      // Intentamos autoconectar si el socket estaba caído
       console.warn('[Socket] No conectado. Intentando reconectar...');
       this.connect();
-      // Retrasamos el envío para darle 1 seg a la conexión
+      
       setTimeout(() => {
         if (this.client) {
           this.client.write(JSON.stringify(data) + '\n');
@@ -91,7 +120,7 @@ class SocketClient {
     console.log('[Socket] Enviado:', data.type);
   }
 
-  disconnect() {
+  public disconnect(): void {
     if (this.client) {
       this.client.destroy();
       this.client = null;

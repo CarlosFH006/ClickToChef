@@ -3,10 +3,14 @@ package org.example.Servidor;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.example.DAO.UsuariosDAO;
+import org.example.DAO.MesasDAO;
+import org.example.DTO.EstadoMesa;
 import org.example.DTO.Usuarios;
+import org.example.DTO.Mesas;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ClienteHilo extends Thread {
     private Socket socket;
@@ -35,6 +39,7 @@ public class ClienteHilo extends Thread {
         } catch (IOException e) {
             System.err.println("[" + getName() + "] Error de red: " + e.getMessage());
         } finally {
+            Servidor.removeCliente(this);
             closeConnection();
         }
     }
@@ -59,7 +64,13 @@ public class ClienteHilo extends Thread {
                     handleLogin(peticion.getAsJsonObject("payload"));
                     break;
 
-                // En el futuro: case "GET_MESAS": handleGetMesas(); break;
+                case "GET_MESAS":
+                    handleGetMesas();
+                    break;
+
+                case "UPDATE_MESA_STATUS":
+                    handleUpdateMesaStatus(peticion.getAsJsonObject("payload"));
+                    break;
 
                 default:
                     System.out.println("[" + getName() + "] Tipo desconocido: " + tipo);
@@ -69,6 +80,67 @@ public class ClienteHilo extends Thread {
             System.err.println("[" + getName() + "] Error al parsear JSON: " + e.getMessage());
             sendError("Error interno procesando JSON");
         }
+    }
+
+    /**
+     * Actualiza el estado de una mesa y notifica a todos los clientes (broadcast)
+     */
+    private void handleUpdateMesaStatus(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("estado")) {
+            sendError("Payload de actualización incompleto");
+            return;
+        }
+
+        int id = payload.get("id").getAsInt();
+        String estadoStr = payload.get("estado").getAsString();
+        EstadoMesa nuevoEstado = EstadoMesa.valueOf(estadoStr.toUpperCase());
+
+        System.out.println("[" + getName() + "] Actualizando mesa " + id + " a " + nuevoEstado);
+
+        boolean exito = MesasDAO.actualizarEstadoMesa(id, nuevoEstado);
+
+        if (exito) {
+            // Si la base de datos se actualizó, notificamos a TODOS
+            JsonObject broadcastMsg = new JsonObject();
+            broadcastMsg.addProperty("type", "MESA_UPDATED");
+            JsonObject resPayload = new JsonObject();
+            resPayload.addProperty("id", id);
+            resPayload.addProperty("estado", estadoStr.toUpperCase());
+            broadcastMsg.add("payload", resPayload);
+
+            Servidor.broadcast(gson.toJson(broadcastMsg));
+        } else {
+            sendError("No se pudo actualizar la mesa en la base de datos");
+        }
+    }
+
+    /**
+     * Utilidad para enviar mensajes individuales al cliente
+     */
+    public void sendMessage(String json) {
+        if (writer != null) {
+            writer.println(json);
+        }
+    }
+
+    /**
+     * Obtiene la lista de mesas y la envía al cliente
+     */
+    private void handleGetMesas() {
+        System.out.println("[" + getName() + "] Obteniendo lista de mesas...");
+        
+        ArrayList<Mesas> listaMesas = MesasDAO.obtenerTodas();
+        
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "MESAS_RESPONSE");
+        
+        JsonObject resPayload = new JsonObject();
+        resPayload.add("mesas", gson.toJsonTree(listaMesas));
+        
+        respuesta.add("payload", resPayload);
+        
+        writer.println(gson.toJson(respuesta));
+        System.out.println("[" + getName() + "] Lista de mesas enviada (" + listaMesas.size() + " mesas)");
     }
 
     /**

@@ -51,6 +51,20 @@ public class MesasDAO {
         return mesas;
     }
 
+    public static boolean actualizarEstadoMesa(int id, EstadoMesa nuevoEstado) {
+        String sql = "UPDATE mesas SET estado = ? WHERE id = ?";
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+
+            statement.setString(1, convertirEstadoMesaADB(nuevoEstado));
+            statement.setInt(2, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar el estado de la mesa", e);
+        }
+    }
+
     private static String convertirEstadoMesaADB(EstadoMesa estadoMesa) {
         return estadoMesa.name().toLowerCase();
     }
