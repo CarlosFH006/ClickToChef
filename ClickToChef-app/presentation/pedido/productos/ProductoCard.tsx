@@ -11,29 +11,41 @@ interface Props {
   cantidad?: number;
 }
 
-const ProductoCard = ({ producto,cantidad }: Props) => {
-  const addItem = useOrderStore(state => state.addItem);
+const ProductoCard = ({ producto, cantidad = 0 }: Props) => {
+  const { updateQuantity } = useOrderStore();
   const primary = useThemeColor({}, 'primary');
 
   return (
-    <Pressable 
-      className="flex-row items-center justify-between px-5 py-4 border-b border-gray-50 active:bg-gray-50"
-    >
+    <View className="flex-row items-center justify-between py-4 border-b border-gray-50">
       <View className="flex-1">
         <Text className="font-titulo text-base text-gray-800">
-          {cantidad && <Text style={{ color: primary }}>{cantidad}x </Text>}
           {producto.nombre}
         </Text>
-        <Text className="font-cuerpo text-sm text-gray-500">{producto.precio.toFixed(2)}€</Text>
+        <Text className="font-cuerpo text-sm text-gray-500">
+          {(producto.precio * cantidad).toFixed(2)}€
+        </Text>
       </View>
       
-      <View 
-        className="w-10 h-10 rounded-full items-center justify-center"
-        style={{ backgroundColor: primary + '15' }}
-      >
-        <Ionicons name="add" size={24} color={primary} />
+      <View className="flex-row items-center bg-gray-50 rounded-xl p-1">
+        <Pressable 
+          onPress={() => updateQuantity(producto.id, -1)}
+          className="w-8 h-8 rounded-lg items-center justify-center bg-white shadow-sm"
+        >
+          <Ionicons name="remove" size={18} color={primary} />
+        </Pressable>
+        
+        <Text className="font-titulo text-base mx-3 min-w-[20px] text-center">
+          {cantidad}
+        </Text>
+        
+        <Pressable 
+          onPress={() => updateQuantity(producto.id, 1)}
+          className="w-8 h-8 rounded-lg items-center justify-center bg-white shadow-sm"
+        >
+          <Ionicons name="add" size={18} color={primary} />
+        </Pressable>
       </View>
-    </Pressable>
+    </View>
   );
 };
 

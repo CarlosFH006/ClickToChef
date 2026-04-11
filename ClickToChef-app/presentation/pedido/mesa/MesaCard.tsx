@@ -38,7 +38,7 @@ const MesaCard = ({ mesa, pedido=false }: Props) => {
           const success = await updateMesaStatusAction(mesa.id, 'RESERVADA');
           if (success) {
             useOrderStore.getState().setMesa(mesa.id);
-            router.push({ pathname: '/(clicktochef-app)/(stack)/pedido', params: { mesaId: mesa.id } });
+            router.push({ pathname: '/(clicktochef-app)/(stack)/productos', params: { mesaId: mesa.id } });
           }
         }
       }}
