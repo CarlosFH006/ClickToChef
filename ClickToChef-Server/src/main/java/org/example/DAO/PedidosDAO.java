@@ -53,6 +53,33 @@ public class PedidosDAO {
         return pedidos;
     }
 
+    public static ArrayList<Pedidos> obtenerPorUsuario(int usuarioId) {
+        String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE usuario_id = ?";
+        ArrayList<Pedidos> pedidos = new ArrayList<>();
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+
+            statement.setInt(1, usuarioId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    Pedidos pedido = new Pedidos(
+                            resultSet.getInt("id"),
+                            resultSet.getInt("mesa_id"),
+                            resultSet.getInt("usuario_id"),
+                            resultSet.getTimestamp("fecha_creacion"),
+                            convertirEstadoPedidoAEnum(resultSet.getString("estado"))
+                    );
+                    pedidos.add(pedido);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener los pedidos del usuario", e);
+        }
+
+        return pedidos;
+    }
+
     private static String convertirEstadoPedidoADB(EstadoPedido estadoPedido) {
         return estadoPedido.name().toLowerCase();
     }

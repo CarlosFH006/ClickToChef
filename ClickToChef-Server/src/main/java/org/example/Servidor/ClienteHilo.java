@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import org.example.DAO.UsuariosDAO;
 import org.example.DAO.MesasDAO;
 import org.example.DAO.CategoriasDAO;
+import org.example.DAO.PedidosDAO;
 import org.example.DTO.*;
 import java.io.*;
 import java.net.Socket;
@@ -76,6 +77,10 @@ public class ClienteHilo extends Thread {
 
                 case "GET_MENU":
                     handleGetMenu();
+                    break;
+                
+                case "GET_PEDIDOS_USUARIO":
+                    handleGetPedidosUsuario(peticion.getAsJsonObject("payload"));
                     break;
 
                 default:
@@ -186,6 +191,28 @@ public class ClienteHilo extends Thread {
 
         writer.println(gson.toJson(respuesta));
         System.out.println("[" + getName() + "] Menú enviado (" + payload.size() + " categorías)");
+    }
+
+    /**
+     * Obtiene los pedidos asignados a un usuario específico
+     */
+    private void handleGetPedidosUsuario(JsonObject payload) {
+        if (payload == null || !payload.has("usuarioId")) {
+            sendError("Payload de GET_PEDIDOS_USUARIO incompleto");
+            return;
+        }
+
+        int usuarioId = payload.get("usuarioId").getAsInt();
+        System.out.println("[" + getName() + "] Obteniendo pedidos para el usuario " + usuarioId + "...");
+
+        ArrayList<Pedidos> lista = PedidosDAO.obtenerPorUsuario(usuarioId);
+
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "PEDIDOS_USUARIO_RESPONSE");
+        respuesta.add("payload", gson.toJsonTree(lista));
+
+        writer.println(gson.toJson(respuesta));
+        System.out.println("[" + getName() + "] Lista de pedidos enviada para el usuario " + usuarioId + " (" + lista.size() + " pedidos)");
     }
 
     /**

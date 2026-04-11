@@ -2,6 +2,7 @@ import { Alert } from 'react-native';
 import TcpSocket from 'react-native-tcp-socket';
 import { useMesaStore } from '../../store/mesa-store';
 import { useMenuStore } from '../../store/menu-store';
+import { usePedidosStore } from '../../store/pedidos-store';
 
 // Interfaces para definir la estructura de los mensajes
 interface ServerMessage {
@@ -98,11 +99,18 @@ class SocketClient {
         }
         break;
 
-      case 'MENU_RESPONSE':
-        if (data.payload) {
-          useMenuStore.getState().setMenu(data.payload);
-        }
-        break;
+        case 'MENU_RESPONSE':
+          if (data.payload) {
+            useMenuStore.getState().setMenu(data.payload);
+          }
+          break;
+  
+        case 'PEDIDOS_USUARIO_RESPONSE':
+          if (data.payload) {
+            console.log('[Socket] Pedidos recibidos:', data.payload.length);
+            usePedidosStore.getState().setPedidos(data.payload);
+          }
+          break;
 
       default:
         console.warn('[Socket] Tipo de mensaje no manejado:', data.type);
