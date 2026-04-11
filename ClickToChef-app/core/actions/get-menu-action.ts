@@ -1,14 +1,14 @@
 import socketClient from "../socket/SocketClient";
 
-export const getMesasAction = async () => {
+export const getMenuAction = async () => {
   try {
     socketClient.send({
-      type: 'GET_MESAS',
+      type: 'GET_MENU',
       payload: {}
     });
     return true;
   } catch (error) {
-    console.error("Error en getMesasAction:", error);
+    console.error("Error en getMenuAction:", error);
     return false;
   }
 };

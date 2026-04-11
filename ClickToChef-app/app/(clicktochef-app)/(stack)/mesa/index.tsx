@@ -3,6 +3,7 @@ import React, { useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useThemeColor } from '../../../../presentation/theme/hooks/use-theme-color'
 import { useMesaStore } from '../../../../store/mesa-store'
+import { useOrderStore } from '../../../../store/pedido-store'
 import { getMesasAction } from '../../../../core/actions/get-mesas-action'
 import MesaFList from '../../../../presentation/pedido/mesa/MesaFList'
 
@@ -11,6 +12,7 @@ const MesaIndex = () => {
   const { mesas, isLoading } = useMesaStore();
 
   useEffect(() => {
+    useOrderStore.getState().clearOrder();
     getMesasAction();
   }, []);
 

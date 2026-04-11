@@ -1,6 +1,7 @@
 import { Alert } from 'react-native';
 import TcpSocket from 'react-native-tcp-socket';
 import { useMesaStore } from '../../store/mesa-store';
+import { useMenuStore } from '../../store/menu-store';
 
 // Interfaces para definir la estructura de los mensajes
 interface ServerMessage {
@@ -27,17 +28,17 @@ class SocketClient {
     if (this.client) return;
 
     console.log(`[Socket] Conectando a ${this.host}:${this.port}...`);
-    
-    this.client = TcpSocket.createConnection({ 
-      port: this.port, 
-      host: this.host 
+
+    this.client = TcpSocket.createConnection({
+      port: this.port,
+      host: this.host
     }, () => {
       console.log(`[Socket] Conectado a ${this.host}:${this.port}`);
     });
 
     this.client.on('data', (data: Buffer | string) => {
       const messages = data.toString().split('\n').filter(Boolean);
-      
+
       messages.forEach(msg => {
         try {
           const parsedData: ServerMessage = JSON.parse(msg);
@@ -97,6 +98,12 @@ class SocketClient {
         }
         break;
 
+      case 'MENU_RESPONSE':
+        if (data.payload) {
+          useMenuStore.getState().setMenu(data.payload);
+        }
+        break;
+
       default:
         console.warn('[Socket] Tipo de mensaje no manejado:', data.type);
     }
@@ -106,7 +113,7 @@ class SocketClient {
     if (!this.client) {
       console.warn('[Socket] No conectado. Intentando reconectar...');
       this.connect();
-      
+
       setTimeout(() => {
         if (this.client) {
           this.client.write(JSON.stringify(data) + '\n');

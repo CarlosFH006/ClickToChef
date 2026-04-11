@@ -1,5 +1,6 @@
 package org.example.DAO;
 
+import org.example.DTO.CategoriaPlato;
 import org.example.DTO.Categorias;
 
 import java.sql.Connection;
@@ -7,7 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class CategoriasDAO {
 
@@ -45,4 +45,47 @@ public class CategoriasDAO {
 
         return categorias;
     }
+
+    public static ArrayList<CategoriaPlato> CategoriasPlatos() {
+        String sql = """
+                SELECT
+                    c.id AS categoria_id,
+                    c.nombre AS categoria_nombre,
+                    p.id AS producto_id,
+                    p.nombre AS producto_nombre,
+                    p.precio
+                FROM categorias c
+                JOIN productos p ON c.id = p.categoria_id
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM recetas r
+                    JOIN ingredientes i ON r.ingrediente_id = i.id
+                    WHERE r.producto_id = p.id
+                    AND i.stock_actual < r.cantidad_necesaria
+                )
+                ORDER BY c.nombre, p.nombre
+                """;
+        ArrayList<CategoriaPlato> categoriasPlatos = new ArrayList<>();
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                CategoriaPlato categoriaPlato = new CategoriaPlato(
+                        resultSet.getInt("categoria_id"),
+                        resultSet.getString("categoria_nombre"),
+                        resultSet.getInt("producto_id"),
+                        resultSet.getString("producto_nombre"),
+                        resultSet.getDouble("precio")
+                );
+                categoriasPlatos.add(categoriaPlato);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener las categorias con platos disponibles", e);
+        }
+
+        return categoriasPlatos;
+    }
+
 }

@@ -1,16 +1,17 @@
 package org.example.Servidor;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.example.DAO.UsuariosDAO;
 import org.example.DAO.MesasDAO;
-import org.example.DTO.EstadoMesa;
-import org.example.DTO.Usuarios;
-import org.example.DTO.Mesas;
-
+import org.example.DAO.CategoriasDAO;
+import org.example.DTO.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class ClienteHilo extends Thread {
     private Socket socket;
@@ -46,7 +47,8 @@ public class ClienteHilo extends Thread {
 
     /**
      * Orquestador de peticiones.
-     * Lee el "type" del JSON enviado por el móvil y llama al método correspondiente.
+     * Lee el "type" del JSON enviado por el móvil y llama al método
+     * correspondiente.
      */
     private void processRequest(String json) {
         try {
@@ -70,6 +72,10 @@ public class ClienteHilo extends Thread {
 
                 case "UPDATE_MESA_STATUS":
                     handleUpdateMesaStatus(peticion.getAsJsonObject("payload"));
+                    break;
+
+                case "GET_MENU":
+                    handleGetMenu();
                     break;
 
                 default:
@@ -128,19 +134,58 @@ public class ClienteHilo extends Thread {
      */
     private void handleGetMesas() {
         System.out.println("[" + getName() + "] Obteniendo lista de mesas...");
-        
+
         ArrayList<Mesas> listaMesas = MesasDAO.obtenerTodas();
-        
+
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "MESAS_RESPONSE");
-        
+
         JsonObject resPayload = new JsonObject();
         resPayload.add("mesas", gson.toJsonTree(listaMesas));
-        
+
         respuesta.add("payload", resPayload);
-        
+
         writer.println(gson.toJson(respuesta));
         System.out.println("[" + getName() + "] Lista de mesas enviada (" + listaMesas.size() + " mesas)");
+    }
+
+    /**
+     * Obtiene el menú (categorías y productos) y lo envía en formato jerárquico
+     */
+    private void handleGetMenu() {
+        System.out.println("[" + getName() + "] Obteniendo menú...");
+
+        ArrayList<CategoriaPlato> lista = CategoriasDAO.CategoriasPlatos();
+        Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
+
+        for (CategoriaPlato cp : lista) {
+            if (!categoriasMap.containsKey(cp.getCategoriaId())) {
+                JsonObject catJson = new JsonObject();
+                catJson.addProperty("id", cp.getCategoriaId());
+                catJson.addProperty("nombre", cp.getCategoriaNombre());
+                catJson.add("productos", new JsonArray());
+                categoriasMap.put(cp.getCategoriaId(), catJson);
+            }
+
+            JsonObject prodJson = new JsonObject();
+            prodJson.addProperty("id", cp.getProductoId());
+            prodJson.addProperty("nombre", cp.getProductoNombre());
+            prodJson.addProperty("precio", cp.getPrecio());
+
+            categoriasMap.get(cp.getCategoriaId()).getAsJsonArray("productos").add(prodJson);
+        }
+
+        JsonArray payload = new JsonArray();
+        for (JsonObject cat : categoriasMap.values()) {
+            payload.add(cat);
+        }
+
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "MENU_RESPONSE");
+        respuesta.add("payload", payload);
+
+        writer.println(gson.toJson(respuesta));
+        System.out.println("[" + getName() + "] Menú enviado (" + payload.size() + " categorías)");
     }
 
     /**

@@ -3,6 +3,8 @@ import { View, Text, Pressable } from 'react-native';
 import { Mesa, MesaEstado } from '../../../type/mesa-interface';
 import { updateMesaStatusAction } from '../../../core/actions/update-mesa-status-action';
 import { router } from 'expo-router';
+import { useOrderStore } from '../../../store/pedido-store';
+
 
 interface Props {
   mesa: Mesa;
@@ -35,6 +37,7 @@ const MesaCard = ({ mesa, pedido=false }: Props) => {
         if (pedido && mesa.estado === 'LIBRE') {
           const success = await updateMesaStatusAction(mesa.id, 'RESERVADA');
           if (success) {
+            useOrderStore.getState().setMesa(mesa.id);
             router.push({ pathname: '/(clicktochef-app)/(stack)/pedido', params: { mesaId: mesa.id } });
           }
         }
