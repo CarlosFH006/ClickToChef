@@ -3,6 +3,7 @@ package org.example.Servidor;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.example.DAO.ProductosDAO;
 import org.example.DAO.UsuariosDAO;
 import org.example.DAO.MesasDAO;
 import org.example.DAO.CategoriasDAO;
@@ -46,6 +47,70 @@ public class ClienteHilo extends Thread {
         }
     }
 
+    private void handleReservarProducto(JsonObject payload) {
+        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
+            sendError("Payload de RESERVAR_PRODUCTO incompleto");
+            return;
+        }
+
+        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        System.out.println("[" + getName() + "] Reservando producto " + productoId + "...");
+
+        boolean success = ProductosDAO.reservarProducto(productoId);
+        sendReservaResponse("RESERVAR_PRODUCTO_RESPONSE", productoId, 1, success);
+    }
+
+    private void handleLiberarReserva(JsonObject payload) {
+        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
+            sendError("Payload de LIBERAR_RESERVA incompleto");
+            return;
+        }
+
+        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
+        System.out.println("[" + getName() + "] Liberando reserva de producto " + productoId + " (cantidad " + cantidad + ")...");
+
+        try {
+            ProductosDAO.liberarReserva(productoId, cantidad);
+            sendReservaResponse("LIBERAR_RESERVA_RESPONSE", productoId, cantidad, true);
+        } catch (Exception e) {
+            System.err.println("[" + getName() + "] Error al liberar reserva: " + e.getMessage());
+            sendReservaResponse("LIBERAR_RESERVA_RESPONSE", productoId, cantidad, false);
+        }
+    }
+
+    private void handleFinalizarReserva(JsonObject payload) {
+        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
+            sendError("Payload de FINALIZAR_RESERVA incompleto");
+            return;
+        }
+
+        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
+        System.out.println("[" + getName() + "] Finalizando reserva de producto " + productoId + " (cantidad " + cantidad + ")...");
+
+        try {
+            ProductosDAO.finalizarReserva(productoId, cantidad);
+            sendReservaResponse("FINALIZAR_RESERVA_RESPONSE", productoId, cantidad, true);
+        } catch (Exception e) {
+            System.err.println("[" + getName() + "] Error al finalizar reserva: " + e.getMessage());
+            sendReservaResponse("FINALIZAR_RESERVA_RESPONSE", productoId, cantidad, false);
+        }
+    }
+
+    private void sendReservaResponse(String type, int productoId, int cantidad, boolean success) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", type);
+
+        JsonObject resPayload = new JsonObject();
+        resPayload.addProperty("success", success);
+        resPayload.addProperty("productoId", productoId);
+        resPayload.addProperty("cantidad", cantidad);
+
+        respuesta.add("payload", resPayload);
+        writer.println(gson.toJson(respuesta));
+    }
+
     /**
      * Orquestador de peticiones.
      * Lee el "type" del JSON enviado por el móvil y llama al método
@@ -81,6 +146,18 @@ public class ClienteHilo extends Thread {
                 
                 case "GET_PEDIDOS_USUARIO":
                     handleGetPedidosUsuario(peticion.getAsJsonObject("payload"));
+                    break;
+
+                case "RESERVAR_PRODUCTO":
+                    handleReservarProducto(peticion.getAsJsonObject("payload"));
+                    break;
+
+                case "LIBERAR_RESERVA":
+                    handleLiberarReserva(peticion.getAsJsonObject("payload"));
+                    break;
+
+                case "FINALIZAR_RESERVA":
+                    handleFinalizarReserva(peticion.getAsJsonObject("payload"));
                     break;
 
                 default:
