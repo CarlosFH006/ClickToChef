@@ -98,7 +98,7 @@ public class ProductosDAO {
     }
     public static void liberarReserva(int productoId, int cantidad) {
         String sqlReceta = "SELECT ingrediente_id, cantidad_necesaria FROM recetas WHERE producto_id = ?";
-        String sqlUpdate = "UPDATE ingredientes SET stock_reservado = stock_reservado - ? WHERE id = ?";
+        String sqlUpdate = "UPDATE ingredientes SET stock_reservado = GREATEST(0, stock_reservado - ?) WHERE id = ?";
 
         try (Connection conn = ConexionDB.getConexion()) {
             conn.setAutoCommit(false);
@@ -122,10 +122,10 @@ public class ProductosDAO {
     }
     public static void finalizarReserva(int productoId, int cantidad) {
         String sqlReceta = "SELECT ingrediente_id, cantidad_necesaria FROM recetas WHERE producto_id = ?";
-        // Restamos del stock real y limpiamos la reserva simultáneamente
+        // Restamos del stock real y limpiamos la reserva simultáneamente (sin permitir negativos)
         String sqlUpdate = "UPDATE ingredientes SET " +
-                "stock_actual = stock_actual - ?, " +
-                "stock_reservado = stock_reservado - ? " +
+                "stock_actual = GREATEST(0, stock_actual - ?), " +
+                "stock_reservado = GREATEST(0, stock_reservado - ?) " +
                 "WHERE id = ?";
 
         try (Connection conn = ConexionDB.getConexion()) {

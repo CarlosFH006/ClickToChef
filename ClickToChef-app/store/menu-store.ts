@@ -4,7 +4,7 @@ import { Categoria } from '../type/menu-inetrface';
 interface MenuState {
   categorias: Categoria[];
   isLoading: boolean;
-  
+
   // Acciones
   setMenu: (categorias: Categoria[]) => void;
   setLoading: (loading: boolean) => void;

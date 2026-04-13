@@ -3,6 +3,7 @@ import TcpSocket from 'react-native-tcp-socket';
 import { useMesaStore } from '../../store/mesa-store';
 import { useMenuStore } from '../../store/menu-store';
 import { usePedidosStore } from '../../store/pedidos-store';
+import { useOrderStore } from '../../store/pedido-store';
 
 // Interfaces para definir la estructura de los mensajes
 interface ServerMessage {
@@ -18,8 +19,8 @@ interface ClientMessage {
 
 class SocketClient {
   private client: TcpSocket.Socket | null = null;
-  private readonly host: string = '192.168.3.54';
-  private readonly port: number = 5000;
+  private readonly host: string = process.env.EXPO_PUBLIC_SERVER_HOST || 'localhost';
+  private readonly port: number = Number(process.env.EXPO_PUBLIC_SERVER_PORT) || 5000;
 
   constructor() {
     this.client = null;
@@ -100,6 +101,7 @@ class SocketClient {
         break;
 
         case 'MENU_RESPONSE':
+        case 'MENU_UPDATED':
           if (data.payload) {
             useMenuStore.getState().setMenu(data.payload);
           }
@@ -111,6 +113,22 @@ class SocketClient {
             usePedidosStore.getState().setPedidos(data.payload);
           }
           break;
+
+      case 'RESERVAR_PRODUCTO_RESPONSE':
+      case 'LIBERAR_RESERVA_RESPONSE':
+      case 'FINALIZAR_RESERVA_RESPONSE':
+        if (data.payload) {
+          const { success, productoId, cantidad } = data.payload;
+          console.log(`[Socket] ${data.type}: success=${success}, productoId=${productoId}, cantidad=${cantidad}`);
+          
+          if (!success && data.type === 'RESERVAR_PRODUCTO_RESPONSE') {
+            console.warn(`[Socket] Reserva fallida para producto ${productoId}. Marcando como no disponible.`);
+            // Rollback del pedido local para asegurar consistencia
+            useOrderStore.getState().updateQuantity(productoId, -1);
+            Alert.alert("Producto no disponible", "No se ha podido reservar el producto porque no hay existencias.");
+          }
+        }
+        break;
 
       default:
         console.warn('[Socket] Tipo de mensaje no manejado:', data.type);

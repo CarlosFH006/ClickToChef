@@ -58,6 +58,10 @@ public class ClienteHilo extends Thread {
 
         boolean success = ProductosDAO.reservarProducto(productoId);
         sendReservaResponse("RESERVAR_PRODUCTO_RESPONSE", productoId, 1, success);
+
+        if (success) {
+            broadcastCatalogo();
+        }
     }
 
     private void handleLiberarReserva(JsonObject payload) {
@@ -73,6 +77,7 @@ public class ClienteHilo extends Thread {
         try {
             ProductosDAO.liberarReserva(productoId, cantidad);
             sendReservaResponse("LIBERAR_RESERVA_RESPONSE", productoId, cantidad, true);
+            broadcastCatalogo();
         } catch (Exception e) {
             System.err.println("[" + getName() + "] Error al liberar reserva: " + e.getMessage());
             sendReservaResponse("LIBERAR_RESERVA_RESPONSE", productoId, cantidad, false);
@@ -92,6 +97,7 @@ public class ClienteHilo extends Thread {
         try {
             ProductosDAO.finalizarReserva(productoId, cantidad);
             sendReservaResponse("FINALIZAR_RESERVA_RESPONSE", productoId, cantidad, true);
+            broadcastCatalogo();
         } catch (Exception e) {
             System.err.println("[" + getName() + "] Error al finalizar reserva: " + e.getMessage());
             sendReservaResponse("FINALIZAR_RESERVA_RESPONSE", productoId, cantidad, false);
@@ -200,6 +206,44 @@ public class ClienteHilo extends Thread {
         } else {
             sendError("No se pudo actualizar la mesa en la base de datos");
         }
+    }
+
+    /**
+     * Envía el catálogo actualizado a todos los clientes (broadcast)
+     */
+    private void broadcastCatalogo() {
+        ArrayList<CategoriaPlato> lista = CategoriasDAO.categoriasplatos();
+        Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
+
+        for (CategoriaPlato cp : lista) {
+            if (!categoriasMap.containsKey(cp.getCategoriaId())) {
+                JsonObject catJson = new JsonObject();
+                catJson.addProperty("id", cp.getCategoriaId());
+                catJson.addProperty("nombre", cp.getCategoriaNombre());
+                catJson.add("productos", new JsonArray());
+                categoriasMap.put(cp.getCategoriaId(), catJson);
+            }
+
+            JsonObject prodJson = new JsonObject();
+            prodJson.addProperty("id", cp.getProductoId());
+            prodJson.addProperty("nombre", cp.getProductoNombre());
+            prodJson.addProperty("precio", cp.getPrecio());
+            prodJson.addProperty("disponible", cp.isDisponible());
+
+            categoriasMap.get(cp.getCategoriaId()).getAsJsonArray("productos").add(prodJson);
+        }
+
+        JsonArray payload = new JsonArray();
+        for (JsonObject cat : categoriasMap.values()) {
+            payload.add(cat);
+        }
+
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "MENU_UPDATED");
+        respuesta.add("payload", payload);
+
+        Servidor.broadcast(gson.toJson(respuesta));
+        System.out.println("[" + getName() + "] Catálogo actualizado y enviado a todos los clientes (" + payload.size() + " categorías)");
     }
 
     /**

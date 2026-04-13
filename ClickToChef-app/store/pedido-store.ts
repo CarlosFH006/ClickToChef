@@ -44,11 +44,13 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     items: state.items.filter(item => item.id !== id)
   })),
 
-  updateQuantity: (id, delta) => set((state) => ({
-    items: state.items.map(item => 
-      item.id === id ? { ...item, cantidad: Math.max(1, item.cantidad + delta) } : item
-    )
-  })),
+  updateQuantity: (id, delta) => set((state) => {
+    const newItems = state.items.map(item => 
+      item.id === id ? { ...item, cantidad: item.cantidad + delta } : item
+    ).filter(item => item.cantidad > 0);
+    
+    return { items: newItems };
+  }),
 
   clearOrder: () => set({ mesaId: null, items: [] }),
 

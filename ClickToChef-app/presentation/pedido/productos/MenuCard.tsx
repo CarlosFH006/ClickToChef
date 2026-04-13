@@ -5,6 +5,8 @@ import { useOrderStore } from '../../../store/pedido-store';
 import { useThemeColor } from '../../theme/hooks/use-theme-color';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { reservarProductoAction } from '../../../core/actions/reservar-producto-action';
+import { liberarReservaAction } from '../../../core/actions/liberar-reserva-action';
 
 interface Props {
   producto: Producto;
@@ -19,24 +21,28 @@ const MenuCard = ({ producto }: Props) => {
   const cantidad = itemInOrder?.cantidad || 0;
 
   const handleAdd = () => {
+    if (!producto.disponible) return;
     if (cantidad === 0) {
       addItem(producto);
     } else {
       updateQuantity(producto.id, 1);
     }
+    reservarProductoAction(producto.id);
   };
 
   const handleRemove = () => {
     if (cantidad > 0) {
       updateQuantity(producto.id, -1);
+      liberarReservaAction(producto.id, 1);
     }
   };
 
   return (
     <View className="border-b border-gray-50">
       <Pressable 
-        className="flex-row items-center justify-between px-5 py-4 active:bg-gray-50"
+        className={`flex-row items-center justify-between px-5 py-4 ${producto.disponible ? 'active:bg-gray-50' : 'opacity-60'}`}
         onPress={handleAdd}
+        disabled={!producto.disponible}
       >
         <View className="flex-1">
           <Text className="font-titulo text-base text-gray-800">
@@ -52,9 +58,9 @@ const MenuCard = ({ producto }: Props) => {
         {cantidad === 0 ? (
           <View 
             className="w-10 h-10 rounded-full items-center justify-center"
-            style={{ backgroundColor: primary + '15' }}
+            style={{ backgroundColor: producto.disponible ? primary + '15' : '#f3f4f6' }}
           >
-            <Ionicons name="add" size={24} color={primary} />
+            <Ionicons name="add" size={24} color={producto.disponible ? primary : '#9ca3af'} />
           </View>
         ) : (
           <View className="flex-row items-center bg-gray-100 rounded-full p-1">
@@ -71,9 +77,10 @@ const MenuCard = ({ producto }: Props) => {
             
             <Pressable 
               onPress={handleAdd}
-              className="w-8 h-8 rounded-full items-center justify-center bg-white shadow-sm"
+              disabled={!producto.disponible}
+              className={`w-8 h-8 rounded-full items-center justify-center bg-white shadow-sm ${!producto.disponible ? 'opacity-40' : ''}`}
             >
-              <Ionicons name="add" size={20} color={primary} />
+              <Ionicons name="add" size={20} color={producto.disponible ? primary : '#9ca3af'} />
             </Pressable>
           </View>
         )}

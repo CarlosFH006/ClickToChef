@@ -9,6 +9,7 @@ import CategoriaFList from '../../../../presentation/pedido/productos/CategoriaF
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { useOrderStore } from '../../../../store/pedido-store'
 import { updateMesaStatusAction } from '../../../../core/actions/update-mesa-status-action'
+import { liberarReservaAction } from '../../../../core/actions/liberar-reserva-action'
 
 const ProductosIndex = () => {
   const { categorias, isLoading } = useMenuStore();
@@ -18,13 +19,19 @@ const ProductosIndex = () => {
   const { mesaId } = useLocalSearchParams();
   const navigation = useNavigation();
 
- useEffect(() => {
+  useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
       // Si volvimos atrás (cancelando el pedido con la flecha o gesto), liberamos la mesa
       const actionType = e.data.action.type;
       console.log('Navegación detectada al salir:', actionType);
 
       if ((actionType === 'GO_BACK' || actionType === 'POP') && mesaId) {
+        // Liberamos todos los productos reservados antes de salir
+        const currentItems = useOrderStore.getState().items;
+        currentItems.forEach(item => {
+          liberarReservaAction(item.id, item.cantidad);
+        });
+
         updateMesaStatusAction(Number(mesaId), 'LIBRE');
         useOrderStore.getState().clearOrder();
       }
