@@ -1,25 +1,18 @@
 package org.example.DTO;
 
-import java.math.BigDecimal;
-
 public class Ingredientes {
     private int id;
     private String nombre;
     private double stockActual;
+    private double stockReservado;
     private String unidadMedida;
     private int odooProductId;
 
-    public Ingredientes(int id, String nombre, double stockActual, String unidadMedida, int odooProductId) {
+    public Ingredientes(int id, String nombre, double stockActual, double stockReservado, String unidadMedida, int odooProductId) {
         this.id = id;
         this.nombre = nombre;
         this.stockActual = stockActual;
-        this.unidadMedida = unidadMedida;
-        this.odooProductId = odooProductId;
-    }
-
-    public Ingredientes(String nombre, double stockActual, String unidadMedida, int odooProductId) {
-        this.nombre = nombre;
-        this.stockActual = stockActual;
+        this.stockReservado = stockReservado;
         this.unidadMedida = unidadMedida;
         this.odooProductId = odooProductId;
     }
@@ -48,6 +41,14 @@ public class Ingredientes {
         this.stockActual = stockActual;
     }
 
+    public double getStockReservado() {
+        return stockReservado;
+    }
+
+    public void setStockReservado(double stockReservado) {
+        this.stockReservado = stockReservado;
+    }
+
     public String getUnidadMedida() {
         return unidadMedida;
     }
@@ -70,6 +71,7 @@ public class Ingredientes {
                 "id=" + id +
                 ", nombre='" + nombre + '\'' +
                 ", stockActual=" + stockActual +
+                ", stockReservado=" + stockReservado +
                 ", unidadMedida='" + unidadMedida + '\'' +
                 ", odooProductId=" + odooProductId +
                 '}';

@@ -11,15 +11,16 @@ import java.util.ArrayList;
 public class IngredientesDAO {
 
     public static boolean insertarIngrediente(Ingredientes ingrediente) {
-        String sql = "INSERT INTO ingredientes (nombre, stock_actual, unidad_medida, odoo_product_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO ingredientes (nombre, stock_actual, stock_reservado, unidad_medida, odoo_product_id) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
              PreparedStatement statement = conexion.prepareStatement(sql)) {
 
             statement.setString(1, ingrediente.getNombre());
             statement.setDouble(2, ingrediente.getStockActual());
-            statement.setString(3, ingrediente.getUnidadMedida());
-            statement.setInt(4, ingrediente.getOdooProductId());
+            statement.setDouble(3, ingrediente.getStockReservado());
+            statement.setString(4, ingrediente.getUnidadMedida());
+            statement.setInt(5, ingrediente.getOdooProductId());
 
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -28,7 +29,7 @@ public class IngredientesDAO {
     }
 
     public static ArrayList<Ingredientes> obtenerTodos() {
-        String sql = "SELECT id, nombre, stock_actual, unidad_medida, odoo_product_id FROM ingredientes";
+        String sql = "SELECT id, nombre, stock_actual, stock_reservado, unidad_medida, odoo_product_id FROM ingredientes";
         ArrayList<Ingredientes> ingredientes = new ArrayList<>();
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -40,6 +41,7 @@ public class IngredientesDAO {
                         resultSet.getInt("id"),
                         resultSet.getString("nombre"),
                         resultSet.getDouble("stock_actual"),
+                        resultSet.getDouble("stock_reservado"),
                         resultSet.getString("unidad_medida"),
                         (Integer) resultSet.getObject("odoo_product_id")
                 );

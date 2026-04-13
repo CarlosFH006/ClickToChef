@@ -56,18 +56,18 @@ public class CategoriasDAO {
                     p.nombre AS producto_nombre,
                     p.precio,
                     CASE
-                        WHEN NOT EXISTS (
-                            SELECT 1
+                        WHEN EXISTS (
+                            SELECT 1\s
                             FROM recetas r
                             JOIN ingredientes i ON r.ingrediente_id = i.id
-                            WHERE r.producto_id = p.id
-                            AND i.stock_actual < r.cantidad_necesaria
-                        ) THEN TRUE
-                        ELSE FALSE
+                            WHERE r.producto_id = p.id\s
+                            AND (i.stock_actual - i.stock_reservado) < r.cantidad_necesaria
+                        ) THEN FALSE
+                        ELSE TRUE
                     END AS disponible
-                FROM categorias c
-                JOIN productos p ON c.id = p.categoria_id
-                ORDER BY c.nombre, p.nombre
+                    FROM categorias c
+                    JOIN productos p ON c.id = p.categoria_id
+                    ORDER BY c.nombre, p.nombre;
                 """;
         ArrayList<CategoriaPlato> categoriasPlatos = new ArrayList<>();
 
