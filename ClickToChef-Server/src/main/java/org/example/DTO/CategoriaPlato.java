@@ -6,13 +6,15 @@ public class CategoriaPlato {
     private int productoId;
     private String productoNombre;
     private double precio;
+    private boolean disponible;
 
-    public CategoriaPlato(int categoriaId, String categoriaNombre, int productoId, String productoNombre, double precio) {
+    public CategoriaPlato(int categoriaId, String categoriaNombre, int productoId, String productoNombre, double precio, boolean disponible) {
         this.categoriaId = categoriaId;
         this.categoriaNombre = categoriaNombre;
         this.productoId = productoId;
         this.productoNombre = productoNombre;
         this.precio = precio;
+        this.disponible = disponible;
     }
 
     public int getCategoriaId() {
@@ -53,5 +55,13 @@ public class CategoriaPlato {
 
     public void setPrecio(double precio) {
         this.precio = precio;
+    }
+
+    public boolean isDisponible() {
+        return disponible;
+    }
+
+    public void setDisponible(boolean disponible) {
+        this.disponible = disponible;
     }
 }

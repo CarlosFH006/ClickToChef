@@ -43,6 +43,10 @@ const MenuCard = ({ producto }: Props) => {
             {producto.nombre}
           </Text>
           <Text className="font-cuerpo text-sm text-gray-500">{producto.precio.toFixed(2)}€</Text>
+          {producto.disponible ?
+            <Text className="font-cuerpo text-sm text-green-500">Disponible</Text>
+            : <Text className="font-cuerpo text-sm text-red-500">No disponible</Text>
+          }
         </View>
         
         {cantidad === 0 ? (

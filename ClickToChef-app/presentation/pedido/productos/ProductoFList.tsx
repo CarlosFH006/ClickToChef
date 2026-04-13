@@ -4,13 +4,15 @@ import { Producto } from '../../../type/menu-inetrface';
 import { ProductoPedido } from '../../../type/pedido-interface';
 import ProductoCard from './ProductoCard';
 
+type ProductoListItem = Producto | ProductoPedido;
+
 interface Props {
-  productos: Producto[] | ProductoPedido[];
+  productos: ProductoListItem[];
 }
 
 const ProductoFList = ({ productos }: Props) => {
   return (
-    <FlatList
+    <FlatList<ProductoListItem>
       data={productos}
       keyExtractor={(item) => item.id.toString()}
       contentContainerStyle={{ paddingBottom: 20 }}
@@ -18,7 +20,7 @@ const ProductoFList = ({ productos }: Props) => {
       renderItem={({ item }) => (
         <ProductoCard 
           producto={item} 
-          cantidad={(item as ProductoPedido).cantidad} 
+          cantidad={'cantidad' in item ? item.cantidad : 0}
         />
       )}
     />

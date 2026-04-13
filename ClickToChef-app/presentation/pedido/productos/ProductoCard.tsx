@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Producto } from '../../../type/menu-inetrface';
+import { ProductoPedido } from '../../../type/pedido-interface';
 import { useOrderStore } from '../../../store/pedido-store';
 import { useThemeColor } from '../../theme/hooks/use-theme-color';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 
 interface Props {
-  producto: Producto;
+  producto: Producto | ProductoPedido;
   cantidad?: number;
 }
 

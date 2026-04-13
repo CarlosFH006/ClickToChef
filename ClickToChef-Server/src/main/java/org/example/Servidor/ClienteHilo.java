@@ -160,7 +160,7 @@ public class ClienteHilo extends Thread {
     private void handleGetMenu() {
         System.out.println("[" + getName() + "] Obteniendo menú...");
 
-        ArrayList<CategoriaPlato> lista = CategoriasDAO.CategoriasPlatos();
+        ArrayList<CategoriaPlato> lista = CategoriasDAO.categoriasplatos();
         Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
 
         for (CategoriaPlato cp : lista) {
@@ -176,6 +176,7 @@ public class ClienteHilo extends Thread {
             prodJson.addProperty("id", cp.getProductoId());
             prodJson.addProperty("nombre", cp.getProductoNombre());
             prodJson.addProperty("precio", cp.getPrecio());
+            prodJson.addProperty("disponible", cp.isDisponible());
 
             categoriasMap.get(cp.getCategoriaId()).getAsJsonArray("productos").add(prodJson);
         }
