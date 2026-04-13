@@ -108,13 +108,28 @@ class SocketClient {
           break;
   
         case 'PEDIDOS_USUARIO_RESPONSE':
+        case 'PEDIDOS_UPDATED':
           if (data.payload) {
-            console.log('[Socket] Pedidos recibidos:', data.payload.length);
-            usePedidosStore.getState().setPedidos(data.payload);
+            const { user } = useAuthStore.getState();
+            if (user) {
+              const filtered = (data.payload as any[]).filter(p => p.usuarioId === user.id);
+              console.log(`[Socket] ${data.type} recibidos:`, filtered.length);
+              usePedidosStore.getState().setPedidos(filtered);
+            }
           }
           break;
 
-      case 'RESERVAR_PRODUCTO_RESPONSE':
+        case 'CREAR_PEDIDO_RESPONSE':
+          const { success: orderSuccess, pedidoId } = data.payload;
+          if (orderSuccess) {
+            console.log(`[Socket] Pedido ${pedidoId} creado con éxito.`);
+            Alert.alert("Pedido Confirmado", `El pedido #${pedidoId} ha sido enviado a cocina.`);
+          } else {
+            Alert.alert("Error", "No se pudo crear el pedido en el servidor.");
+          }
+          break;
+
+        case 'RESERVAR_PRODUCTO_RESPONSE':
       case 'LIBERAR_RESERVA_RESPONSE':
       case 'FINALIZAR_RESERVA_RESPONSE':
         if (data.payload) {

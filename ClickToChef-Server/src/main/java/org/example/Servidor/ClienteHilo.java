@@ -8,6 +8,7 @@ import org.example.DAO.UsuariosDAO;
 import org.example.DAO.MesasDAO;
 import org.example.DAO.CategoriasDAO;
 import org.example.DAO.PedidosDAO;
+import org.example.DAO.DetallesPedidoDAO;
 import org.example.DTO.*;
 import java.io.*;
 import java.net.Socket;
@@ -166,6 +167,10 @@ public class ClienteHilo extends Thread {
                     handleFinalizarReserva(peticion.getAsJsonObject("payload"));
                     break;
 
+                case "CREAR_PEDIDO":
+                    handleCrearPedido(peticion.getAsJsonObject("payload"));
+                    break;
+
                 default:
                     System.out.println("[" + getName() + "] Tipo desconocido: " + tipo);
                     sendError("Acción no reconocida en el servidor");
@@ -247,6 +252,20 @@ public class ClienteHilo extends Thread {
     }
 
     /**
+     * Envía la lista completa de pedidos a todos los clientes (broadcast)
+     */
+    private void broadcastPedidos() {
+        ArrayList<Pedidos> lista = PedidosDAO.obtenerTodos();
+        
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "PEDIDOS_UPDATED");
+        respuesta.add("payload", gson.toJsonTree(lista));
+
+        Servidor.broadcast(gson.toJson(respuesta));
+        System.out.println("[" + getName() + "] Lista de pedidos actualizada y broadcast enviado (" + lista.size() + " pedidos)");
+    }
+
+    /**
      * Utilidad para enviar mensajes individuales al cliente
      */
     public void sendMessage(String json) {
@@ -313,6 +332,73 @@ public class ClienteHilo extends Thread {
 
         writer.println(gson.toJson(respuesta));
         System.out.println("[" + getName() + "] Menú enviado (" + payload.size() + " categorías)");
+    }
+
+    /**
+     * Crea un pedido y sus detalles en la base de datos
+     */
+    private void handleCrearPedido(JsonObject payload) {
+        if (payload == null || !payload.has("mesaId") || !payload.has("usuarioId") || !payload.has("items")) {
+            sendError("Payload de CREAR_PEDIDO incompleto");
+            return;
+        }
+
+        int mesaId = payload.get("mesaId").getAsInt();
+        int usuarioId = payload.get("usuarioId").getAsInt();
+        JsonArray items = payload.getAsJsonArray("items");
+
+        System.out.println("[" + getName() + "] Creando pedido para mesa " + mesaId + " por usuario " + usuarioId + "...");
+
+        try {
+            // 1. Crear la cabecera del pedido
+            Pedidos nuevoPedido = new Pedidos(mesaId, usuarioId, new java.sql.Timestamp(System.currentTimeMillis()), EstadoPedido.ABIERTA);
+            int pedidoId = PedidosDAO.insertarPedido(nuevoPedido);
+
+            if (pedidoId == -1) {
+                sendError("No se pudo crear la cabecera del pedido");
+                return;
+            }
+
+            // 2. Crear los detalles del pedido
+            boolean exitoDetalles = true;
+            for (int i = 0; i < items.size(); i++) {
+                JsonObject itemJson = items.get(i).getAsJsonObject();
+                int productoId = itemJson.get("id").getAsInt();
+                int cantidad = itemJson.get("cantidad").getAsInt();
+                String notas = itemJson.has("notas") ? itemJson.get("notas").getAsString() : "";
+
+                DetallesPedido detalle = new DetallesPedido(
+                    pedidoId, 
+                    productoId, 
+                    cantidad, 
+                    notas, 
+                    EstadoDetallePedido.PENDIENTE, 
+                    new java.sql.Timestamp(System.currentTimeMillis())
+                );
+                
+                if (!DetallesPedidoDAO.insertarDetallePedido(detalle)) {
+                    exitoDetalles = false;
+                }
+            }
+
+            // 3. Responder al cliente
+            JsonObject respuesta = new JsonObject();
+            respuesta.addProperty("type", "CREAR_PEDIDO_RESPONSE");
+            JsonObject resPayload = new JsonObject();
+            resPayload.addProperty("success", exitoDetalles);
+            resPayload.addProperty("pedidoId", pedidoId);
+            respuesta.add("payload", resPayload);
+
+            writer.println(gson.toJson(respuesta));
+            System.out.println("[" + getName() + "] Pedido " + pedidoId + " creado con " + (exitoDetalles ? "éxito" : "errores parciales"));
+
+            // 4. Notificar a todos los clientes que hay una actualización en los pedidos
+            broadcastPedidos();
+
+        } catch (Exception e) {
+            System.err.println("[" + getName() + "] Error al crear pedido: " + e.getMessage());
+            sendError("Error interno al procesar el pedido: " + e.getMessage());
+        }
     }
 
     /**

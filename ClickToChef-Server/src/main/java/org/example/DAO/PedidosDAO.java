@@ -8,21 +8,33 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
+import java.sql.Statement;
 
 public class PedidosDAO {
 
-    public static boolean insertarPedido(Pedidos pedido) {
+    public static int insertarPedido(Pedidos pedido) {
         String sql = "INSERT INTO pedidos (mesa_id, usuario_id, fecha_creacion, estado) VALUES (?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
+             PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setInt(1, pedido.getMesaId());
             statement.setInt(2, pedido.getUsuarioId());
             statement.setTimestamp(3, pedido.getFechaCreacion());
             statement.setString(4, convertirEstadoPedidoADB(pedido.getEstado()));
-            return statement.executeUpdate() > 0;
+            
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows == 0) {
+                return -1;
+            }
+
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    return -1;
+                }
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el pedido", e);
         }

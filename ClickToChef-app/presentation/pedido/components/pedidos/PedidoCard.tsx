@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { Pedidos } from '../../../type/pedidos-interface';
+import { Pedidos } from '../../../../type/pedidos-interface';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColor } from '../../theme/hooks/use-theme-color';
+import { useThemeColor } from '../../../theme/hooks/use-theme-color';
 
 interface Props {
   pedido: Pedidos;
@@ -34,9 +34,9 @@ const PedidoCard = ({ pedido, onPress }: Props) => {
   const dateStr = new Date(pedido.fechaCreacion).toLocaleString();
 
   return (
-    <Pressable 
+    <Pressable
       className="m-2 p-4 rounded-2xl bg-white border-l-8"
-      style={{ 
+      style={{
         borderColor: getStatusColor(pedido.estado),
         elevation: 3,
         shadowColor: '#000',
@@ -48,7 +48,7 @@ const PedidoCard = ({ pedido, onPress }: Props) => {
     >
       <View className="flex-row justify-between items-center mb-2">
         <View className="flex-row items-center">
-          <View 
+          <View
             className="w-10 h-10 rounded-full items-center justify-center mr-3"
             style={{ backgroundColor: primary + '15' }}
           >
@@ -59,13 +59,13 @@ const PedidoCard = ({ pedido, onPress }: Props) => {
             <Text className="font-cuerpo text-xs text-gray-500">ID: #{pedido.id}</Text>
           </View>
         </View>
-        
-        <View 
+
+        <View
           className="px-3 py-1 rounded-full flex-row items-center"
           style={{ backgroundColor: getStatusColor(pedido.estado) + '15' }}
         >
           <Ionicons name={getStatusIcon(pedido.estado) as any} size={14} color={getStatusColor(pedido.estado)} />
-          <Text 
+          <Text
             className="text-[10px] font-bold ml-1 uppercase"
             style={{ color: getStatusColor(pedido.estado) }}
           >
@@ -73,7 +73,7 @@ const PedidoCard = ({ pedido, onPress }: Props) => {
           </Text>
         </View>
       </View>
-      
+
       <View className="border-t border-gray-50 pt-2 flex-row justify-between items-center">
         <Text className="font-cuerpo text-[10px] text-gray-400">
           {dateStr}

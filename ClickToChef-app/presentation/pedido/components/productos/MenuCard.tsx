@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { Producto } from '../../../type/menu-inetrface';
-import { useOrderStore } from '../../../store/pedido-store';
-import { useThemeColor } from '../../theme/hooks/use-theme-color';
+import { Producto } from '../../../../type/menu-inetrface';
+import { useOrderStore } from '../../../../store/pedido-store';
+import { useThemeColor } from '../../../theme/hooks/use-theme-color';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { reservarProductoAction } from '../../../core/actions/reservar-producto-action';
-import { liberarReservaAction } from '../../../core/actions/liberar-reserva-action';
+import { reservarProductoAction } from '../../../../core/actions/reservar-producto-action';
+import { liberarReservaAction } from '../../../../core/actions/liberar-reserva-action';
 
 interface Props {
   producto: Producto;
@@ -39,7 +39,7 @@ const MenuCard = ({ producto }: Props) => {
 
   return (
     <View className="border-b border-gray-50">
-      <Pressable 
+      <Pressable
         className={`flex-row items-center justify-between px-5 py-4 ${producto.disponible ? 'active:bg-gray-50' : 'opacity-60'}`}
         onPress={handleAdd}
         disabled={!producto.disponible}
@@ -54,9 +54,9 @@ const MenuCard = ({ producto }: Props) => {
             : <Text className="font-cuerpo text-sm text-red-500">No disponible</Text>
           }
         </View>
-        
+
         {cantidad === 0 ? (
-          <View 
+          <View
             className="w-10 h-10 rounded-full items-center justify-center"
             style={{ backgroundColor: producto.disponible ? primary + '15' : '#f3f4f6' }}
           >
@@ -64,18 +64,18 @@ const MenuCard = ({ producto }: Props) => {
           </View>
         ) : (
           <View className="flex-row items-center bg-gray-100 rounded-full p-1">
-            <Pressable 
+            <Pressable
               onPress={handleRemove}
               className="w-8 h-8 rounded-full items-center justify-center bg-white shadow-sm"
             >
               <Ionicons name="remove" size={20} color={primary} />
             </Pressable>
-            
+
             <Text className="font-titulo text-base mx-3 min-w-[20px] text-center">
               {cantidad}
             </Text>
-            
-            <Pressable 
+
+            <Pressable
               onPress={handleAdd}
               disabled={!producto.disponible}
               className={`w-8 h-8 rounded-full items-center justify-center bg-white shadow-sm ${!producto.disponible ? 'opacity-40' : ''}`}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList } from 'react-native';
-import { Mesa } from '../../../type/mesa-interface';
+import { Mesa } from '../../../../type/mesa-interface';
 import MesaCard from './MesaCard';
 
 interface Props {
@@ -8,10 +8,11 @@ interface Props {
   pedido?: boolean;
 }
 
-const MesaFList = ({ mesas, pedido=false }: Props) => {
+const MesaFList = ({ mesas, pedido = false }: Props) => {
   return (
     <FlatList
       data={mesas}
+      scrollEnabled={false}
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => <MesaCard mesa={item} pedido={pedido} />}
       numColumns={2}

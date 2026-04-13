@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList } from 'react-native';
-import { Pedidos } from '../../../type/pedidos-interface';
+import { Pedidos } from '../../../../type/pedidos-interface';
 import PedidoCard from './PedidoCard';
 
 interface Props {
@@ -12,15 +12,16 @@ const PedidoFList = ({ pedidos, onPedidoPress }: Props) => {
   return (
     <FlatList
       data={pedidos}
+      scrollEnabled={false}
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => (
-        <PedidoCard 
-          pedido={item} 
-          onPress={onPedidoPress} 
+        <PedidoCard
+          pedido={item}
+          onPress={onPedidoPress}
         />
       )}
-      contentContainerStyle={{ 
-        paddingHorizontal: 10, 
+      contentContainerStyle={{
+        paddingHorizontal: 10,
         paddingBottom: 20,
         paddingTop: 10
       }}

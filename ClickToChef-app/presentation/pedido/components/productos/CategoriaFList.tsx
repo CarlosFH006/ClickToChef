@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, FlatList } from 'react-native';
-import { Categoria } from '../../../type/menu-inetrface';
+import { Categoria } from '../../../../type/menu-inetrface';
 import MenuCard from './MenuCard';
 
 interface Props {
@@ -11,6 +11,7 @@ const CategoriaFList = ({ categorias }: Props) => {
   return (
     <FlatList
       data={categorias}
+      scrollEnabled={false}
       keyExtractor={(item) => item.id.toString()}
       contentContainerStyle={{ paddingBottom: 20 }}
       showsVerticalScrollIndicator={false}
@@ -21,7 +22,7 @@ const CategoriaFList = ({ categorias }: Props) => {
               {categoria.nombre}
             </Text>
           </View>
-          
+
           {categoria.productos.map((producto) => (
             <MenuCard key={producto.id} producto={producto} />
           ))}
