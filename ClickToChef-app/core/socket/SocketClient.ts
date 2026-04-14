@@ -138,9 +138,8 @@ class SocketClient {
           
           if (!success && data.type === 'RESERVAR_PRODUCTO_RESPONSE') {
             console.warn(`[Socket] Reserva fallida para producto ${productoId}. Marcando como no disponible.`);
-            // Rollback del pedido local para asegurar consistencia
-            useOrderStore.getState().updateQuantity(productoId, -1);
-            Alert.alert("Producto no disponible", "No se ha podido reservar el producto porque no hay existencias.");
+            useOrderStore.getState().updateQuantity(productoId, -(cantidad || 1));
+            Alert.alert("Stock insuficiente", "No hay suficiente stock para reservar la cantidad solicitada.");
           }
         }
         break;

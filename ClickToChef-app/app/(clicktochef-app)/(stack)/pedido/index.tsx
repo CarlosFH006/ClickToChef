@@ -38,7 +38,7 @@ const PedidoIndex = () => {
               <Text className="font-cuerpo text-gray-500 mt-2">No hay productos añadidos</Text>
             </View>
           ) : (
-            <ProductoFList productos={items} />
+            <ProductoFList productos={items} showNotas />
           )}
         </View>
 

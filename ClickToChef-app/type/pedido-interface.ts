@@ -3,6 +3,7 @@ export interface ProductoPedido {
   nombre: string;
   precio: number;
   cantidad: number;
+  notas?: string;
 }
 
 export interface Pedido {

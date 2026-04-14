@@ -53,10 +53,11 @@ public class ClienteHilo extends Thread {
         }
 
         int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
         System.out.println("[" + getName() + "] Reservando producto " + productoId + "...");
 
-        boolean success = ProductosDAO.reservarProducto(productoId);
-        sendReservaResponse("RESERVAR_PRODUCTO_RESPONSE", productoId, 1, success);
+        boolean success = ProductosDAO.reservarProducto(productoId, cantidad);
+        sendReservaResponse("RESERVAR_PRODUCTO_RESPONSE", productoId, cantidad, success);
 
         if (success) {
             broadcastCatalogo();
@@ -276,11 +277,13 @@ public class ClienteHilo extends Thread {
                 JsonObject itemJson = items.get(i).getAsJsonObject();
                 int productoId = itemJson.get("id").getAsInt();
                 int cantidad = itemJson.get("cantidad").getAsInt();
+                String notas = itemJson.has("notas") ? itemJson.get("notas").getAsString() : "";
 
                 DetallesPedido detalle = new DetallesPedido(
                     pedidoId,
                     productoId,
                     cantidad,
+                    notas,
                     EstadoDetallePedido.PENDIENTE,
                     new java.sql.Timestamp(System.currentTimeMillis())
                 );

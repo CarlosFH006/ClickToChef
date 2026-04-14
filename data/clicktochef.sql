@@ -47,6 +47,7 @@ CREATE TABLE detalles_pedido (
     pedido_id INT NOT NULL,
     producto_id INT NOT NULL,
     cantidad INT NOT NULL DEFAULT 1,
+    notas_especiales VARCHAR(255),
     estado ENUM('pendiente', 'en preparacion', 'listo', 'servido') DEFAULT 'pendiente',
     hora_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
@@ -147,9 +148,9 @@ INSERT INTO pedidos (id, mesa_id, usuario_id, estado) VALUES
 (1, 1, 2, 'abierta');
 
 INSERT INTO detalles_pedido
-(pedido_id, producto_id, cantidad, estado) VALUES
-(1, 3, 2, 'en preparacion'),
-(1, 5, 2, 'listo');
+(pedido_id, producto_id, cantidad, notas_especiales, estado) VALUES
+(1, 3, 2, 'Carne muy hecha', 'en preparacion'),
+(1, 5, 2, 'Con hielo', 'listo');
 
 INSERT INTO pedidos (id, mesa_id, usuario_id, estado) VALUES 
 (2, 4, 3, 'abierta');

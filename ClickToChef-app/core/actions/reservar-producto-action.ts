@@ -1,11 +1,12 @@
 import socketClient from "../socket/SocketClient";
 
-export const reservarProductoAction = async (productoId: number) => {
+export const reservarProductoAction = async (productoId: number, cantidad: number) => {
   try {
     socketClient.send({
       type: 'RESERVAR_PRODUCTO',
       payload: {
-        productoId
+        productoId,
+        cantidad
       }
     });
     return true;

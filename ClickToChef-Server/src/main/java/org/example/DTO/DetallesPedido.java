@@ -7,22 +7,25 @@ public class DetallesPedido {
     private int pedidoId;
     private int productoId;
     private int cantidad;
+    private String notasEspeciales;
     private EstadoDetallePedido estado;
     private Timestamp horaPedido;
 
-    public DetallesPedido(int id, int pedidoId, int productoId, int cantidad, EstadoDetallePedido estado, Timestamp horaPedido) {
+    public DetallesPedido(int id, int pedidoId, int productoId, int cantidad, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
         this.id = id;
         this.pedidoId = pedidoId;
         this.productoId = productoId;
         this.cantidad = cantidad;
+        this.notasEspeciales = notasEspeciales;
         this.estado = estado;
         this.horaPedido = horaPedido;
     }
 
-    public DetallesPedido(int pedidoId, int productoId, int cantidad, EstadoDetallePedido estado, Timestamp horaPedido) {
+    public DetallesPedido(int pedidoId, int productoId, int cantidad, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
         this.pedidoId = pedidoId;
         this.productoId = productoId;
         this.cantidad = cantidad;
+        this.notasEspeciales = notasEspeciales;
         this.estado = estado;
         this.horaPedido = horaPedido;
     }
@@ -59,6 +62,14 @@ public class DetallesPedido {
         this.cantidad = cantidad;
     }
 
+    public String getNotasEspeciales() {
+        return notasEspeciales;
+    }
+
+    public void setNotasEspeciales(String notasEspeciales) {
+        this.notasEspeciales = notasEspeciales;
+    }
+
     public EstadoDetallePedido getEstado() {
         return estado;
     }
@@ -82,6 +93,7 @@ public class DetallesPedido {
                 ", pedidoId=" + pedidoId +
                 ", productoId=" + productoId +
                 ", cantidad=" + cantidad +
+                ", notasEspeciales='" + notasEspeciales + '\'' +
                 ", estado='" + estado + '\'' +
                 ", horaPedido=" + horaPedido +
                 '}';

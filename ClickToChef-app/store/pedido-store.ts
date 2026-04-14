@@ -10,6 +10,7 @@ interface OrderState {
   addItem: (producto: any) => void; // El producto que viene del catálogo
   removeItem: (id: number) => void;
   updateQuantity: (id: number, delta: number) => void;
+  setNotas: (id: number, notas: string) => void;
   clearOrder: () => void;
   
   // Selectores (opcional para cálculos rápidos)
@@ -45,12 +46,18 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   })),
 
   updateQuantity: (id, delta) => set((state) => {
-    const newItems = state.items.map(item => 
+    const newItems = state.items.map(item =>
       item.id === id ? { ...item, cantidad: item.cantidad + delta } : item
     ).filter(item => item.cantidad > 0);
-    
+
     return { items: newItems };
   }),
+
+  setNotas: (id, notas) => set((state) => ({
+    items: state.items.map(item =>
+      item.id === id ? { ...item, notas } : item
+    )
+  })),
 
   clearOrder: () => set({ mesaId: null, items: [] }),
 

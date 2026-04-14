@@ -51,8 +51,7 @@ public class ProductosDAO {
         return productos;
     }
 
-    public static boolean reservarProducto(int productoId) {
-        int cantidad = 1;
+    public static boolean reservarProducto(int productoId, int cantidad) {
         String sqlReceta = "SELECT ingrediente_id, cantidad_necesaria FROM recetas WHERE producto_id = ?";
         String sqlUpdate = "UPDATE ingredientes SET stock_reservado = stock_reservado + ? " +
                 "WHERE id = ? AND (stock_actual - stock_reservado) >= ?";

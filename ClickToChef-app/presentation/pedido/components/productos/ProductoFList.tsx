@@ -8,9 +8,10 @@ type ProductoListItem = Producto | ProductoPedido;
 
 interface Props {
   productos: ProductoListItem[];
+  showNotas?: boolean;
 }
 
-const ProductoFList = ({ productos }: Props) => {
+const ProductoFList = ({ productos, showNotas = false }: Props) => {
   return (
     <FlatList<ProductoListItem>
       data={productos}
@@ -21,7 +22,7 @@ const ProductoFList = ({ productos }: Props) => {
       renderItem={({ item }) => (
         <ProductoCard
           producto={item}
-          cantidad={'cantidad' in item ? item.cantidad : 0}
+          showNotas={showNotas}
         />
       )}
     />

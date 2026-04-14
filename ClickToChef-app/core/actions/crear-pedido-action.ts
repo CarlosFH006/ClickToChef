@@ -24,6 +24,7 @@ export const crearPedidoAction = async () => {
                 items: items.map(item => ({
                     id: item.id,
                     cantidad: item.cantidad,
+                    notas: item.notas ?? '',
                 }))
             }
         });
