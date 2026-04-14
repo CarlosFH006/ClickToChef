@@ -13,8 +13,6 @@ import org.example.DTO.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class ClienteHilo extends Thread {
     private Socket socket;
@@ -106,16 +104,7 @@ public class ClienteHilo extends Thread {
     }
 
     private void sendReservaResponse(String type, int productoId, int cantidad, boolean success) {
-        JsonObject respuesta = new JsonObject();
-        respuesta.addProperty("type", type);
-
-        JsonObject resPayload = new JsonObject();
-        resPayload.addProperty("success", success);
-        resPayload.addProperty("productoId", productoId);
-        resPayload.addProperty("cantidad", cantidad);
-
-        respuesta.add("payload", resPayload);
-        writer.println(gson.toJson(respuesta));
+        writer.println(GeneradorJSON.generarReservaResponse(type, productoId, cantidad, success));
     }
 
     /**
@@ -200,14 +189,7 @@ public class ClienteHilo extends Thread {
 
         if (exito) {
             // Si la base de datos se actualizó, notificamos a TODOS
-            JsonObject broadcastMsg = new JsonObject();
-            broadcastMsg.addProperty("type", "MESA_UPDATED");
-            JsonObject resPayload = new JsonObject();
-            resPayload.addProperty("id", id);
-            resPayload.addProperty("estado", estadoStr.toUpperCase());
-            broadcastMsg.add("payload", resPayload);
-
-            Servidor.broadcast(gson.toJson(broadcastMsg));
+            Servidor.broadcast(GeneradorJSON.generarMesaUpdated(id, estadoStr.toUpperCase()));
         } else {
             sendError("No se pudo actualizar la mesa en la base de datos");
         }
@@ -218,37 +200,9 @@ public class ClienteHilo extends Thread {
      */
     private void broadcastCatalogo() {
         ArrayList<CategoriaPlato> lista = CategoriasDAO.categoriasplatos();
-        Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
-
-        for (CategoriaPlato cp : lista) {
-            if (!categoriasMap.containsKey(cp.getCategoriaId())) {
-                JsonObject catJson = new JsonObject();
-                catJson.addProperty("id", cp.getCategoriaId());
-                catJson.addProperty("nombre", cp.getCategoriaNombre());
-                catJson.add("productos", new JsonArray());
-                categoriasMap.put(cp.getCategoriaId(), catJson);
-            }
-
-            JsonObject prodJson = new JsonObject();
-            prodJson.addProperty("id", cp.getProductoId());
-            prodJson.addProperty("nombre", cp.getProductoNombre());
-            prodJson.addProperty("precio", cp.getPrecio());
-            prodJson.addProperty("disponible", cp.isDisponible());
-
-            categoriasMap.get(cp.getCategoriaId()).getAsJsonArray("productos").add(prodJson);
-        }
-
-        JsonArray payload = new JsonArray();
-        for (JsonObject cat : categoriasMap.values()) {
-            payload.add(cat);
-        }
-
-        JsonObject respuesta = new JsonObject();
-        respuesta.addProperty("type", "MENU_UPDATED");
-        respuesta.add("payload", payload);
-
-        Servidor.broadcast(gson.toJson(respuesta));
-        System.out.println("[" + getName() + "] Catálogo actualizado y enviado a todos los clientes (" + payload.size() + " categorías)");
+        String json = GeneradorJSON.generarMenuUpdated(lista);
+        Servidor.broadcast(json);
+        System.out.println("[" + getName() + "] Catálogo actualizado y enviado a todos los clientes (" + lista.size() + " categorías)");
     }
 
     /**
@@ -256,12 +210,7 @@ public class ClienteHilo extends Thread {
      */
     private void broadcastPedidos() {
         ArrayList<Pedidos> lista = PedidosDAO.obtenerTodos();
-        
-        JsonObject respuesta = new JsonObject();
-        respuesta.addProperty("type", "PEDIDOS_UPDATED");
-        respuesta.add("payload", gson.toJsonTree(lista));
-
-        Servidor.broadcast(gson.toJson(respuesta));
+        Servidor.broadcast(GeneradorJSON.generarPedidosUpdated(lista));
         System.out.println("[" + getName() + "] Lista de pedidos actualizada y broadcast enviado (" + lista.size() + " pedidos)");
     }
 
@@ -281,16 +230,7 @@ public class ClienteHilo extends Thread {
         System.out.println("[" + getName() + "] Obteniendo lista de mesas...");
 
         ArrayList<Mesas> listaMesas = MesasDAO.obtenerTodas();
-
-        JsonObject respuesta = new JsonObject();
-        respuesta.addProperty("type", "MESAS_RESPONSE");
-
-        JsonObject resPayload = new JsonObject();
-        resPayload.add("mesas", gson.toJsonTree(listaMesas));
-
-        respuesta.add("payload", resPayload);
-
-        writer.println(gson.toJson(respuesta));
+        writer.println(GeneradorJSON.generarMesasResponse(listaMesas));
         System.out.println("[" + getName() + "] Lista de mesas enviada (" + listaMesas.size() + " mesas)");
     }
 
@@ -301,37 +241,8 @@ public class ClienteHilo extends Thread {
         System.out.println("[" + getName() + "] Obteniendo menú...");
 
         ArrayList<CategoriaPlato> lista = CategoriasDAO.categoriasplatos();
-        Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
-
-        for (CategoriaPlato cp : lista) {
-            if (!categoriasMap.containsKey(cp.getCategoriaId())) {
-                JsonObject catJson = new JsonObject();
-                catJson.addProperty("id", cp.getCategoriaId());
-                catJson.addProperty("nombre", cp.getCategoriaNombre());
-                catJson.add("productos", new JsonArray());
-                categoriasMap.put(cp.getCategoriaId(), catJson);
-            }
-
-            JsonObject prodJson = new JsonObject();
-            prodJson.addProperty("id", cp.getProductoId());
-            prodJson.addProperty("nombre", cp.getProductoNombre());
-            prodJson.addProperty("precio", cp.getPrecio());
-            prodJson.addProperty("disponible", cp.isDisponible());
-
-            categoriasMap.get(cp.getCategoriaId()).getAsJsonArray("productos").add(prodJson);
-        }
-
-        JsonArray payload = new JsonArray();
-        for (JsonObject cat : categoriasMap.values()) {
-            payload.add(cat);
-        }
-
-        JsonObject respuesta = new JsonObject();
-        respuesta.addProperty("type", "MENU_RESPONSE");
-        respuesta.add("payload", payload);
-
-        writer.println(gson.toJson(respuesta));
-        System.out.println("[" + getName() + "] Menú enviado (" + payload.size() + " categorías)");
+        writer.println(GeneradorJSON.generarMenuResponse(lista));
+        System.out.println("[" + getName() + "] Menú enviado (" + lista.size() + " categorías)");
     }
 
     /**
@@ -365,14 +276,12 @@ public class ClienteHilo extends Thread {
                 JsonObject itemJson = items.get(i).getAsJsonObject();
                 int productoId = itemJson.get("id").getAsInt();
                 int cantidad = itemJson.get("cantidad").getAsInt();
-                String notas = itemJson.has("notas") ? itemJson.get("notas").getAsString() : "";
 
                 DetallesPedido detalle = new DetallesPedido(
-                    pedidoId, 
-                    productoId, 
-                    cantidad, 
-                    notas, 
-                    EstadoDetallePedido.PENDIENTE, 
+                    pedidoId,
+                    productoId,
+                    cantidad,
+                    EstadoDetallePedido.PENDIENTE,
                     new java.sql.Timestamp(System.currentTimeMillis())
                 );
                 
@@ -382,14 +291,7 @@ public class ClienteHilo extends Thread {
             }
 
             // 3. Responder al cliente
-            JsonObject respuesta = new JsonObject();
-            respuesta.addProperty("type", "CREAR_PEDIDO_RESPONSE");
-            JsonObject resPayload = new JsonObject();
-            resPayload.addProperty("success", exitoDetalles);
-            resPayload.addProperty("pedidoId", pedidoId);
-            respuesta.add("payload", resPayload);
-
-            writer.println(gson.toJson(respuesta));
+            writer.println(GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId));
             System.out.println("[" + getName() + "] Pedido " + pedidoId + " creado con " + (exitoDetalles ? "éxito" : "errores parciales"));
 
             // 4. Notificar a todos los clientes que hay una actualización en los pedidos
@@ -414,12 +316,7 @@ public class ClienteHilo extends Thread {
         System.out.println("[" + getName() + "] Obteniendo pedidos para el usuario " + usuarioId + "...");
 
         ArrayList<Pedidos> lista = PedidosDAO.obtenerPorUsuario(usuarioId);
-
-        JsonObject respuesta = new JsonObject();
-        respuesta.addProperty("type", "PEDIDOS_USUARIO_RESPONSE");
-        respuesta.add("payload", gson.toJsonTree(lista));
-
-        writer.println(gson.toJson(respuesta));
+        writer.println(GeneradorJSON.generarPedidosUsuarioResponse(lista));
         System.out.println("[" + getName() + "] Lista de pedidos enviada para el usuario " + usuarioId + " (" + lista.size() + " pedidos)");
     }
 
@@ -440,39 +337,22 @@ public class ClienteHilo extends Thread {
         // Llamada a tu DAO de Base de Datos
         Usuarios usuarioValidado = UsuariosDAO.login(user, pass);
 
-        // Creamos la respuesta con la estructura que espera tu SocketClient.ts
-        JsonObject respuesta = new JsonObject();
-        respuesta.addProperty("type", "LOGIN_RESPONSE");
-
-        JsonObject resPayload = new JsonObject();
+        // Enviamos la respuesta
+        writer.println(GeneradorJSON.generarLoginResponse(usuarioValidado, pass));
+        
         if (usuarioValidado != null) {
-            resPayload.addProperty("success", true);
-            resPayload.add("user", gson.toJsonTree(usuarioValidado));
-            resPayload.addProperty("pass", pass); // Se devuelve para que el móvil lo guarde en SecureStore
             System.out.println("[" + getName() + "] Login OK para " + user);
         } else {
-            resPayload.addProperty("success", false);
             System.out.println("[" + getName() + "] Login fallido para " + user);
         }
-
-        respuesta.add("payload", resPayload);
-
-        // Enviamos el JSON al móvil (PrintWriter.println añade el \n automático)
-        writer.println(gson.toJson(respuesta));
     }
 
     /**
      * Utilidad para enviar mensajes de error genéricos al móvil
      */
     private void sendError(String mensaje) {
-        JsonObject error = new JsonObject();
-        error.addProperty("type", "SERVER_ERROR");
-        JsonObject payload = new JsonObject();
-        payload.addProperty("message", mensaje);
-        error.add("payload", payload);
-
         if (writer != null) {
-            writer.println(gson.toJson(error));
+            writer.println(GeneradorJSON.generarError(mensaje));
         }
     }
 

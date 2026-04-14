@@ -132,8 +132,8 @@ public class CargaInicial {
                 valoresOdoo.put("type", "consu");
                 valoresOdoo.put("is_storable", true);
 
-                if (ingrediente.getUnidadMedida() != null && !ingrediente.getUnidadMedida().isBlank()) {
-                    valoresOdoo.put("description_purchase", "Unidad de medida: " + ingrediente.getUnidadMedida());
+                if (ingrediente.getMetodoMedida() != null) {
+                    valoresOdoo.put("description_purchase", "Unidad de medida: " + ingrediente.getMetodoMedida().name().toLowerCase());
                 }
 
                 Object result = objectClient.execute(

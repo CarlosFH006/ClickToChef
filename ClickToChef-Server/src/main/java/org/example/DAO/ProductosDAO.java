@@ -6,14 +6,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
-import java.util.List;
 
 public class ProductosDAO {
 
     public static boolean insertarProducto(Productos producto) {
-        String sql = "INSERT INTO productos (nombre, descripcion, precio, categoria_id, imagen_url) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO productos (nombre, descripcion, precio, categoria_id) VALUES (?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
              PreparedStatement statement = conexion.prepareStatement(sql)) {
@@ -22,8 +20,6 @@ public class ProductosDAO {
             statement.setString(2, producto.getDescripcion());
             statement.setDouble(3, producto.getPrecio());
             statement.setInt(4, producto.getCategoriaId());
-
-            statement.setString(5, producto.getImagenUrl());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el producto", e);
@@ -31,7 +27,7 @@ public class ProductosDAO {
     }
 
     public static ArrayList<Productos> obtenerTodos() {
-        String sql = "SELECT id, nombre, descripcion, precio, categoria_id, imagen_url FROM productos";
+        String sql = "SELECT id, nombre, descripcion, precio, categoria_id FROM productos";
         ArrayList<Productos> productos = new ArrayList<>();
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -44,8 +40,7 @@ public class ProductosDAO {
                         resultSet.getString("nombre"),
                         resultSet.getString("descripcion"),
                         resultSet.getDouble("precio"),
-                        (Integer) resultSet.getObject("categoria_id"),
-                        resultSet.getString("imagen_url")
+                        resultSet.getInt("categoria_id")
                 );
                 productos.add(producto);
             }

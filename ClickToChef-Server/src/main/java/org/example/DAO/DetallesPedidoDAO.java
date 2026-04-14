@@ -8,12 +8,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class DetallesPedidoDAO {
 
     public static boolean insertarDetallePedido(DetallesPedido detallePedido) {
-        String sql = "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, notas_especiales, estado, hora_pedido) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, estado, hora_pedido) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conexion = ConexionDB.getConexion();
              PreparedStatement statement = conexion.prepareStatement(sql)) {
@@ -21,9 +20,8 @@ public class DetallesPedidoDAO {
             statement.setInt(1, detallePedido.getPedidoId());
             statement.setInt(2, detallePedido.getProductoId());
             statement.setInt(3, detallePedido.getCantidad());
-            statement.setString(4, detallePedido.getNotasEspeciales());
-            statement.setString(5, convertirEstadoDetalleADB(detallePedido.getEstado()));
-            statement.setTimestamp(6, detallePedido.getHoraPedido());
+            statement.setString(4, convertirEstadoDetalleADB(detallePedido.getEstado()));
+            statement.setTimestamp(5, detallePedido.getHoraPedido());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el detalle del pedido", e);
@@ -31,7 +29,7 @@ public class DetallesPedidoDAO {
     }
 
     public static ArrayList<DetallesPedido> obtenerTodos() {
-        String sql = "SELECT id, pedido_id, producto_id, cantidad, notas_especiales, estado, hora_pedido FROM detalles_pedido";
+        String sql = "SELECT id, pedido_id, producto_id, cantidad, estado, hora_pedido FROM detalles_pedido";
         ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -44,7 +42,6 @@ public class DetallesPedidoDAO {
                         resultSet.getInt("pedido_id"),
                         resultSet.getInt("producto_id"),
                         resultSet.getInt("cantidad"),
-                        resultSet.getString("notas_especiales"),
                         convertirEstadoDetalleAEnum(resultSet.getString("estado")),
                         resultSet.getTimestamp("hora_pedido")
                 );

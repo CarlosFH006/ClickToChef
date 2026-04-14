@@ -5,15 +5,17 @@ public class Ingredientes {
     private String nombre;
     private double stockActual;
     private double stockReservado;
-    private String unidadMedida;
+    private MetodoMedida metodoMedida;
+    private TipoIngrediente tipoIngrediente;
     private int odooProductId;
 
-    public Ingredientes(int id, String nombre, double stockActual, double stockReservado, String unidadMedida, int odooProductId) {
+    public Ingredientes(int id, String nombre, double stockActual, double stockReservado, MetodoMedida metodoMedida, TipoIngrediente tipoIngrediente, int odooProductId) {
         this.id = id;
         this.nombre = nombre;
         this.stockActual = stockActual;
         this.stockReservado = stockReservado;
-        this.unidadMedida = unidadMedida;
+        this.metodoMedida = metodoMedida;
+        this.tipoIngrediente = tipoIngrediente;
         this.odooProductId = odooProductId;
     }
 
@@ -49,12 +51,20 @@ public class Ingredientes {
         this.stockReservado = stockReservado;
     }
 
-    public String getUnidadMedida() {
-        return unidadMedida;
+    public MetodoMedida getMetodoMedida() {
+        return metodoMedida;
     }
 
-    public void setUnidadMedida(String unidadMedida) {
-        this.unidadMedida = unidadMedida;
+    public void setMetodoMedida(MetodoMedida metodoMedida) {
+        this.metodoMedida = metodoMedida;
+    }
+
+    public TipoIngrediente getTipoIngrediente() {
+        return tipoIngrediente;
+    }
+
+    public void setTipoIngrediente(TipoIngrediente tipoIngrediente) {
+        this.tipoIngrediente = tipoIngrediente;
     }
 
     public int getOdooProductId() {
@@ -72,7 +82,8 @@ public class Ingredientes {
                 ", nombre='" + nombre + '\'' +
                 ", stockActual=" + stockActual +
                 ", stockReservado=" + stockReservado +
-                ", unidadMedida='" + unidadMedida + '\'' +
+                ", metodoMedida=" + metodoMedida +
+                ", tipoIngrediente=" + tipoIngrediente +
                 ", odooProductId=" + odooProductId +
                 '}';
     }
