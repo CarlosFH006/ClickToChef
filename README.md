@@ -1,4 +1,4 @@
-# 🍽️ SyncroDine KDS: Kitchen Display System
+# 🍽️ ClickToChef: Kitchen Display System
 
 [cite_start]Este proyecto consiste en una plataforma integral diseñada para digitalizar y agilizar la comunicación entre la sala y la cocina en el sector de la hostelería[cite: 4]. [cite_start]El sistema elimina el uso de papel, minimiza errores humanos y optimiza los tiempos de servicio mediante una sincronización instantánea y bidireccional[cite: 7, 20].
 
