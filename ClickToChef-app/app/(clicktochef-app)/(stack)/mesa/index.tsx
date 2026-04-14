@@ -1,14 +1,14 @@
 import { View, Text, ActivityIndicator, ScrollView } from 'react-native'
 import React, { useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useThemeColor } from '../../../../presentation/theme/hooks/use-theme-color'
 import { useMesaStore } from '../../../../store/mesa-store'
 import { useOrderStore } from '../../../../store/pedido-store'
 import { getMesasAction } from '../../../../core/actions/get-mesas-action'
 import MesaFList from '../../../../presentation/pedido/components/mesa/MesaFList'
+import { Colors } from '../../../../constants/theme'
+import { Ionicons } from '@expo/vector-icons'
 
 const MesaIndex = () => {
-  const primary = useThemeColor({}, 'primary');
   const { mesas, isLoading } = useMesaStore();
 
   useEffect(() => {
@@ -17,23 +17,31 @@ const MesaIndex = () => {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-superficie" edges={['bottom']}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
-          <Text className='font-titulo text-2xl text-gray-800 mb-2'>Selecciona una Mesa</Text>
-          <Text className='font-cuerpo text-sm text-gray-600 mb-4'>
-            Para iniciar el pedido, toca una mesa que esté LIBRE para reservarla.
+        <View className="px-5 pt-4 pb-2">
+          <Text className="font-titulo text-2xl text-principal">Seleccionar Mesa</Text>
+          <Text className="font-cuerpo text-sm text-secundario mt-0.5">
+            Solo las mesas libres están disponibles
           </Text>
         </View>
 
         {isLoading && mesas.length === 0 ? (
-          <ActivityIndicator size="large" color={primary} className="mt-10" />
+          <ActivityIndicator size="large" color={Colors.light.primary} className="mt-10" />
         ) : (
           <MesaFList mesas={mesas} pedido={true} />
         )}
       </ScrollView>
-    </SafeAreaView>
-  )
-}
 
-export default MesaIndex
+      {/* Banner informativo inferior */}
+      <View className="flex-row items-center justify-center px-5 py-3 bg-primary/[6%] border-t border-primary/20">
+        <Ionicons name="information-circle-outline" size={16} color={Colors.light.primary} />
+        <Text className="font-cuerpo text-xs text-primary ml-1.5">
+          Toca una mesa libre para iniciar el pedido
+        </Text>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+export default MesaIndex;

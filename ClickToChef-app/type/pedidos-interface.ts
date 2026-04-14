@@ -3,5 +3,5 @@ export interface Pedidos {
   mesaId: number;
   usuarioId: number;
   fechaCreacion: string;
-  estado: 'pendiente' | 'preparando' | 'completado' | 'cancelado';
+  estado: 'ABIERTA' | 'CERRADA' | 'CANCELADA';
 }

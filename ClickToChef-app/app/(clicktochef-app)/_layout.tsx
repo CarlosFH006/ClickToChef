@@ -19,7 +19,7 @@ const CheckAuthenticationLayout = () => {
 
     if (status === 'checking') {
         return (
-            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 5 }}>
+            <SafeAreaView className="flex-1 justify-center items-center">
                 <ActivityIndicator />
             </SafeAreaView>
         );

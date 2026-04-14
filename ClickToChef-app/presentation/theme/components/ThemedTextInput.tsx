@@ -14,14 +14,14 @@ const ThemedTextInput = ({ icon, className = '', ...rest }: Props) => {
     const inputRef = useRef<TextInput>(null);
 
     return (
-        <View 
-            className={`border rounded-md p-2 mb-3 flex-row items-center bg-superficie ${isActive ? 'border-principal' : 'border-borde'} ${className}`}
+        <View
+            className={`border rounded-2xl px-4 py-3 mb-3 flex-row items-center bg-superficie ${isActive ? 'border-primary' : 'border-borde'} ${className}`}
             onTouchStart={() => inputRef.current?.focus()}>
             {icon &&(
                 <Ionicons
                 name={icon}
                 size={24}
-                color={isActive ? '#09090b' : '#71717a'} // principal / secundario
+                color={isActive ? '#3D64F4' : '#71717a'} // primary / secundario
                 style={{marginRight: 10}}/>
             )}
             <TextInput {...rest}

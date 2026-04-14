@@ -1,16 +1,15 @@
-import { View, Text, Pressable, ActivityIndicator, RefreshControl, ScrollView } from 'react-native'
-import React, { useEffect, useCallback } from 'react'
+import { View, Text, Pressable, ActivityIndicator, ScrollView } from 'react-native'
+import React, { useEffect, useCallback, useMemo } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useThemeColor } from '../../../../presentation/theme/hooks/use-theme-color'
 import { usePedidosStore } from '../../../../store/pedidos-store'
 import { useAuthStore } from '../../../../presentation/auth/store/useAuthStore'
 import { getPedidosUsuarioAction } from '../../../../core/actions/get-pedidos-usuario-action'
 import PedidoFList from '../../../../presentation/pedido/components/pedidos/PedidoFList'
+import { Colors } from '../../../../constants/theme'
 
 const PedidosScreen = () => {
-  const primary = useThemeColor({}, 'primary');
   const { pedidos, isLoading } = usePedidosStore();
   const { user } = useAuthStore();
 
@@ -24,31 +23,46 @@ const PedidosScreen = () => {
     fetchPedidos();
   }, [fetchPedidos]);
 
+  const activosCount = useMemo(
+    () => pedidos.filter(p => p.estado === 'ABIERTA').length,
+    [pedidos]
+  );
+
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-5 pt-4">
+        {/* Header */}
+        <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
+          <View>
+            <Text className="font-titulo text-xl text-principal">Mis Pedidos</Text>
+            {activosCount > 0 && (
+              <Text className="font-cuerpo text-xs text-secundario">
+                {activosCount} activo{activosCount !== 1 ? 's' : ''}
+              </Text>
+            )}
+          </View>
+          {isLoading && <ActivityIndicator color={Colors.light.primary} size="small" />}
+        </View>
+
+        {/* CTA nuevo pedido */}
+        <View className="px-5 mb-4">
           <Pressable
-            className="flex-row items-center justify-center py-4 rounded-2xl border-2 border-dashed shadow-sm"
-            style={{ borderColor: primary, backgroundColor: primary + '05' }}
+            className="flex-row items-center justify-center py-4 rounded-2xl bg-primary active:opacity-90"
             onPress={() => router.push('/(clicktochef-app)/(stack)/mesa')}
           >
-            <Ionicons name="add-circle-outline" size={28} color={primary} />
-            <Text className="font-titulo text-lg ml-2" style={{ color: primary }}>Nuevo Pedido</Text>
+            <Ionicons name="add-circle-outline" size={22} color="white" />
+            <Text className="font-titulo text-base text-superficie ml-2">Nuevo Pedido</Text>
           </Pressable>
         </View>
 
-        <View className="flex-1 px-5 pt-6">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="font-titulo text-xl text-gray-800">Tus Pedidos</Text>
-            {isLoading && <ActivityIndicator color={primary} size="small" />}
-          </View>
-
+        {/* Lista de pedidos */}
+        <View className="px-5">
           {pedidos.length === 0 && !isLoading ? (
-            <View className="flex-1 justify-center items-center opacity-30">
-              <Ionicons name="receipt-outline" size={80} color="gray" />
-              <Text className="font-cuerpo text-gray-500 mt-4 text-center">
-                No tienes pedidos asignados{"\n"}en este momento.
+            <View className="items-center py-16 opacity-40">
+              <Ionicons name="receipt-outline" size={72} color="gray" />
+              <Text className="font-titulo text-base text-secundario mt-3">Sin pedidos</Text>
+              <Text className="font-cuerpo text-sm text-secundario text-center mt-1">
+                Crea un nuevo pedido para empezar
               </Text>
             </View>
           ) : (
@@ -60,7 +74,7 @@ const PedidosScreen = () => {
         </View>
       </ScrollView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default PedidosScreen
+export default PedidosScreen;

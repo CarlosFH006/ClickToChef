@@ -18,6 +18,9 @@ module.exports = {
         fondo: "#fafafa",        // Gris ultra claro (Fondo de pantalla)
         borde: "#e4e4e7",        // Color para líneas divisorias
 
+        // Color de acción principal
+        primary: "#3D64F4",      // Azul (Botones de acción / Elementos interactivos)
+
         // Colores de estado (Semánticos normales)
         success: "#22c55e",      // Verde (Mesa libre / Pedido enviado)
         error: "#ef4444",        // Rojo (Mesa ocupada / Error login)

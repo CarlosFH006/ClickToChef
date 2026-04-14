@@ -1,38 +1,26 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { Mesa, MesaEstado } from '../../../../type/mesa-interface';
+import { Mesa } from '../../../../type/mesa-interface';
 import { updateMesaStatusAction } from '../../../../core/actions/update-mesa-status-action';
 import { router } from 'expo-router';
 import { useOrderStore } from '../../../../store/pedido-store';
-
+import { getMesaStatusColor, getMesaStatusLabel } from '../../utils/status-colors';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
   mesa: Mesa;
   pedido?: boolean;
 }
 
-const getStatusColor = (estado: MesaEstado) => {
-  switch (estado) {
-    case 'LIBRE': return '#4ade80'; // verde
-    case 'RESERVADA': return '#fbbf24'; // ambar/amarillo
-    case 'OCUPADA': return '#f87171'; // rojo
-    default: return '#94a3b8'; // gris
-  }
-};
-
 const MesaCard = ({ mesa, pedido = false }: Props) => {
+  const statusColor = getMesaStatusColor(mesa.estado);
+  const isDisabled = pedido && mesa.estado !== 'LIBRE';
+
   return (
     <Pressable
-      className="m-2 p-4 rounded-2xl flex-1 items-center justify-center border-b-4"
-      style={{
-        backgroundColor: '#fff',
-        borderColor: getStatusColor(mesa.estado),
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      }}
+      className="m-2 rounded-2xl flex-1 overflow-hidden bg-superficie shadow-md active:opacity-75"
+      style={{ borderColor: statusColor, borderWidth: 1.5, opacity: isDisabled ? 0.45 : 1 }}
+      disabled={isDisabled}
       onPress={async () => {
         if (pedido && mesa.estado === 'LIBRE') {
           const success = await updateMesaStatusAction(mesa.id, 'RESERVADA');
@@ -43,23 +31,23 @@ const MesaCard = ({ mesa, pedido = false }: Props) => {
         }
       }}
     >
-      <View
-        className="w-12 h-12 rounded-full items-center justify-center mb-2"
-        style={{ backgroundColor: getStatusColor(mesa.estado) + '20' }}
-      >
-        <Text style={{ color: getStatusColor(mesa.estado), fontSize: 20, fontWeight: 'bold' }}>
+      {/* Cuerpo de la tarjeta */}
+      <View className="items-center py-5 px-3" style={{ backgroundColor: statusColor + '12' }}>
+        <Ionicons name="grid-outline" size={22} color={statusColor} style={{ marginBottom: 6 }} />
+        <Text className="font-titulo text-3xl" style={{ color: statusColor }}>
           {mesa.numero}
         </Text>
+        <View className="flex-row items-center mt-1">
+          <Ionicons name="people-outline" size={13} color="#71717a" />
+          <Text className="font-cuerpo text-xs text-secundario ml-1">{mesa.capacidad}</Text>
+        </View>
       </View>
 
-      <Text className="font-titulo text-sm text-gray-800">Mesa {mesa.numero}</Text>
-      <Text className="font-cuerpo text-xs text-gray-500">Capacidad: {mesa.capacidad}</Text>
-
-      <View
-        className="mt-2 px-2 py-0.5 rounded-full"
-        style={{ backgroundColor: getStatusColor(mesa.estado) }}
-      >
-        <Text className="text-white text-[10px] font-bold">{mesa.estado}</Text>
+      {/* Franja de estado inferior */}
+      <View className="py-1.5 items-center" style={{ backgroundColor: statusColor }}>
+        <Text className="font-titulo text-xs text-superficie uppercase tracking-widest">
+          {getMesaStatusLabel(mesa.estado)}
+        </Text>
       </View>
     </Pressable>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, FlatList } from 'react-native';
 import { Categoria } from '../../../../type/menu-inetrface';
 import MenuCard from './MenuCard';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
   categorias: Categoria[];
@@ -17,8 +18,9 @@ const CategoriaFList = ({ categorias }: Props) => {
       showsVerticalScrollIndicator={false}
       renderItem={({ item: categoria }) => (
         <View className="mb-6">
-          <View className="px-5 py-2 bg-gray-50 border-y border-gray-100">
-            <Text className="font-titulo text-lg text-primary uppercase tracking-wider">
+          <View className="px-5 py-3 bg-fondo border-y border-borde flex-row items-center">
+            <Ionicons name="restaurant-outline" size={14} color="#71717a" />
+            <Text className="font-titulo text-sm text-secundario uppercase tracking-widest ml-2">
               {categoria.nombre}
             </Text>
           </View>
