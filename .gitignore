@@ -4,4 +4,3 @@ data/odoo_web_data/
 *.log
 .DS_Store
 node_modules/
-.env

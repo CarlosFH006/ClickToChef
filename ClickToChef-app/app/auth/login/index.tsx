@@ -1,11 +1,9 @@
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, ScrollView, View, Text } from 'react-native';
+import { Alert, KeyboardAvoidingView, ScrollView, View, Text, Image } from 'react-native';
 import { useAuthStore } from '../../../presentation/auth/store/useAuthStore';
 import ThemedButton from '../../../presentation/theme/components/ThemedButton';
 import ThemedTextInput from '../../../presentation/theme/components/ThemedTextInput';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../../constants/theme';
 
 const LoginScreen = () => {
   const login = useAuthStore((state) => state.login);
@@ -41,10 +39,12 @@ const LoginScreen = () => {
         <View className="flex-1 justify-center px-8 py-12">
           {/* Logo */}
           <View className="items-center mb-8">
-            <View className="w-20 h-20 rounded-3xl bg-primary/[10%] items-center justify-center mb-4">
-              <Ionicons name="restaurant" size={40} color={Colors.light.primary} />
-            </View>
-            <Text className="font-titulo text-3xl text-primary">ClickToChef</Text>
+            <Image
+              source={require('../../../assets/images/logo-clicktochef.png')}
+              style={{ width: 100, height: 100 }}
+              resizeMode="contain"
+            />
+            <Text className="font-titulo text-3xl text-primary mt-4">ClickToChef</Text>
             <Text className="font-cuerpo text-base text-secundario mt-1">Panel del Camarero</Text>
           </View>
 

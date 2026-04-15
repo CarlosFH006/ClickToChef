@@ -1,5 +1,5 @@
 import socketClient from "../socket/SocketClient";
-import { useOrderStore } from "../../store/pedido-store";
+import { useOrderStore } from "../../store/useOrderStore";
 import { useAuthStore } from "../../presentation/auth/store/useAuthStore";
 
 /**

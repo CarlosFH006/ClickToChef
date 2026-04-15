@@ -1,7 +1,7 @@
 import { crearPedidoAction } from '../../../core/actions/crear-pedido-action';
 import { updateMesaStatusAction } from '../../../core/actions/update-mesa-status-action';
 import { finalizarReservaAction } from '../../../core/actions/finalizar-reserva-action';
-import { useOrderStore } from '../../../store/pedido-store';
+import { useOrderStore } from '../../../store/useOrderStore';
 
 const useFinalizarPedido = () => {
     const { mesaId, items, clearOrder } = useOrderStore();

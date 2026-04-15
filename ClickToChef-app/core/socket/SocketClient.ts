@@ -1,9 +1,9 @@
 import { Alert } from 'react-native';
 import TcpSocket from 'react-native-tcp-socket';
-import { useMesaStore } from '../../store/mesa-store';
-import { useMenuStore } from '../../store/menu-store';
-import { usePedidosStore } from '../../store/pedidos-store';
-import { useOrderStore } from '../../store/pedido-store';
+import { useMesaStore } from '../../store/useMesaStore';
+import { useMenuStore } from '../../store/useMenuStore';
+import { usePedidosStore } from '../../store/usePedidosStore';
+import { useOrderStore } from '../../store/useOrderStore';
 
 // Interfaces para definir la estructura de los mensajes
 interface ServerMessage {
@@ -100,42 +100,42 @@ class SocketClient {
         }
         break;
 
-        case 'MENU_RESPONSE':
-        case 'MENU_UPDATED':
-          if (data.payload) {
-            useMenuStore.getState().setMenu(data.payload);
-          }
-          break;
-  
-        case 'PEDIDOS_USUARIO_RESPONSE':
-        case 'PEDIDOS_UPDATED':
-          if (data.payload) {
-            const { user } = useAuthStore.getState();
-            if (user) {
-              const filtered = (data.payload as any[]).filter(p => p.usuarioId === user.id);
-              console.log(`[Socket] ${data.type} recibidos:`, filtered.length);
-              usePedidosStore.getState().setPedidos(filtered);
-            }
-          }
-          break;
+      case 'MENU_RESPONSE':
+      case 'MENU_UPDATED':
+        if (data.payload) {
+          useMenuStore.getState().setMenu(data.payload);
+        }
+        break;
 
-        case 'CREAR_PEDIDO_RESPONSE':
-          const { success: orderSuccess, pedidoId } = data.payload;
-          if (orderSuccess) {
-            console.log(`[Socket] Pedido ${pedidoId} creado con éxito.`);
-            Alert.alert("Pedido Confirmado", `El pedido #${pedidoId} ha sido enviado a cocina.`);
-          } else {
-            Alert.alert("Error", "No se pudo crear el pedido en el servidor.");
+      case 'PEDIDOS_USUARIO_RESPONSE':
+      case 'PEDIDOS_UPDATED':
+        if (data.payload) {
+          const { user } = useAuthStore.getState();
+          if (user) {
+            const filtered = (data.payload as any[]).filter(p => p.usuarioId === user.id);
+            console.log(`[Socket] ${data.type} recibidos:`, filtered.length);
+            usePedidosStore.getState().setPedidos(filtered);
           }
-          break;
+        }
+        break;
 
-        case 'RESERVAR_PRODUCTO_RESPONSE':
+      case 'CREAR_PEDIDO_RESPONSE':
+        const { success: orderSuccess, pedidoId } = data.payload;
+        if (orderSuccess) {
+          console.log(`[Socket] Pedido ${pedidoId} creado con éxito.`);
+          Alert.alert("Pedido Confirmado", `El pedido #${pedidoId} ha sido enviado a cocina.`);
+        } else {
+          Alert.alert("Error", "No se pudo crear el pedido en el servidor.");
+        }
+        break;
+
+      case 'RESERVAR_PRODUCTO_RESPONSE':
       case 'LIBERAR_RESERVA_RESPONSE':
       case 'FINALIZAR_RESERVA_RESPONSE':
         if (data.payload) {
           const { success, productoId, cantidad } = data.payload;
           console.log(`[Socket] ${data.type}: success=${success}, productoId=${productoId}, cantidad=${cantidad}`);
-          
+
           if (!success && data.type === 'RESERVAR_PRODUCTO_RESPONSE') {
             console.warn(`[Socket] Reserva fallida para producto ${productoId}. Marcando como no disponible.`);
             useOrderStore.getState().updateQuantity(productoId, -(cantidad || 1));

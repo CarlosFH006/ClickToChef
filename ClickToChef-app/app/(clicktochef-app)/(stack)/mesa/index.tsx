@@ -1,8 +1,8 @@
 import { View, Text, ActivityIndicator, ScrollView } from 'react-native'
 import React, { useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useMesaStore } from '../../../../store/mesa-store'
-import { useOrderStore } from '../../../../store/pedido-store'
+import { useMesaStore } from '../../../../store/useMesaStore'
+import { useOrderStore } from '../../../../store/useOrderStore'
 import { getMesasAction } from '../../../../core/actions/get-mesas-action'
 import MesaFList from '../../../../presentation/pedido/components/mesa/MesaFList'
 import { Colors } from '../../../../constants/theme'
@@ -16,6 +16,14 @@ const MesaIndex = () => {
     getMesasAction();
   }, []);
 
+  if(isLoading && mesas.length === 0){
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={['bottom']}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -26,11 +34,9 @@ const MesaIndex = () => {
           </Text>
         </View>
 
-        {isLoading && mesas.length === 0 ? (
-          <ActivityIndicator size="large" color={Colors.light.primary} className="mt-10" />
-        ) : (
-          <MesaFList mesas={mesas} pedido={true} />
-        )}
+        
+        <MesaFList mesas={mesas} pedido={true} />
+        
       </ScrollView>
 
       {/* Banner informativo inferior */}

@@ -1,8 +1,8 @@
 import { View, Text, ActivityIndicator, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../../presentation/auth/store/useAuthStore';
-import { useEffect, useMemo } from 'react';
-import { useMesaStore } from '../../../store/mesa-store';
+import { useEffect } from 'react';
+import { useMesaStore } from '../../../store/useMesaStore';
 import { getMesasAction } from '../../../core/actions/get-mesas-action';
 import MesaFList from '../../../presentation/pedido/components/mesa/MesaFList';
 import { Colors } from '../../../constants/theme';
@@ -16,11 +16,19 @@ const MesasScreen = () => {
     getMesasAction();
   }, []);
 
-  const stats = useMemo(() => ({
-    libres:    mesas.filter(m => m.estado === 'LIBRE').length,
+  const stats = {
+    libres: mesas.filter(m => m.estado === 'LIBRE').length,
     reservadas: mesas.filter(m => m.estado === 'RESERVADA').length,
-    ocupadas:  mesas.filter(m => m.estado === 'OCUPADA').length,
-  }), [mesas]);
+    ocupadas: mesas.filter(m => m.estado === 'OCUPADA').length,
+  };
+
+  if(isLoading && mesas.length === 0){
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
@@ -50,11 +58,9 @@ const MesasScreen = () => {
           </View>
         </View>
 
-        {isLoading && mesas.length === 0 ? (
-          <ActivityIndicator size="large" color={Colors.light.primary} className="mt-10" />
-        ) : (
-          <MesaFList mesas={mesas} />
-        )}
+        
+        <MesaFList mesas={mesas} />
+        
       </ScrollView>
     </SafeAreaView>
   );

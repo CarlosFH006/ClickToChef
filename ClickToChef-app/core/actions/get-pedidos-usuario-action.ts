@@ -1,5 +1,5 @@
 import socketClient from "../socket/SocketClient";
-import { usePedidosStore } from "../../store/pedidos-store";
+import { usePedidosStore } from "../../store/usePedidosStore";
 
 export const getPedidosUsuarioAction = async (usuarioId: number) => {
   try {

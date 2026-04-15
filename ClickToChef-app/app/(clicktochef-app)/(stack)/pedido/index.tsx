@@ -3,7 +3,7 @@ import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useOrderStore } from '../../../../store/pedido-store'
+import { useOrderStore } from '../../../../store/useOrderStore'
 import ProductoFList from '../../../../presentation/pedido/components/productos/ProductoFList'
 import useFinalizarPedido from '../../../../presentation/pedido/hooks/useFinalizarPedido'
 

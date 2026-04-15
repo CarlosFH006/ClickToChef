@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, TextInput } from 'react-native';
 import { Producto } from '../../../../type/menu-inetrface';
 import { ProductoPedido } from '../../../../type/pedido-interface';
-import { useOrderStore } from '../../../../store/pedido-store';
+import { useOrderStore } from '../../../../store/useOrderStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useProductoActions } from '../../hooks/useProductoActions';
 import { Colors } from '../../../../constants/theme';

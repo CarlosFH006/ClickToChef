@@ -1,11 +1,11 @@
 import { View, Text, FlatList, Pressable, ActivityIndicator, ScrollView } from 'react-native'
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useMenuStore } from '../../../../store/menu-store'
+import { useMenuStore } from '../../../../store/useMenuStore'
 import { getMenuAction } from '../../../../core/actions/get-menu-action'
 import CategoriaFList from '../../../../presentation/pedido/components/productos/CategoriaFList'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import { useOrderStore } from '../../../../store/pedido-store'
+import { useOrderStore } from '../../../../store/useOrderStore'
 import { updateMesaStatusAction } from '../../../../core/actions/update-mesa-status-action'
 import { liberarReservaAction } from '../../../../core/actions/liberar-reserva-action'
 import { Colors } from '../../../../constants/theme'
@@ -45,12 +45,19 @@ const ProductosIndex = () => {
     }
   }, [categorias]);
 
-  const filteredCategorias = useMemo(() => {
-    if (selectedCategoryId === null) return categorias;
-    return categorias.filter(cat => cat.id === selectedCategoryId);
-  }, [categorias, selectedCategoryId]);
+  const filteredCategorias = selectedCategoryId === null
+    ? categorias
+    : categorias.filter(cat => cat.id === selectedCategoryId);
 
-  const totalItems = useMemo(() => items.reduce((acc, item) => acc + item.cantidad, 0), [items]);
+  const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
+
+  if(isLoading){
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
@@ -78,15 +85,13 @@ const ProductosIndex = () => {
             renderItem={({ item }) => (
               <Pressable
                 onPress={() => setSelectedCategoryId(item.id)}
-                className={`mr-3 px-4 py-2 rounded-full border ${
-                  selectedCategoryId === item.id
-                    ? 'bg-primary border-primary'
-                    : 'bg-transparent border-borde'
-                }`}
+                className={`mr-3 px-4 py-2 rounded-full border ${selectedCategoryId === item.id
+                  ? 'bg-primary border-primary'
+                  : 'bg-transparent border-borde'
+                  }`}
               >
-                <Text className={`font-titulo text-sm ${
-                  selectedCategoryId === item.id ? 'text-superficie' : 'text-secundario'
-                }`}>
+                <Text className={`font-titulo text-sm ${selectedCategoryId === item.id ? 'text-superficie' : 'text-secundario'
+                  }`}>
                   {item.nombre}
                 </Text>
               </Pressable>
@@ -94,15 +99,11 @@ const ProductosIndex = () => {
           />
         </View>
 
-        {isLoading ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color={Colors.light.primary} />
-          </View>
-        ) : (
-          <View className="flex-1">
-            <CategoriaFList categorias={filteredCategorias} />
-          </View>
-        )}
+        
+        <View className="flex-1">
+          <CategoriaFList categorias={filteredCategorias} />
+        </View>
+        
 
         {/* Botón Resumen Pedido */}
         {!isLoading && items.length > 0 && (

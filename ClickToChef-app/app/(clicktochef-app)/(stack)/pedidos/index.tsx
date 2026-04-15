@@ -1,9 +1,9 @@
 import { View, Text, Pressable, ActivityIndicator, ScrollView } from 'react-native'
-import React, { useEffect, useCallback, useMemo } from 'react'
+import React, { useEffect } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { usePedidosStore } from '../../../../store/pedidos-store'
+import { usePedidosStore } from '../../../../store/usePedidosStore'
 import { useAuthStore } from '../../../../presentation/auth/store/useAuthStore'
 import { getPedidosUsuarioAction } from '../../../../core/actions/get-pedidos-usuario-action'
 import PedidoFList from '../../../../presentation/pedido/components/pedidos/PedidoFList'
@@ -13,20 +13,21 @@ const PedidosScreen = () => {
   const { pedidos, isLoading } = usePedidosStore();
   const { user } = useAuthStore();
 
-  const fetchPedidos = useCallback(() => {
+  useEffect(() => {
     if (user?.id) {
       getPedidosUsuarioAction(user.id);
     }
   }, [user]);
 
-  useEffect(() => {
-    fetchPedidos();
-  }, [fetchPedidos]);
+  const activosCount = pedidos.filter(p => p.estado === 'ABIERTA').length;
 
-  const activosCount = useMemo(
-    () => pedidos.filter(p => p.estado === 'ABIERTA').length,
-    [pedidos]
-  );
+  if(isLoading && pedidos.length === 0){
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
@@ -41,7 +42,6 @@ const PedidosScreen = () => {
               </Text>
             )}
           </View>
-          {isLoading && <ActivityIndicator color={Colors.light.primary} size="small" />}
         </View>
 
         {/* CTA nuevo pedido */}

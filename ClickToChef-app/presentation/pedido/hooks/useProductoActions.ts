@@ -1,6 +1,6 @@
 import { Producto } from '../../../type/menu-inetrface';
 import { ProductoPedido } from '../../../type/pedido-interface';
-import { useOrderStore } from '../../../store/pedido-store';
+import { useOrderStore } from '../../../store/useOrderStore';
 import { reservarProductoAction } from '../../../core/actions/reservar-producto-action';
 import { liberarReservaAction } from '../../../core/actions/liberar-reserva-action';
 
