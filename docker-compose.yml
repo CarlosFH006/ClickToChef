@@ -39,3 +39,4 @@ services:
     volumes:
       - ./data/odoo_web_data:/var/lib/odoo
       - ./extra-addons:/mnt/extra-addons
+    
