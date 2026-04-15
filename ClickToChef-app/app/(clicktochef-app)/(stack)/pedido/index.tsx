@@ -55,7 +55,7 @@ const PedidoIndex = () => {
               onPress={async () => {
                 const success = await finalizarPedido();
                 if (success) {
-                  router.replace('/(clicktochef-app)/(stack)/pedidos');
+                  router.dismissAll();
                 }
               }}
             >
