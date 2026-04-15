@@ -1,0 +1,69 @@
+import { View, Text, ActivityIndicator, ScrollView } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuthStore } from '../../../presentation/auth/store/useAuthStore';
+import { useEffect } from 'react';
+import { useMesaStore } from '../../../store/useMesaStore';
+import { getMesasAction } from '../../../core/actions/get-mesas-action';
+import MesaFList from '../../../presentation/pedido/components/mesa/MesaFList';
+import { Colors } from '../../../constants/theme';
+import LogOutIconButton from '../../../presentation/auth/components/LogOutIconButton';
+
+const MesasScreen = () => {
+  const { user } = useAuthStore();
+  const { mesas, isLoading } = useMesaStore();
+
+  useEffect(() => {
+    getMesasAction();
+  }, []);
+
+  const stats = {
+    libres: mesas.filter(m => m.estado === 'LIBRE').length,
+    reservadas: mesas.filter(m => m.estado === 'RESERVADA').length,
+    ocupadas: mesas.filter(m => m.estado === 'OCUPADA').length,
+  };
+
+  if(isLoading && mesas.length === 0){
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Header compacto */}
+        <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
+          <View>
+            <Text className="font-titulo text-xl text-principal">Hola, {user?.username}</Text>
+            <Text className="font-cuerpo text-xs text-secundario">Estado actual de las mesas</Text>
+          </View>
+          <LogOutIconButton />
+        </View>
+
+        {/* Stats bar */}
+        <View className="flex-row px-5 mb-4">
+          <View className="flex-1 mr-2 items-center py-2.5 rounded-xl" style={{ backgroundColor: '#4ade8018' }}>
+            <Text className="font-titulo text-lg text-success">{stats.libres}</Text>
+            <Text className="font-cuerpo text-[11px] text-success">Libres</Text>
+          </View>
+          <View className="flex-1 mr-2 items-center py-2.5 rounded-xl" style={{ backgroundColor: '#fbbf2418' }}>
+            <Text className="font-titulo text-lg text-warning">{stats.reservadas}</Text>
+            <Text className="font-cuerpo text-[11px] text-warning">Reservadas</Text>
+          </View>
+          <View className="flex-1 items-center py-2.5 rounded-xl" style={{ backgroundColor: '#f8717118' }}>
+            <Text className="font-titulo text-lg text-error">{stats.ocupadas}</Text>
+            <Text className="font-cuerpo text-[11px] text-error">Ocupadas</Text>
+          </View>
+        </View>
+
+        
+        <MesaFList mesas={mesas} />
+        
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+export default MesasScreen;

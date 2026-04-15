@@ -1,26 +1,21 @@
 package org.example.DTO;
 
-import java.math.BigDecimal;
-
 public class Ingredientes {
     private int id;
     private String nombre;
     private double stockActual;
-    private String unidadMedida;
+    private double stockReservado;
+    private MetodoMedida metodoMedida;
+    private TipoIngrediente tipoIngrediente;
     private int odooProductId;
 
-    public Ingredientes(int id, String nombre, double stockActual, String unidadMedida, int odooProductId) {
+    public Ingredientes(int id, String nombre, double stockActual, double stockReservado, MetodoMedida metodoMedida, TipoIngrediente tipoIngrediente, int odooProductId) {
         this.id = id;
         this.nombre = nombre;
         this.stockActual = stockActual;
-        this.unidadMedida = unidadMedida;
-        this.odooProductId = odooProductId;
-    }
-
-    public Ingredientes(String nombre, double stockActual, String unidadMedida, int odooProductId) {
-        this.nombre = nombre;
-        this.stockActual = stockActual;
-        this.unidadMedida = unidadMedida;
+        this.stockReservado = stockReservado;
+        this.metodoMedida = metodoMedida;
+        this.tipoIngrediente = tipoIngrediente;
         this.odooProductId = odooProductId;
     }
 
@@ -48,12 +43,28 @@ public class Ingredientes {
         this.stockActual = stockActual;
     }
 
-    public String getUnidadMedida() {
-        return unidadMedida;
+    public double getStockReservado() {
+        return stockReservado;
     }
 
-    public void setUnidadMedida(String unidadMedida) {
-        this.unidadMedida = unidadMedida;
+    public void setStockReservado(double stockReservado) {
+        this.stockReservado = stockReservado;
+    }
+
+    public MetodoMedida getMetodoMedida() {
+        return metodoMedida;
+    }
+
+    public void setMetodoMedida(MetodoMedida metodoMedida) {
+        this.metodoMedida = metodoMedida;
+    }
+
+    public TipoIngrediente getTipoIngrediente() {
+        return tipoIngrediente;
+    }
+
+    public void setTipoIngrediente(TipoIngrediente tipoIngrediente) {
+        this.tipoIngrediente = tipoIngrediente;
     }
 
     public int getOdooProductId() {
@@ -70,7 +81,9 @@ public class Ingredientes {
                 "id=" + id +
                 ", nombre='" + nombre + '\'' +
                 ", stockActual=" + stockActual +
-                ", unidadMedida='" + unidadMedida + '\'' +
+                ", stockReservado=" + stockReservado +
+                ", metodoMedida=" + metodoMedida +
+                ", tipoIngrediente=" + tipoIngrediente +
                 ", odooProductId=" + odooProductId +
                 '}';
     }
