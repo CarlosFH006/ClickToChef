@@ -40,3 +40,9 @@ services:
       - ./data/odoo_web_data:/var/lib/odoo
       - ./extra-addons:/mnt/extra-addons
     
+  web-cocina:
+    image: httpd:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./ClickToChef-web:/usr/local/apache2/htdocs/
