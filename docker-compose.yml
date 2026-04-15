@@ -14,6 +14,11 @@ services:
     volumes:
       - ./data/clicktochef.sql:/docker-entrypoint-initdb.d/clicktochef.sql
       - ./data/mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-padminDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db_odoo:
     image: postgres:15
@@ -46,3 +51,19 @@ services:
       - "8080:80"
     volumes:
       - ./ClickToChef-web:/usr/local/apache2/htdocs/
+
+  backend:
+    build:
+      context: ./ClickToChef-Server
+      dockerfile: Dockerfile
+    container_name: clicktochef_backend
+    depends_on:
+      db_app:
+        condition: service_healthy
+      odoo:
+        condition: service_started
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    volumes:
+      - ./ClickToChef-Server/config.properties:/app/config.properties
