@@ -37,13 +37,18 @@ public class Servidor {
     }
 
     /**
-     * Envía un mensaje JSON a todos los clientes conectados.
+     * Envía un mensaje JSON a todos los clientes conectados (TCP y WebSocket).
      */
     public static void broadcast(String json) {
-        System.out.println(">>> BROADCAST: Enviando actualización a " + clienteHilos.size() + " clientes.");
+        System.out.println(">>> BROADCAST: Enviando actualización a " + clienteHilos.size() + " clientes TCP + WebSocket.");
+        
+        // Broadcast a clientes TCP
         for (ClienteHilo cliente : clienteHilos) {
             cliente.sendMessage(json);
         }
+        
+        // Broadcast a clientes WebSocket
+        WebSocketServidor.broadcastGlobal(json);
     }
 
     /**
