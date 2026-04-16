@@ -44,6 +44,12 @@ services:
     volumes:
       - ./data/odoo_web_data:/var/lib/odoo
       - ./extra-addons:/mnt/extra-addons
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8069/web/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     
   web-cocina:
     image: httpd:latest
@@ -61,7 +67,7 @@ services:
       db_app:
         condition: service_healthy
       odoo:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "5000:5000"
       - "5001:5001"

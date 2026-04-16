@@ -31,6 +31,9 @@ const Api = (() => {
                 _dispatch('DETALLES_PEDIDO_RESPONSE', detalles);
                 break;
             }
+            case 'UPDATE_ESTADO_DETALLE_RESPONSE':
+                _dispatch('UPDATE_ESTADO_DETALLE_RESPONSE', msg.payload);
+                break;
             default:
                 console.warn('[Api] Tipo de mensaje desconocido:', msg.type);
         }
@@ -57,5 +60,9 @@ const Api = (() => {
         sendMessage('GET_DETALLES_PEDIDO', null);
     }
 
-    return { on, sendMessage, login, getDetallesPedido };
+    function updateEstadoDetalle(id, estado) {
+        sendMessage('UPDATE_ESTADO_DETALLE', { id, estado });
+    }
+
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle };
 })();
