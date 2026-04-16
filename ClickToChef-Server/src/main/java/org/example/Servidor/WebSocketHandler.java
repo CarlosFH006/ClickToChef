@@ -3,8 +3,12 @@ package org.example.Servidor;
 import com.google.gson.*;
 
 import org.java_websocket.WebSocket;
+import org.example.DAO.DetallesPedidoDAO;
 import org.example.DAO.UsuariosDAO;
+import org.example.DTO.DetallesPedido;
+import org.example.DTO.EstadoDetallePedido;
 import org.example.DTO.Usuarios;
+import java.util.ArrayList;
 
 public class WebSocketHandler {
 
@@ -19,6 +23,12 @@ public class WebSocketHandler {
         switch (type) {
             case "LOGIN":
                 handleLogin(conn, peticion.getAsJsonObject("payload"));
+                break;
+            case "GET_DETALLES_PEDIDO":
+                handleGetDetallesPedido(conn);
+                break;
+            case "UPDATE_ESTADO_DETALLE":
+                handleUpdateEstadoDetalle(conn, peticion.getAsJsonObject("payload"));
                 break;
         }
     }
@@ -44,6 +54,29 @@ public class WebSocketHandler {
             System.out.println("[WebSocket] Login OK para " + user);
         } else {
             System.out.println("[WebSocket] Login fallido para " + user);
+        }
+    }
+
+    private static void handleGetDetallesPedido(WebSocket conn) {
+        ArrayList<DetallesPedido> detalles = DetallesPedidoDAO.obtenerTodos();
+        conn.send(GeneradorJSON.generarDetallesPedidoResponse(detalles));
+    }
+
+    private static void handleUpdateEstadoDetalle(WebSocket conn, JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("estado")) {
+            sendError(conn, "Payload de UPDATE_ESTADO_DETALLE incompleto");
+            return;
+        }
+
+        int id = payload.get("id").getAsInt();
+        EstadoDetallePedido nuevoEstado = EstadoDetallePedido.valueOf(payload.get("estado").getAsString());
+
+        boolean success = DetallesPedidoDAO.updateEstado(id, nuevoEstado);
+        conn.send(GeneradorJSON.generarUpdateEstadoDetalleResponse(success, id));
+
+        if (success) {
+            ArrayList<DetallesPedido> detalles = DetallesPedidoDAO.obtenerTodos();
+            Servidor.broadcast(GeneradorJSON.generarDetallesPedidoResponse(detalles));
         }
     }
 

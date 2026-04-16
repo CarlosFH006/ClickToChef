@@ -161,6 +161,10 @@ public class ClienteHilo extends Thread {
                     handleCrearPedido(peticion.getAsJsonObject("payload"));
                     break;
 
+                case "UPDATE_ESTADO_DETALLE":
+                    handleUpdateEstadoDetalle(peticion.getAsJsonObject("payload"));
+                    break;
+
                 default:
                     System.out.println("[" + getName() + "] Tipo desconocido: " + tipo);
                     sendError("Acción no reconocida en el servidor");
@@ -204,6 +208,32 @@ public class ClienteHilo extends Thread {
         String json = GeneradorJSON.generarMenuUpdated(lista);
         Servidor.broadcast(json);
         System.out.println("[" + getName() + "] Catálogo actualizado y enviado a todos los clientes (" + lista.size() + " categorías)");
+    }
+
+    private void handleUpdateEstadoDetalle(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("estado")) {
+            sendError("Payload de UPDATE_ESTADO_DETALLE incompleto");
+            return;
+        }
+
+        int id = payload.get("id").getAsInt();
+        EstadoDetallePedido nuevoEstado = EstadoDetallePedido.valueOf(payload.get("estado").getAsString());
+
+        boolean success = DetallesPedidoDAO.updateEstado(id, nuevoEstado);
+        writer.println(GeneradorJSON.generarUpdateEstadoDetalleResponse(success, id));
+
+        if (success) {
+            broadcastDetallesPedido();
+        }
+    }
+
+    /**
+     * Envía la lista completa de detalles de pedido a todos los clientes (broadcast)
+     */
+    private void broadcastDetallesPedido() {
+        ArrayList<DetallesPedido> lista = DetallesPedidoDAO.obtenerTodos();
+        Servidor.broadcast(GeneradorJSON.generarDetallesPedidoResponse(lista));
+        System.out.println("[" + getName() + "] Detalles de pedido actualizados y broadcast enviado (" + lista.size() + " detalles)");
     }
 
     /**
@@ -297,8 +327,9 @@ public class ClienteHilo extends Thread {
             writer.println(GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId));
             System.out.println("[" + getName() + "] Pedido " + pedidoId + " creado con " + (exitoDetalles ? "éxito" : "errores parciales"));
 
-            // 4. Notificar a todos los clientes que hay una actualización en los pedidos
+            // 4. Notificar a todos los clientes que hay una actualización en los pedidos y detalles
             broadcastPedidos();
+            broadcastDetallesPedido();
 
         } catch (Exception e) {
             System.err.println("[" + getName() + "] Error al crear pedido: " + e.getMessage());

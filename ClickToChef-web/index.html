@@ -3,247 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClickToChef</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 360px;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: #333;
-            font-size: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.4rem;
-            color: #555;
-            font-size: 0.9rem;
-        }
-
-        input {
-            width: 100%;
-            padding: 0.6rem 0.8rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        button {
-            width: 100%;
-            padding: 0.7rem;
-            background: #e84040;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-
-        button:disabled {
-            background: #aaa;
-            cursor: not-allowed;
-        }
-
-        button:hover:not(:disabled) {
-            background: #c43030;
-        }
-
-        #estado-ws {
-            text-align: center;
-            font-size: 0.8rem;
-            margin-bottom: 1rem;
-            padding: 0.4rem;
-            border-radius: 4px;
-        }
-
-        .ws-conectado  { background: #d4edda; color: #155724; }
-        .ws-conectando { background: #fff3cd; color: #856404; }
-        .ws-error      { background: #f8d7da; color: #721c24; }
-
-        #respuesta {
-            margin-top: 1.2rem;
-            padding: 0.8rem;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            display: none;
-        }
-
-        .resp-ok    { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .resp-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-        #log {
-            margin-top: 1rem;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 0.8rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-family: monospace;
-            max-height: 160px;
-            overflow-y: auto;
-            display: none;
-        }
-
-        #log p { margin: 0.15rem 0; }
-        #log .sent    { color: #9cdcfe; }
-        #log .received { color: #b5cea8; }
-        #log .info    { color: #888; }
-    </style>
+    <title>ClickToChef — Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
-    <div class="container">
-        <h1>ClickToChef — Login</h1>
+<body class="bg-fondo min-h-screen flex items-center justify-center" data-page="login">
 
-        <div id="estado-ws" class="ws-conectando">Conectando al servidor...</div>
+    <div class="w-full max-w-sm px-8 py-12">
 
-        <div class="form-group">
-            <label for="usuario">Usuario</label>
-            <input type="text" id="usuario" placeholder="Introduce tu usuario" autocomplete="username">
+        <!-- Logo -->
+        <div class="flex flex-col items-center mb-8">
+            <img src="assets/icons/logo-clicktochef.png" alt="ClickToChef" class="w-24 h-24 object-contain">
+            <h1 class="text-3xl font-bold text-principal mt-4">ClickToChef</h1>
         </div>
 
-        <div class="form-group">
-            <label for="contrasena">Contraseña</label>
-            <input type="password" id="contrasena" placeholder="Introduce tu contraseña" autocomplete="current-password">
+        <!-- Formulario -->
+        <div>
+            <!-- Usuario -->
+            <div id="wrap-usuario" class="border border-borde rounded-2xl px-4 py-3 mb-3 flex items-center bg-superficie transition-colors duration-150">
+                <svg id="icon-usuario" class="w-6 h-6 mr-3 flex-shrink-0 text-secundario transition-colors duration-150"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <input type="text" id="usuario" placeholder="Nombre de usuario" autocomplete="username"
+                       class="flex-1 bg-transparent text-principal text-base placeholder-secundario outline-none">
+            </div>
+
+            <!-- Contraseña -->
+            <div id="wrap-contrasena" class="border border-borde rounded-2xl px-4 py-3 mb-3 flex items-center bg-superficie transition-colors duration-150">
+                <svg id="icon-contrasena" class="w-6 h-6 mr-3 flex-shrink-0 text-secundario transition-colors duration-150"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <input type="password" id="contrasena" placeholder="Contraseña" autocomplete="current-password"
+                       class="flex-1 bg-transparent text-principal text-base placeholder-secundario outline-none">
+            </div>
+
+            <div class="mt-2"></div>
+
+            <!-- Botón login -->
+            <button id="btn-login" disabled
+                    class="w-full bg-primary text-white font-semibold py-4 px-4 rounded-2xl
+                           flex items-center justify-center gap-3
+                           hover:bg-blue-600 active:opacity-80 transition-colors duration-150
+                           disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                Iniciar sesión
+            </button>
         </div>
 
-        <button id="btn-login" disabled>Iniciar sesión</button>
-
-        <div id="respuesta"></div>
-        <div id="log"></div>
     </div>
 
-    <script>
-        const WS_URL = "ws://localhost:5001";
-
-        const estadoEl   = document.getElementById("estado-ws");
-        const btnLogin   = document.getElementById("btn-login");
-        const respuestaEl = document.getElementById("respuesta");
-        const logEl      = document.getElementById("log");
-
-        let ws = null;
-
-        function addLog(texto, clase) {
-            logEl.style.display = "block";
-            const p = document.createElement("p");
-            p.className = clase;
-            p.textContent = texto;
-            logEl.appendChild(p);
-            logEl.scrollTop = logEl.scrollHeight;
-        }
-
-        function setEstado(texto, clase) {
-            estadoEl.textContent = texto;
-            estadoEl.className = clase;
-        }
-
-        function conectar() {
-            setEstado("Conectando al servidor...", "ws-conectando");
-            addLog("Conectando a " + WS_URL + "...", "info");
-
-            ws = new WebSocket(WS_URL);
-
-            ws.onopen = () => {
-                setEstado("Conectado al servidor", "ws-conectado");
-                btnLogin.disabled = false;
-                addLog("Conexión establecida.", "info");
-            };
-
-            ws.onclose = () => {
-                setEstado("Desconectado — reconectando en 3s...", "ws-error");
-                btnLogin.disabled = true;
-                addLog("Conexión cerrada.", "info");
-                setTimeout(conectar, 3000);
-            };
-
-            ws.onerror = () => {
-                setEstado("Error de conexión", "ws-error");
-                addLog("Error en el WebSocket.", "info");
-            };
-
-            ws.onmessage = (event) => {
-                addLog("← " + event.data, "received");
-                try {
-                    const resp = JSON.parse(event.data);
-                    mostrarRespuesta(resp);
-                } catch {
-                    mostrarMensaje("Respuesta inesperada del servidor.", false);
-                }
-            };
-        }
-
-        function mostrarRespuesta(resp) {
-            if (resp.type === "LOGIN_RESPONSE") {
-                const ok = resp.payload?.success === true;
-                const mensaje = ok
-                    ? "Bienvenido, " + (resp.payload.user?.username || "usuario")
-                    : "Usuario o contraseña incorrectos";
-                mostrarMensaje(mensaje, ok);
-                alert(ok ? "Login correcto" : "Login incorrecto");
-            } else {
-                mostrarMensaje(JSON.stringify(resp), false);
-            }
-        }
-
-        function mostrarMensaje(texto, exito) {
-            respuestaEl.style.display = "block";
-            respuestaEl.className = exito ? "resp-ok" : "resp-error";
-            respuestaEl.textContent = texto;
-        }
-
-        document.getElementById("btn-login").addEventListener("click", () => {
-            const username = document.getElementById("usuario").value.trim();
-            const pass     = document.getElementById("contrasena").value;
-
-            if (!username || !pass) {
-                mostrarMensaje("Por favor rellena usuario y contraseña.", false);
-                return;
-            }
-
-            const mensaje = {
-                type: "LOGIN",
-                payload: { username, pass }
-            };
-
-            const json = JSON.stringify(mensaje);
-            addLog("→ " + json, "sent");
-            ws.send(json);
-
-            respuestaEl.style.display = "none";
-        });
-
-        // Permitir login con Enter
-        document.getElementById("contrasena").addEventListener("keydown", (e) => {
-            if (e.key === "Enter") btnLogin.click();
-        });
-
-        conectar();
-    </script>
+    <script src="js/config.js"></script>
+    <script src="js/services/websocket.js"></script>
+    <script src="js/models/detallePedido.js"></script>
+    <script src="js/services/api.js"></script>
+    <script src="js/paginas/login.js"></script>
 </body>
 </html>

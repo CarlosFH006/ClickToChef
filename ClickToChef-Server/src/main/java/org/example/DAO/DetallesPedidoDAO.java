@@ -30,7 +30,10 @@ public class DetallesPedidoDAO {
     }
 
     public static ArrayList<DetallesPedido> obtenerTodos() {
-        String sql = "SELECT id, pedido_id, producto_id, cantidad, notas_especiales, estado, hora_pedido FROM detalles_pedido";
+        String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
+                     "dp.cantidad, dp.notas_especiales, dp.estado, dp.hora_pedido " +
+                     "FROM detalles_pedido dp " +
+                     "JOIN productos p ON dp.producto_id = p.id";
         ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -42,6 +45,7 @@ public class DetallesPedidoDAO {
                         resultSet.getInt("id"),
                         resultSet.getInt("pedido_id"),
                         resultSet.getInt("producto_id"),
+                        resultSet.getString("nombre_producto"),
                         resultSet.getInt("cantidad"),
                         resultSet.getString("notas_especiales"),
                         convertirEstadoDetalleAEnum(resultSet.getString("estado")),
@@ -54,6 +58,20 @@ public class DetallesPedidoDAO {
         }
 
         return detalles;
+    }
+
+    public static boolean updateEstado(int id, EstadoDetallePedido nuevoEstado) {
+        String sql = "UPDATE detalles_pedido SET estado = ? WHERE id = ?";
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+
+            statement.setString(1, convertirEstadoDetalleADB(nuevoEstado));
+            statement.setInt(2, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar el estado del detalle del pedido", e);
+        }
     }
 
     private static String convertirEstadoDetalleADB(EstadoDetallePedido estadoDetallePedido) {

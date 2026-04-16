@@ -3,6 +3,7 @@ package org.example.Servidor;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.example.DTO.DetallesPedido;
 import org.example.DTO.Mesas;
 import org.example.DTO.CategoriaPlato;
 import org.example.DTO.Pedidos;
@@ -187,6 +188,31 @@ public class GeneradorJSON {
         } else {
             payload.addProperty("success", false);
         }
+
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    /**
+     * Genera respuesta de detalles de pedido
+     */
+    public static String generarDetallesPedidoResponse(ArrayList<DetallesPedido> lista) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "DETALLES_PEDIDO_RESPONSE");
+        respuesta.add("payload", gson.toJsonTree(lista));
+        return gson.toJson(respuesta);
+    }
+
+    /**
+     * Genera respuesta de actualización de estado de detalle
+     */
+    public static String generarUpdateEstadoDetalleResponse(boolean success, int id) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "UPDATE_ESTADO_DETALLE_RESPONSE");
+
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        payload.addProperty("id", id);
 
         respuesta.add("payload", payload);
         return gson.toJson(respuesta);

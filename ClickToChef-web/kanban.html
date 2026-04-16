@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickToChef — Cocina</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+</head>
+<body class="bg-fondo min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-superficie border-b border-borde px-6 py-4 flex items-center gap-3">
+        <img src="assets/icons/logo-clicktochef.png" alt="ClickToChef" class="w-8 h-8 object-contain">
+        <h1 class="text-xl font-bold text-principal">ClickToChef — Cocina</h1>
+        <span id="ws-status" class="ml-auto text-xs px-2 py-1 rounded-full bg-gray-100 text-secundario">Conectando...</span>
+    </header>
+
+    <!-- Kanban board -->
+    <main class="p-6 grid grid-cols-3 gap-4 h-[calc(100vh-65px)]">
+
+        <!-- Columna PENDIENTE -->
+        <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="w-3 h-3 rounded-full bg-warning"></span>
+                <h2 class="font-semibold text-principal text-sm uppercase tracking-wide">Pendiente</h2>
+                <span id="count-PENDIENTE" class="ml-auto text-xs text-secundario font-medium">0</span>
+            </div>
+            <div id="col-PENDIENTE" class="flex flex-col gap-3 overflow-y-auto flex-1 pr-1"></div>
+        </div>
+
+        <!-- Columna EN_PREPARACION -->
+        <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="w-3 h-3 rounded-full bg-primary"></span>
+                <h2 class="font-semibold text-principal text-sm uppercase tracking-wide">En preparación</h2>
+                <span id="count-EN_PREPARACION" class="ml-auto text-xs text-secundario font-medium">0</span>
+            </div>
+            <div id="col-EN_PREPARACION" class="flex flex-col gap-3 overflow-y-auto flex-1 pr-1"></div>
+        </div>
+
+        <!-- Columna LISTO -->
+        <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="w-3 h-3 rounded-full bg-success"></span>
+                <h2 class="font-semibold text-principal text-sm uppercase tracking-wide">Listo</h2>
+                <span id="count-LISTO" class="ml-auto text-xs text-secundario font-medium">0</span>
+            </div>
+            <div id="col-LISTO" class="flex flex-col gap-3 overflow-y-auto flex-1 pr-1"></div>
+        </div>
+
+
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/services/websocket.js"></script>
+    <script src="js/models/detallePedido.js"></script>
+    <script src="js/services/api.js"></script>
+    <script src="js/paginas/kanban.js"></script>
+</body>
+</html>
