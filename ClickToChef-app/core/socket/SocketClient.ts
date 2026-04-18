@@ -156,15 +156,38 @@ class SocketClient {
 
       setTimeout(() => {
         if (this.client) {
-          this.client.write(JSON.stringify(data) + '\n');
-          console.log('[Socket] Enviado (tras reconexión):', data.type);
+          try {
+            this.client.write(JSON.stringify(data) + '\n');
+            console.log('[Socket] Enviado (tras reconexión):', data.type);
+          } catch (err) {
+            console.error('[Socket] Error al enviar tras reconexión:', err);
+            this.client = null;
+            Alert.alert(
+              'Sin conexión',
+              'No se pudo conectar con el servidor. Comprueba la red e inténtalo de nuevo.'
+            );
+          }
+        } else {
+          Alert.alert(
+            'Sin conexión',
+            'No se pudo conectar con el servidor. Comprueba la red e inténtalo de nuevo.'
+          );
         }
       }, 1000);
       return;
     }
 
-    this.client.write(JSON.stringify(data) + '\n');
-    console.log('[Socket] Enviado:', data.type);
+    try {
+      this.client.write(JSON.stringify(data) + '\n');
+      console.log('[Socket] Enviado:', data.type);
+    } catch (err) {
+      console.error('[Socket] Error al enviar:', err);
+      this.client = null;
+      Alert.alert(
+        'Sin conexión',
+        'Se perdió la conexión con el servidor. Comprueba la red e inténtalo de nuevo.'
+      );
+    }
   }
 
   public disconnect(): void {
