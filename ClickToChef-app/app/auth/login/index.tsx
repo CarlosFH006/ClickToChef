@@ -23,10 +23,15 @@ const LoginScreen = () => {
       Alert.alert('Error', 'Por favor completa ambos campos');
       return;
     }
-    const success = await login(username, pass);
-    if (!success) {
-      Alert.alert('Error', 'No se pudo conectar con el servidor');
-    }
+
+    login(username, pass);
+
+    setTimeout(() => {
+      if (useAuthStore.getState().status === 'checking') {
+        useAuthStore.setState({ status: 'unauthenticated' });
+        Alert.alert('Sin conexión', 'No se pudo conectar con el servidor. Comprueba la red e inténtalo de nuevo.');
+      }
+    }, 5000);
   };
 
   return (

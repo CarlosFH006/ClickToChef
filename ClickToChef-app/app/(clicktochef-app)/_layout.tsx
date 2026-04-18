@@ -45,7 +45,8 @@ const CheckAuthenticationLayout = () => {
         }}>
             <Tabs.Screen name="mesas/index" options={{
                 title: "Mesas",
-                tabBarIcon: ({ color }) => <Ionicons name="restaurant-outline" size={24} color={color} />
+                tabBarIcon: ({ color }) => <Ionicons name="restaurant-outline" size={24} color={color} />,
+                headerShown: false
             }} />
             <Tabs.Screen name="(stack)" options={{
                 title: "Pedido",
