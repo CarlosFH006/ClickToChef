@@ -34,6 +34,10 @@ const Api = (() => {
             case 'UPDATE_ESTADO_DETALLE_RESPONSE':
                 _dispatch('UPDATE_ESTADO_DETALLE_RESPONSE', msg.payload);
                 break;
+            case 'SERVER_ERROR':
+                console.error('[Api] Error del servidor:', msg.payload);
+                _dispatch('SERVER_ERROR', msg.payload);
+                break;
             default:
                 console.warn('[Api] Tipo de mensaje desconocido:', msg.type);
         }

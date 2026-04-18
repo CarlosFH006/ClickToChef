@@ -26,7 +26,6 @@ const CheckAuthenticationLayout = () => {
     }
 
     if (status === 'unauthenticated') {
-        // TODO: Guardar la ruta del usuario desde la que accede para redirigirle después de loguearse
         return <Redirect href="/auth/login" />;
     }
 
