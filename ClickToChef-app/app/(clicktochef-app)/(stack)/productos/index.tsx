@@ -17,11 +17,15 @@ const ProductosIndex = () => {
   const { mesaId } = useLocalSearchParams();
   const navigation = useNavigation();
 
+  //Al salir de la pantalla de productos, se libera la mesa y se limpia el pedido
   useEffect(() => {
+    //Listener para detectar cuando se sale de la pantalla de productos
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      //Obtener el tipo de acción
       const actionType = e.data.action.type;
       console.log('Navegación detectada al salir:', actionType);
 
+      //Si se sale de la pantalla de productos, se libera la mesa y se limpia el pedido
       if ((actionType === 'GO_BACK' || actionType === 'POP') && mesaId) {
         const currentItems = useOrderStore.getState().items;
         currentItems.forEach(item => {
@@ -31,7 +35,7 @@ const ProductosIndex = () => {
         useOrderStore.getState().clearOrder();
       }
     });
-
+    //Limpiar el listener al salir de la pantalla
     return unsubscribe;
   }, [navigation, mesaId]);
 
@@ -106,7 +110,7 @@ const ProductosIndex = () => {
         
 
         {/* Botón Resumen Pedido */}
-        {!isLoading && items.length > 0 && (
+        {items.length > 0 && (
           <View className="px-5 py-4 bg-superficie border-t border-borde shadow-lg">
             <Pressable
               onPress={() => router.push('/(clicktochef-app)/(stack)/pedido')}

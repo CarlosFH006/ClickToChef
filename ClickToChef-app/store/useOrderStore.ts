@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { ProductoPedido } from '../type/pedido-interface';
 
+//Store para manejar el estado global del pedido
+//En este store se va almacenando el pedido mientras se genera
+
 interface OrderState {
   mesaId: number | null;
   items: ProductoPedido[];
@@ -41,10 +44,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     return { items: [...state.items, { ...producto, cantidad: 1 }] };
   }),
 
+  //Elimina un producto del pedido
   removeItem: (id) => set((state) => ({
     items: state.items.filter(item => item.id !== id)
   })),
 
+  //Actualiza la cantidad de un producto
   updateQuantity: (id, delta) => set((state) => {
     const newItems = state.items.map(item =>
       item.id === id ? { ...item, cantidad: item.cantidad + delta } : item
@@ -53,14 +58,17 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     return { items: newItems };
   }),
 
+  //Añade notas a un producto
   setNotas: (id, notas) => set((state) => ({
     items: state.items.map(item =>
       item.id === id ? { ...item, notas } : item
     )
   })),
 
+  //Limpia el pedido
   clearOrder: () => set({ mesaId: null, items: [] }),
 
+  //Calcula el total del pedido
   getTotal: () => {
     return get().items.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
   }

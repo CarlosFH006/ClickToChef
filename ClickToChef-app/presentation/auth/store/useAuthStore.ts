@@ -20,11 +20,22 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     status: 'checking',
     user: undefined,
 
+    //Acción para iniciar sesión
+    /*
+        El estado se cambia a authenticated cuando en el SocketClient se recibe un mensaje de tipo LOGIN_SUCCESS
+        y se guarda el usuario en el estado.
+        Si el login falla o el usuario no es camarero, el estado cambia a unauthenticated.
+    */
     login: async (username: string, pass: string) => {
         set({ status: 'checking' });
         return await authLogin(username, pass);
     },
 
+    //Acción para cambiar el estado de autenticación
+    /*
+        Si no se proporciona usuario, se establece el estado como unauthenticated y se elimina la sesión.
+        Si se proporciona usuario, se establece el estado como authenticated y se guarda la sesión.
+    */
     changeStatus: async (user?: Usuario, pass?: string) => {
         if (!user) {
             set({ status: 'unauthenticated', user: undefined });
@@ -37,6 +48,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         await SecureStorage.setItem('user_session', JSON.stringify({ user, pass }));
     },
 
+    //Acción para verificar el estado de autenticación
+    /*
+        Verifica si existe una sesión persistente y establece el estado de autenticación.
+    */
     checkStatus: async () => {
         try {
             const session = await SecureStorage.getItem('user_session');
@@ -57,6 +72,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         }
     },
 
+    //Acción para cerrar sesión
+    /*
+        Elimina la sesión persistente y establece el estado como unauthenticated.
+    */
     logout: async () => {
         await SecureStorage.deleteItem('user_session');
         set({ status: "unauthenticated", user: undefined });

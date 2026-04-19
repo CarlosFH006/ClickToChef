@@ -2,6 +2,7 @@ import React from 'react'
 import { useAuthStore } from '../store/useAuthStore';
 import ThemedButton from '../../theme/components/ThemedButton';
 
+//Botón para cerrar sesión
 const LogOutIconButton = () => {
     const { logout } = useAuthStore();
 

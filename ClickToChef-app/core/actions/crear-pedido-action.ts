@@ -2,19 +2,19 @@ import socketClient from "../socket/SocketClient";
 import { useOrderStore } from "../../store/useOrderStore";
 import { useAuthStore } from "../../presentation/auth/store/useAuthStore";
 
-/**
- * Envía el pedido actual al servidor para ser procesado.
- * La lógica de stock y estado de mesa se maneja por separado según requerimiento.
- */
+//Acción para crear un pedido
 export const crearPedidoAction = async () => {
+    //Obtener datos del pedido y del usuario
     const { mesaId, items } = useOrderStore.getState();
     const { user } = useAuthStore.getState();
 
+    //Si no hay datos suficientes, mostrar error
     if (!mesaId || !user || items.length === 0) {
         console.warn("[crearPedidoAction] Datos insuficientes para crear el pedido", { mesaId, user, itemsCount: items.length });
         return false;
     }
 
+    //Enviar solicitud al servidor
     try {
         socketClient.send({
             type: 'CREAR_PEDIDO',

@@ -16,7 +16,7 @@ const MesasScreen = () => {
     getMesasAction();
   }, []);
 
-  const stats = {
+  const estados = {
     libres: mesas.filter(m => m.estado === 'LIBRE').length,
     reservadas: mesas.filter(m => m.estado === 'RESERVADA').length,
     ocupadas: mesas.filter(m => m.estado === 'OCUPADA').length,
@@ -36,24 +36,24 @@ const MesasScreen = () => {
         {/* Header compacto */}
         <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
           <View>
-            <Text className="font-titulo text-xl text-principal">Hola, {user?.username}</Text>
+            <Text className="font-titulo text-xl text-principal">Bienvenido, {user?.username}</Text>
             <Text className="font-cuerpo text-xs text-secundario">Estado actual de las mesas</Text>
           </View>
           <LogOutIconButton />
         </View>
 
-        {/* Stats bar */}
+        {/* Estados */}
         <View className="flex-row px-5 mb-4">
           <View className="flex-1 mr-2 items-center py-2.5 rounded-xl" style={{ backgroundColor: '#4ade8018' }}>
-            <Text className="font-titulo text-lg text-success">{stats.libres}</Text>
+            <Text className="font-titulo text-lg text-success">{estados.libres}</Text>
             <Text className="font-cuerpo text-[11px] text-success">Libres</Text>
           </View>
           <View className="flex-1 mr-2 items-center py-2.5 rounded-xl" style={{ backgroundColor: '#fbbf2418' }}>
-            <Text className="font-titulo text-lg text-warning">{stats.reservadas}</Text>
+            <Text className="font-titulo text-lg text-warning">{estados.reservadas}</Text>
             <Text className="font-cuerpo text-[11px] text-warning">Reservadas</Text>
           </View>
           <View className="flex-1 items-center py-2.5 rounded-xl" style={{ backgroundColor: '#f8717118' }}>
-            <Text className="font-titulo text-lg text-error">{stats.ocupadas}</Text>
+            <Text className="font-titulo text-lg text-error">{estados.ocupadas}</Text>
             <Text className="font-cuerpo text-[11px] text-error">Ocupadas</Text>
           </View>
         </View>

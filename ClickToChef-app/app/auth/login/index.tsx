@@ -19,13 +19,13 @@ const LoginScreen = () => {
 
   const onLogin = async () => {
     const { username, pass } = form;
-    if (username.length === 0 || pass.length === 0) {
+    if (username.trim().length === 0 || pass.trim().length === 0) {
       Alert.alert('Error', 'Por favor completa ambos campos');
       return;
     }
 
     login(username, pass);
-
+    //Si en 5 segundos no se ha autenticado, mostrar error de conexión
     setTimeout(() => {
       if (useAuthStore.getState().status === 'checking') {
         useAuthStore.setState({ status: 'unauthenticated' });

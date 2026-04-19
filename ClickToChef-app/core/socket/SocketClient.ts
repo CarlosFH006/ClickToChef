@@ -5,6 +5,8 @@ import { useMenuStore } from '../../store/useMenuStore';
 import { usePedidosStore } from '../../store/usePedidosStore';
 import { useOrderStore } from '../../store/useOrderStore';
 
+//Clase Singleton para manejar el Socket
+
 // Interfaces para definir la estructura de los mensajes
 interface ServerMessage {
   type: string;
@@ -19,18 +21,20 @@ interface ClientMessage {
 
 class SocketClient {
   private client: TcpSocket.Socket | null = null;
-  private readonly host: string = process.env.EXPO_PUBLIC_SERVER_HOST || 'localhost';
-  private readonly port: number = Number(process.env.EXPO_PUBLIC_SERVER_PORT) || 5000;
+  private host: string = process.env.EXPO_PUBLIC_SERVER_HOST!;
+  private port: number = Number(process.env.EXPO_PUBLIC_SERVER_PORT);
 
   constructor() {
     this.client = null;
   }
 
   public connect(): void {
+    //Si ya existe una conexión, no crear otra
     if (this.client) return;
 
     console.log(`[Socket] Conectando a ${this.host}:${this.port}...`);
 
+    //Crear conexión
     this.client = TcpSocket.createConnection({
       port: this.port,
       host: this.host
@@ -38,9 +42,16 @@ class SocketClient {
       console.log(`[Socket] Conectado a ${this.host}:${this.port}`);
     });
 
+    //El evento data se dispara cuando el servidor envía datos
     this.client.on('data', (data: Buffer | string) => {
+      /*
+        Dividir los mensajes en los saltos de línea
+        porque el servidor puede mandar mas de un mensaje junto
+      */
+      //.filter(Boolean) elimina los strings vacíos
       const messages = data.toString().split('\n').filter(Boolean);
 
+      //Procesar cada mensaje
       messages.forEach(msg => {
         try {
           const parsedData: ServerMessage = JSON.parse(msg);
@@ -51,31 +62,38 @@ class SocketClient {
       });
     });
 
+    //Manejar errores
     this.client.on('error', (error: Error) => {
       console.error('[Socket] Error:', error);
+      //Desconectar del servidor si ocurre un error
       this.disconnect();
     });
 
+    //Manejar cierre de conexión
     this.client.on('close', () => {
       console.log('[Socket] Conexión cerrada');
+      //Si sucede un cierre, el cliente se pone en null para que se pueda reconectar
       this.client = null;
     });
   }
 
+  //Procesar los mensajes recibidos del servidor
   private handleServerMessage(data: ServerMessage): void {
     console.log('[Socket] Recibido:', data.type);
-
-    // Tipamos el require para mantener la seguridad
+    /*
+      Require dinámico para evitar una dependencia circular
+      ya que useAuthStore utiliza login-action que utiliza SocketClient
+    */
     const { useAuthStore } = require('../../presentation/auth/store/useAuthStore');
-
     switch (data.type) {
       case 'LOGIN_RESPONSE':
         const { success, user } = data.payload || {};
-
         if (success) {
+          //Si el usuario es camarero, cambiar estado a autenticado
           if (user.rol === 'CAMARERO') {
             useAuthStore.getState().changeStatus(user);
           } else {
+            //Si el usuario no es camarero, cambiar estado a no autenticado
             useAuthStore.getState().changeStatus();
             Alert.alert("Acceso denegado", "Debe ser Camarero para acceder a esta aplicación.");
           }
@@ -92,6 +110,7 @@ class SocketClient {
         }
         break;
 
+      //Actualizar estado de una mesa en tiempo real
       case 'MESA_UPDATED':
         if (data.payload) {
           const { id, estado } = data.payload;
@@ -100,6 +119,7 @@ class SocketClient {
         }
         break;
 
+      //Actualizar menu en tiempo real
       case 'MENU_RESPONSE':
       case 'MENU_UPDATED':
         if (data.payload) {
@@ -107,6 +127,7 @@ class SocketClient {
         }
         break;
 
+      //Actualizar pedidos en tiempo real
       case 'PEDIDOS_USUARIO_RESPONSE':
       case 'PEDIDOS_UPDATED':
         if (data.payload) {
@@ -138,7 +159,8 @@ class SocketClient {
 
           if (!success && data.type === 'RESERVAR_PRODUCTO_RESPONSE') {
             console.warn(`[Socket] Reserva fallida para producto ${productoId}. Marcando como no disponible.`);
-            useOrderStore.getState().updateQuantity(productoId, -(cantidad || 1));
+            //Restar el producto añadido sin stock
+            useOrderStore.getState().updateQuantity(productoId, cantidad);
             Alert.alert("Stock insuficiente", "No hay suficiente stock para reservar la cantidad solicitada.");
           }
         }
@@ -149,17 +171,22 @@ class SocketClient {
     }
   }
 
+  //Enviar mensajes al servidor
   public send(data: ClientMessage): void {
+    //Si no hay conexión, intentar reconectar
     if (!this.client) {
       console.warn('[Socket] No conectado. Intentando reconectar...');
       this.connect();
 
+      //Esperamos un segundo para que connect se establezca
       setTimeout(() => {
+        //Si se ha establecido la conexión, enviar el mensaje
         if (this.client) {
           try {
             this.client.write(JSON.stringify(data) + '\n');
             console.log('[Socket] Enviado (tras reconexión):', data.type);
           } catch (err) {
+            //Si ocurre un error, mostrar alerta
             console.error('[Socket] Error al enviar tras reconexión:', err);
             this.client = null;
             Alert.alert(
@@ -167,6 +194,7 @@ class SocketClient {
               'No se pudo conectar con el servidor. Comprueba la red e inténtalo de nuevo.'
             );
           }
+        //Si no se ha establecido la conexión, mostrar alerta
         } else {
           Alert.alert(
             'Sin conexión',
@@ -177,10 +205,12 @@ class SocketClient {
       return;
     }
 
+    //Si hay conexión, enviar el mensaje
     try {
       this.client.write(JSON.stringify(data) + '\n');
       console.log('[Socket] Enviado:', data.type);
     } catch (err) {
+      //Si ocurre un error, mostrar alerta
       console.error('[Socket] Error al enviar:', err);
       this.client = null;
       Alert.alert(
@@ -190,6 +220,7 @@ class SocketClient {
     }
   }
 
+  //Desconectar del servidor
   public disconnect(): void {
     if (this.client) {
       this.client.destroy();
@@ -199,5 +230,6 @@ class SocketClient {
   }
 }
 
+//Instancia única de SocketClient
 const socketClient = new SocketClient();
 export default socketClient;

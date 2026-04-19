@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Categoria } from '../type/menu-inetrface';
 
+//Almacenar el estado global del menu
 interface MenuState {
   categorias: Categoria[];
   isLoading: boolean;

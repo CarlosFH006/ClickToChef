@@ -44,7 +44,7 @@ const PedidosScreen = () => {
           </View>
         </View>
 
-        {/* CTA nuevo pedido */}
+        {/* Nuevo pedido */}
         <View className="px-5 mb-4">
           <Pressable
             className="flex-row items-center justify-center py-4 rounded-2xl bg-primary active:opacity-90"

@@ -1,6 +1,7 @@
-  import { create } from 'zustand';
+import { create } from 'zustand';
 import { Pedidos } from '../type/pedidos-interface';
 
+//Almacenar el estado global de los pedidos
 interface PedidosState {
   pedidos: Pedidos[];
   isLoading: boolean;

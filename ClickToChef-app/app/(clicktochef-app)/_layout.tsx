@@ -8,26 +8,8 @@ import { Ionicons } from '@expo/vector-icons'
 
 const CheckAuthenticationLayout = () => {
 
-    const { status, checkStatus } = useAuthStore()
-
     const backgroundColor = useThemeColor({}, 'background');
     const primaryColor = useThemeColor({}, 'primary');
-
-    useEffect(() => {
-        checkStatus();
-    }, [])
-
-    if (status === 'checking') {
-        return (
-            <SafeAreaView className="flex-1 justify-center items-center">
-                <ActivityIndicator />
-            </SafeAreaView>
-        );
-    }
-
-    if (status === 'unauthenticated') {
-        return <Redirect href="/auth/login" />;
-    }
 
     return (
         <Tabs screenOptions={{
