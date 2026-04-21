@@ -23,6 +23,7 @@ class SocketClient {
   private client: TcpSocket.Socket | null = null;
   private host: string = process.env.EXPO_PUBLIC_SERVER_HOST!;
   private port: number = Number(process.env.EXPO_PUBLIC_SERVER_PORT);
+  private buffer: string = '';
 
   constructor() {
     this.client = null;
@@ -45,14 +46,15 @@ class SocketClient {
     //El evento data se dispara cuando el servidor envía datos
     this.client.on('data', (data: Buffer | string) => {
       /*
-        Dividir los mensajes en los saltos de línea
-        porque el servidor puede mandar mas de un mensaje junto
+        Acumular datos en el buffer porque TCP puede fragmentar mensajes.
+        Solo procesar líneas completas (terminadas en \n).
+        trim() elimina \r de servidores Windows y espacios sobrantes.
       */
-      //.filter(Boolean) elimina los strings vacíos
-      const messages = data.toString().split('\n').filter(Boolean);
+      this.buffer = (this.buffer || '') + data.toString();
+      const lines = this.buffer.split('\n');
+      this.buffer = lines.pop() ?? '';
 
-      //Procesar cada mensaje
-      messages.forEach(msg => {
+      lines.map(l => l.trim()).filter(Boolean).forEach(msg => {
         try {
           const parsedData: ServerMessage = JSON.parse(msg);
           this.handleServerMessage(parsedData);
@@ -72,6 +74,7 @@ class SocketClient {
     //Manejar cierre de conexión
     this.client.on('close', () => {
       console.log('[Socket] Conexión cerrada');
+      this.buffer = '';
       //Si sucede un cierre, el cliente se pone en null para que se pueda reconectar
       this.client = null;
     });
