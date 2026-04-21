@@ -109,7 +109,7 @@ public class ClienteHilo extends Thread {
     }
 
     //Envia mensaje si el PrintWriter existe
-    private void send(String json) {
+    private synchronized void send(String json) {
         if (writer != null) {
             writer.println(json);
         }
