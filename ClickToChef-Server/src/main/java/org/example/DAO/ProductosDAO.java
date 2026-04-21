@@ -52,17 +52,21 @@ public class ProductosDAO {
     }
 
     public static boolean reservarProducto(int productoId, int cantidad) {
+        //Obtener los ingredientes y cantidad de ingredientes de cada producto
         String sqlReceta = "SELECT ingrediente_id, cantidad_necesaria FROM recetas WHERE producto_id = ?";
+
+        //Hacer la reserva si hay suficiente Stock
         String sqlUpdate = "UPDATE ingredientes SET stock_reservado = stock_reservado + ? " +
                 "WHERE id = ? AND (stock_actual - stock_reservado) >= ?";
 
         try (Connection conn = ConexionDB.getConexion()) {
-            conn.setAutoCommit(false); // Empezamos transacción
+            //Que la base de datos no almacene las respuestas hasta que este todo bien
+            conn.setAutoCommit(false);
 
             try (PreparedStatement psReceta = conn.prepareStatement(sqlReceta)) {
                 psReceta.setInt(1, productoId);
                 ResultSet rs = psReceta.executeQuery();
-
+                //Por cada ingrediente hacer la reserva
                 while (rs.next()) {
                     int ingId = rs.getInt("ingrediente_id");
                     double cantNecesaria = rs.getDouble("cantidad_necesaria") * cantidad;
@@ -74,12 +78,14 @@ public class ProductosDAO {
 
                         int filasAfectadas = psUpdate.executeUpdate();
                         if (filasAfectadas == 0) {
+                            //Si falla una reserva lanzamos una excepción
                             throw new Exception("Stock insuficiente para el ingrediente ID: " + ingId);
                         }
                     }
                 }
                 conn.commit(); // Si todo fue bien, guardamos cambios
                 return true;
+            //Si falla una reserva se ejecuta este codigo
             } catch (Exception e) {
                 conn.rollback(); // Si algo falló, deshacemos todo
                 System.err.println("Error en reserva: " + e.getMessage());
@@ -90,8 +96,11 @@ public class ProductosDAO {
             return false;
         }
     }
+
+    //Liberar reserva, quitar la cantidad reservada
     public static void liberarReserva(int productoId, int cantidad) {
         String sqlReceta = "SELECT ingrediente_id, cantidad_necesaria FROM recetas WHERE producto_id = ?";
+        //Elimina el stock reservado, no permite que el stock reservado sea menor que cero
         String sqlUpdate = "UPDATE ingredientes SET stock_reservado = GREATEST(0, stock_reservado - ?) WHERE id = ?";
 
         try (Connection conn = ConexionDB.getConexion()) {
@@ -112,11 +121,15 @@ public class ProductosDAO {
             } catch (Exception e) {
                 conn.rollback();
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { 
+            e.printStackTrace(); 
+        }
     }
+
+    //Finaliza la reserva y los descuenta del Stock
     public static void finalizarReserva(int productoId, int cantidad) {
         String sqlReceta = "SELECT ingrediente_id, cantidad_necesaria FROM recetas WHERE producto_id = ?";
-        // Restamos del stock real y limpiamos la reserva simultáneamente (sin permitir negativos)
+        // Restamos del stock real y eliminamos el reservado, no permite que al eliminar el resultado sea menor que 0
         String sqlUpdate = "UPDATE ingredientes SET " +
                 "stock_actual = GREATEST(0, stock_actual - ?), " +
                 "stock_reservado = GREATEST(0, stock_reservado - ?) " +
@@ -141,6 +154,8 @@ public class ProductosDAO {
             } catch (Exception e) {
                 conn.rollback();
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+             e.printStackTrace(); 
+        }
     }
 }

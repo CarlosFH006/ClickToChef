@@ -69,5 +69,7 @@ function login() {
         return;
     }
 
-    Api.login(usuario, contrasena);
+    if (!Api.login(usuario, contrasena)) {
+        alert('Error de conexión: No se pudo contactar con el servidor. Por favor, compruebe su conexión e inténtelo de nuevo.');
+    }
 }

@@ -12,16 +12,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Clase utilitaria para generar respuestas JSON estandarizadas
- * Todos los métodos son estáticos para facilitar el uso
- */
+//Clase con métodos estaticos para generar los Json de las respuestas
 public class GeneradorJSON {
     private static final Gson gson = new Gson();
 
-    /**
-     * Genera respuesta de reserva de producto
-     */
+    //Respuesta de la reserva del producto
     public static String generarReservaResponse(String type, int productoId, int cantidad, boolean success) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", type);
@@ -35,9 +30,7 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera respuesta de actualización de mesa
-     */
+    //Respuesta de actualización de mesa
     public static String generarMesaUpdated(int id, String estado) {
         JsonObject broadcastMsg = new JsonObject();
         broadcastMsg.addProperty("type", "MESA_UPDATED");
@@ -50,9 +43,7 @@ public class GeneradorJSON {
         return gson.toJson(broadcastMsg);
     }
 
-    /**
-     * Genera actualización del catálogo (menú)
-     */
+    //Respuesta de actualización de catalogo
     public static String generarMenuUpdated(ArrayList<CategoriaPlato> lista) {
         Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
 
@@ -86,9 +77,7 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera actualización de pedidos
-     */
+    //Genera actualización de pedidos
     public static String generarPedidosUpdated(ArrayList<Pedidos> lista) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "PEDIDOS_UPDATED");
@@ -97,9 +86,7 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera respuesta de mesas
-     */
+    //Genera la respuesta de mesas
     public static String generarMesasResponse(ArrayList<Mesas> listaMesas) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "MESAS_RESPONSE");
@@ -111,10 +98,9 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera respuesta del menú
-     */
+    //Genera la respuesta del menú
     public static String generarMenuResponse(ArrayList<CategoriaPlato> lista) {
+        //LinkedHashMap para mantener el orden de la insercción
         Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
 
         for (CategoriaPlato cp : lista) {
@@ -147,9 +133,7 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera respuesta de crear pedido
-     */
+    //Genera la respuesta de crear pedido
     public static String generarCrearPedidoResponse(boolean success, int pedidoId) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "CREAR_PEDIDO_RESPONSE");
@@ -162,9 +146,7 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera respuesta de pedidos por usuario
-     */
+    //Genera la respuesta de Pedidos por usuario
     public static String generarPedidosUsuarioResponse(ArrayList<Pedidos> lista) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "PEDIDOS_USUARIO_RESPONSE");
@@ -173,9 +155,7 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera respuesta de login
-     */
+    //Respuesta de login
     public static String generarLoginResponse(Usuarios usuarioValidado, String pass) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "LOGIN_RESPONSE");
@@ -193,9 +173,7 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera respuesta de detalles de pedido
-     */
+    //Genera la respuesta de los platos
     public static String generarDetallesPedidoResponse(ArrayList<DetallesPedido> lista) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "DETALLES_PEDIDO_RESPONSE");
@@ -203,9 +181,7 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera respuesta de actualización de estado de detalle
-     */
+    //Genera la respuesta de actualizar el estado del plato
     public static String generarUpdateEstadoDetalleResponse(boolean success, int id) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "UPDATE_ESTADO_DETALLE_RESPONSE");
@@ -218,9 +194,7 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    /**
-     * Genera error del servidor
-     */
+    //Genera el error del servidor
     public static String generarError(String mensaje) {
         JsonObject error = new JsonObject();
         error.addProperty("type", "SERVER_ERROR");

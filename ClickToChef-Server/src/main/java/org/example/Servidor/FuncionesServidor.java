@@ -6,10 +6,13 @@ import org.example.DAO.*;
 import org.example.DTO.*;
 import java.util.ArrayList;
 
+//Funciones para ejecutar en las llamadas de ServerSocket y de WebSocket
 public class FuncionesServidor {
 
     public static String procesarLogin(JsonObject payload) {
-        if (payload == null) return GeneradorJSON.generarError("Payload de login vacío");
+        if (payload == null) {
+            return GeneradorJSON.generarError("Payload de login vacío");
+        }
 
         String user = payload.has("username") ? payload.get("username").getAsString() : "";
         String pass = payload.has("pass") ? payload.get("pass").getAsString() : "";
@@ -27,7 +30,7 @@ public class FuncionesServidor {
         return GeneradorJSON.generarMesasResponse(lista);
     }
 
-    // Devuelve null si solo hace broadcast (sin respuesta directa al cliente)
+    //Si hace broadcast devuelve null, para no enviar respuesta al cliente
     public static String procesarUpdateMesaStatus(JsonObject payload) {
         if (payload == null || !payload.has("id") || !payload.has("estado")) {
             return GeneradorJSON.generarError("Payload de actualización incompleto");
@@ -74,7 +77,10 @@ public class FuncionesServidor {
         System.out.println("[FuncionesServidor] Reservando producto " + productoId + " (cantidad " + cantidad + ")");
 
         boolean success = ProductosDAO.reservarProducto(productoId, cantidad);
-        if (success) broadcastCatalogo();
+        //Si se completa la reserva llama a su función de broadcast
+        if (success) {
+            broadcastCatalogo();
+        }
 
         return GeneradorJSON.generarReservaResponse("RESERVAR_PRODUCTO_RESPONSE", productoId, cantidad, success);
     }
@@ -93,11 +99,13 @@ public class FuncionesServidor {
             broadcastCatalogo();
             return GeneradorJSON.generarReservaResponse("LIBERAR_RESERVA_RESPONSE", productoId, cantidad, true);
         } catch (Exception e) {
+            //Si falla la liberación de la reserva de stock se devuelve un error
             System.err.println("[FuncionesServidor] Error al liberar reserva: " + e.getMessage());
             return GeneradorJSON.generarReservaResponse("LIBERAR_RESERVA_RESPONSE", productoId, cantidad, false);
         }
     }
 
+    //Este método es similar al anterior pero confirma la reserva y resta el stock
     public static String procesarFinalizarReserva(JsonObject payload) {
         if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
             return GeneradorJSON.generarError("Payload de FINALIZAR_RESERVA incompleto");
@@ -132,8 +140,12 @@ public class FuncionesServidor {
             Pedidos nuevoPedido = new Pedidos(mesaId, usuarioId, new java.sql.Timestamp(System.currentTimeMillis()), EstadoPedido.ABIERTA);
             int pedidoId = PedidosDAO.insertarPedido(nuevoPedido);
 
-            if (pedidoId == -1) return GeneradorJSON.generarError("No se pudo crear la cabecera del pedido");
+            //Si al crear el pedido devuelve un -1 como id muestra el fallo
+            if (pedidoId == -1) {
+                return GeneradorJSON.generarError("No se pudo crear la cabecera del pedido");
+            }
 
+            //Añade los platos al pedido
             boolean exitoDetalles = true;
             for (int i = 0; i < items.size(); i++) {
                 JsonObject item = items.get(i).getAsJsonObject();
@@ -145,7 +157,9 @@ public class FuncionesServidor {
                     EstadoDetallePedido.PENDIENTE,
                     new java.sql.Timestamp(System.currentTimeMillis())
                 );
-                if (!DetallesPedidoDAO.insertarDetallePedido(detalle)) exitoDetalles = false;
+                if (!DetallesPedidoDAO.insertarDetallePedido(detalle)) {
+                    exitoDetalles = false;
+                }
             }
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " creado con " + (exitoDetalles ? "éxito" : "errores parciales"));
@@ -184,6 +198,7 @@ public class FuncionesServidor {
         }
     }
 
+    //Funciones de broadcast
     private static void broadcastCatalogo() {
         ArrayList<CategoriaPlato> lista = CategoriasDAO.categoriasplatos();
         Servidor.broadcast(GeneradorJSON.generarMenuUpdated(lista));

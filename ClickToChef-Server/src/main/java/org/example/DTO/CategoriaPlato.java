@@ -1,5 +1,7 @@
 package org.example.DTO;
 
+//Clase para consultar los platos con su categoria
+
 public class CategoriaPlato {
     private int categoriaId;
     private String categoriaNombre;

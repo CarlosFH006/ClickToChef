@@ -48,6 +48,8 @@ public class CategoriasDAO {
 
     public static ArrayList<CategoriaPlato> categoriasplatos() {
         //Case sirve para crear una variable booleana en una consulta, devuelve true o false segun la condición del when.
+        
+        //Select 1 para no recibir la base de datos completa, porque para Exists con que haya una respuesta es suficiente
         String sql = """
                 SELECT
                     c.id AS categoria_id,
@@ -57,10 +59,10 @@ public class CategoriasDAO {
                     p.precio,
                     CASE
                         WHEN EXISTS (
-                            SELECT 1\s
+                            SELECT 1
                             FROM recetas r
                             JOIN ingredientes i ON r.ingrediente_id = i.id
-                            WHERE r.producto_id = p.id\s
+                            WHERE r.producto_id = p.id
                             AND (i.stock_actual - i.stock_reservado) < r.cantidad_necesaria
                         ) THEN FALSE
                         ELSE TRUE

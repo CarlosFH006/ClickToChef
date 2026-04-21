@@ -57,7 +57,7 @@ const Api = (() => {
     }
 
     function login(username, pass) {
-        sendMessage('LOGIN', { username, pass });
+        return sendMessage('LOGIN', { username, pass });
     }
 
     function getDetallesPedido() {

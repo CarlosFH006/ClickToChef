@@ -17,36 +17,41 @@ public class WebSocketServidor extends WebSocketServer {
         instance=this;
     }
 
+    //Cuando un cliente se conecta
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         clientes.add(conn);
         System.out.println("WS cliente conectado: " + conn.getRemoteSocketAddress());
     }
 
+    //Cuando se pierde la conexión con un cliente
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         clientes.remove(conn);
         System.out.println("WS cliente desconectado");
     }
 
+    //Recibir mensaje de un cliente
     @Override
     public void onMessage(WebSocket conn, String message) {
         System.out.println("WS mensaje: " + message);
 
-        // 👉 reutilizas tu lógica
         WebSocketHandler.process(conn, message);
     }
 
+    //Fallo en la conexión
     @Override
     public void onError(WebSocket conn, Exception ex) {
         ex.printStackTrace();
     }
 
+    //Al iniciar el servidor
     @Override
     public void onStart() {
-
+        System.out.println("WebSocketServer iniciado");
     }
 
+    //Enviar broadcast a todos los clientes
     public static void broadcastGlobal(String msg) {
         if (instance != null) {
             instance.broadcast(msg);

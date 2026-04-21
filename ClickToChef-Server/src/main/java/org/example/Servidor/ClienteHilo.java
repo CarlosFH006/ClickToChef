@@ -21,15 +21,18 @@ public class ClienteHilo extends Thread {
             this.writer = new PrintWriter(socket.getOutputStream(), true);
             System.out.println(">>> [" + getName() + "] Cliente conectado desde " + socket.getInetAddress());
 
+            //Lee todos los mensajes que recibe del cliente
             String jsonRecibido;
             while ((jsonRecibido = reader.readLine()) != null) {
                 System.out.println("[" + getName() + "] Mensaje entrante: " + jsonRecibido);
+                //Procesa el mensaje recibido
                 processRequest(jsonRecibido);
             }
 
         } catch (IOException e) {
             System.err.println("[" + getName() + "] Error de red: " + e.getMessage());
         } finally {
+            //Al terminar elimina el Hilo del Arraylist del cliente y cierra la conexión
             Servidor.removeCliente(this);
             closeConnection();
         }
@@ -39,16 +42,20 @@ public class ClienteHilo extends Thread {
         try {
             JsonObject peticion = gson.fromJson(json, JsonObject.class);
 
+            //Comprueba que la peticion tiene Type
             if (!peticion.has("type")) {
                 send(GeneradorJSON.generarError("Formato de petición inválido: falta campo 'type'"));
                 return;
             }
 
             String tipo = peticion.get("type").getAsString();
+
+            //Comprueba el contenido de la peticion, si tiene y es Json lo guarda y si no lo pone en Null
             JsonObject payload = peticion.has("payload") && peticion.get("payload").isJsonObject()
                     ? peticion.getAsJsonObject("payload") : null;
             String respuesta;
 
+            //Procesa el tipo de respuesta
             switch (tipo) {
                 case "LOGIN":
                     respuesta = FuncionesServidor.procesarLogin(payload);
@@ -85,7 +92,10 @@ public class ClienteHilo extends Thread {
                     respuesta = GeneradorJSON.generarError("Acción no reconocida en el servidor");
             }
 
-            if (respuesta != null) send(respuesta);
+            //Si se ha generado una respuesta la envia al cliente
+            if (respuesta != null) {
+                send(respuesta);
+            }
 
         } catch (Exception e) {
             System.err.println("[" + getName() + "] Error al parsear JSON: " + e.getMessage());
@@ -93,17 +103,23 @@ public class ClienteHilo extends Thread {
         }
     }
 
+    //Metodo publico para poder enviar mensajes desde fuera de la clase
     public void sendMessage(String json) {
         send(json);
     }
 
+    //Envia mensaje si el PrintWriter existe
     private void send(String json) {
-        if (writer != null) writer.println(json);
+        if (writer != null) {
+            writer.println(json);
+        }
     }
 
     private void closeConnection() {
         try {
-            if (socket != null && !socket.isClosed()) socket.close();
+            if (socket != null && !socket.isClosed()){
+                socket.close();
+            }
             System.out.println("<<< [" + getName() + "] Conexión finalizada.");
         } catch (IOException e) {
             e.printStackTrace();

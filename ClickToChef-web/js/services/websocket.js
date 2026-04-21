@@ -6,7 +6,8 @@ const WebSocketService = (() => {
     function connect() {
         _notifyStatus("connecting");
 
-        ws = new WebSocket(CONFIG.WS_URL);
+        const url = 'ws://'+CONFIG.WS_IP+':'+CONFIG.WS_PORT
+        ws = new WebSocket(url);
 
         ws.onopen = () => {
             _notifyStatus("connected");
@@ -19,6 +20,7 @@ const WebSocketService = (() => {
 
         ws.onerror = () => {
             _notifyStatus("error");
+            alert("No hay conexión con el servidor")
         };
 
         ws.onmessage = (event) => {

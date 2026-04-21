@@ -9,18 +9,23 @@ public class WebSocketHandler {
 
     public static void process(WebSocket conn, String json) {
         try {
+            //Convierte el mensaje recibido en JSON
             JsonObject peticion = gson.fromJson(json, JsonObject.class);
 
+            //Comprueba que la peticion tiene Type
             if (!peticion.has("type")) {
                 conn.send(GeneradorJSON.generarError("Formato de petición inválido: falta campo 'type'"));
                 return;
             }
 
             String tipo = peticion.get("type").getAsString();
+
+            //Comprueba si tiene contenido y si es un JSON y si no tiene lo pone en null
             JsonObject payload = peticion.has("payload") && peticion.get("payload").isJsonObject()
                     ? peticion.getAsJsonObject("payload") : null;
             String respuesta;
 
+            //Genera la respuesta según el tipo de mensaje
             switch (tipo) {
                 case "LOGIN":
                     respuesta = FuncionesServidor.procesarLogin(payload);
@@ -60,7 +65,9 @@ public class WebSocketHandler {
                     respuesta = GeneradorJSON.generarError("Acción no reconocida en el servidor");
             }
 
-            if (respuesta != null) conn.send(respuesta);
+            if (respuesta != null) {
+                conn.send(respuesta);
+            }
 
         } catch (Exception e) {
             System.err.println("[WebSocket] Error al parsear JSON: " + e.getMessage());

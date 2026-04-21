@@ -28,6 +28,7 @@ public class PedidosDAO {
                 return -1;
             }
 
+            //Devuelve el ID del pedido
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     return generatedKeys.getInt(1);
