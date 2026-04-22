@@ -33,7 +33,8 @@ public class DetallesPedidoDAO {
         String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
                      "dp.cantidad, dp.notas_especiales, dp.estado, dp.hora_pedido " +
                      "FROM detalles_pedido dp " +
-                     "JOIN productos p ON dp.producto_id = p.id";
+                     "JOIN productos p ON dp.producto_id = p.id " +
+                     "WHERE dp.estado <> 'servido'";
         ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -55,6 +56,72 @@ public class DetallesPedidoDAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al obtener los detalles del pedido", e);
+        }
+
+        return detalles;
+    }
+
+    public static DetallesPedido obtenerPorId(int id) {
+        String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
+                     "dp.cantidad, dp.notas_especiales, dp.estado, dp.hora_pedido " +
+                     "FROM detalles_pedido dp " +
+                     "JOIN productos p ON dp.producto_id = p.id " +
+                     "WHERE dp.id = ?";
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+
+            statement.setInt(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new DetallesPedido(
+                            resultSet.getInt("id"),
+                            resultSet.getInt("pedido_id"),
+                            resultSet.getInt("producto_id"),
+                            resultSet.getString("nombre_producto"),
+                            resultSet.getInt("cantidad"),
+                            resultSet.getString("notas_especiales"),
+                            convertirEstadoDetalleAEnum(resultSet.getString("estado")),
+                            resultSet.getTimestamp("hora_pedido")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener el detalle del pedido " + id, e);
+        }
+
+        return null;
+    }
+
+    public static ArrayList<DetallesPedido> obtenerPorPedido(int pedidoId) {
+        String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
+                     "dp.cantidad, dp.notas_especiales, dp.estado, dp.hora_pedido " +
+                     "FROM detalles_pedido dp " +
+                     "JOIN productos p ON dp.producto_id = p.id " +
+                     "WHERE dp.pedido_id = ?";
+        ArrayList<DetallesPedido> detalles = new ArrayList<>();
+
+        try (Connection conexion = ConexionDB.getConexion();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+
+            statement.setInt(1, pedidoId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    DetallesPedido detalle = new DetallesPedido(
+                            resultSet.getInt("id"),
+                            resultSet.getInt("pedido_id"),
+                            resultSet.getInt("producto_id"),
+                            resultSet.getString("nombre_producto"),
+                            resultSet.getInt("cantidad"),
+                            resultSet.getString("notas_especiales"),
+                            convertirEstadoDetalleAEnum(resultSet.getString("estado")),
+                            resultSet.getTimestamp("hora_pedido")
+                    );
+                    detalles.add(detalle);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener los detalles del pedido " + pedidoId, e);
         }
 
         return detalles;

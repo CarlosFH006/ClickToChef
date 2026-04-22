@@ -8,6 +8,8 @@ const COLOR_ESTADO = {
 
 const ORDEN_ESTADO = { PENDIENTE: 0, EN_PREPARACION: 1, LISTO: 2 };
 
+let detallesActuales = [];
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // Estado del WebSocket en el header
@@ -26,7 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (status === 'connected') Api.getDetallesPedido();
     });
 
-    Api.on('DETALLES_PEDIDO_RESPONSE', renderKanban);
+    Api.on('DETALLES_PEDIDO_RESPONSE', (detalles) => {
+        detallesActuales = detalles;
+        renderKanban();
+    });
+
+    Api.on('DETALLE_UPDATED', (detalle) => {
+        updateDetalle(detalle);
+    });
 
     // Drop zones — se registran UNA SOLA VEZ
     ESTADOS.forEach(estado => {
@@ -60,7 +69,21 @@ document.addEventListener('DOMContentLoaded', () => {
     WebSocketService.connect();
 });
 
-function renderKanban(detalles) {
+function updateDetalle(detalle) {
+    if (detalle.estado === 'SERVIDO') {
+        detallesActuales = detallesActuales.filter(d => d.id !== detalle.id);
+    } else {
+        const index = detallesActuales.findIndex(d => d.id === detalle.id);
+        if (index !== -1) {
+            detallesActuales[index] = detalle;
+        } else {
+            detallesActuales.push(detalle);
+        }
+    }
+    renderKanban();
+}
+
+function renderKanban() {
     // Limpiar columnas y contadores
     ESTADOS.forEach(estado => {
         document.getElementById(`col-${estado}`).innerHTML = '';
@@ -70,12 +93,13 @@ function renderKanban(detalles) {
     const grupos = {};
     ESTADOS.forEach(e => grupos[e] = []);
 
-    detalles
+    detallesActuales
         .slice()
         .sort((a, b) => new Date(a.hora) - new Date(b.hora))
         .forEach(detalle => {
             if (grupos[detalle.estado] !== undefined) grupos[detalle.estado].push(detalle);
         });
+
 
     ESTADOS.forEach(estado => {
         const col   = document.getElementById(`col-${estado}`);

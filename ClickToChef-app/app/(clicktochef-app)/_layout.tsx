@@ -8,8 +8,21 @@ import { Ionicons } from '@expo/vector-icons'
 
 const CheckAuthenticationLayout = () => {
 
+    const { status } = useAuthStore();
     const backgroundColor = useThemeColor({}, 'background');
     const primaryColor = useThemeColor({}, 'primary');
+
+    if (status === 'checking') {
+        return (
+            <View className="flex-1 justify-center items-center" style={{ backgroundColor }}>
+                <ActivityIndicator size="large" color={primaryColor} />
+            </View>
+        )
+    }
+
+    if (status === 'unauthenticated') {
+        return <Redirect href="/auth/login" />
+    }
 
     return (
         <Tabs screenOptions={{

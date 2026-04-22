@@ -182,10 +182,13 @@ public class FuncionesServidor {
         EstadoDetallePedido nuevoEstado = EstadoDetallePedido.valueOf(payload.get("estado").getAsString());
 
         boolean success = DetallesPedidoDAO.updateEstado(id, nuevoEstado);
-        if (success) broadcastDetallesPedido();
+        if (success) {
+            broadcastDetalleActualizado(id);
+        }
 
         return GeneradorJSON.generarUpdateEstadoDetalleResponse(success, id);
     }
+
 
     public static String procesarGetDetallesPedido() {
         try {
@@ -215,5 +218,13 @@ public class FuncionesServidor {
         ArrayList<Pedidos> lista = PedidosDAO.obtenerTodos();
         Servidor.broadcast(GeneradorJSON.generarPedidosUpdated(lista));
         System.out.println("[FuncionesServidor] Pedidos broadcast (" + lista.size() + " pedidos)");
+    }
+
+    private static void broadcastDetalleActualizado(int id) {
+        DetallesPedido detalle = DetallesPedidoDAO.obtenerPorId(id);
+        if (detalle != null) {
+            Servidor.broadcast(GeneradorJSON.generarDetalleUpdated(detalle));
+            System.out.println("[FuncionesServidor] Detalle pedido actualizado broadcast (ID: " + id + ")");
+        }
     }
 }

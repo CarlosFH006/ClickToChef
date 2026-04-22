@@ -1,6 +1,7 @@
 package org.example.DTO;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 public class Pedidos {
     private int id;
@@ -8,6 +9,7 @@ public class Pedidos {
     private int usuarioId;
     private Timestamp fechaCreacion;
     private EstadoPedido estado;
+    private ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
     public Pedidos(int id, int mesaId, int usuarioId, Timestamp fechaCreacion, EstadoPedido estado) {
         this.id = id;
@@ -64,6 +66,14 @@ public class Pedidos {
         this.estado = estado;
     }
 
+    public ArrayList<DetallesPedido> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(ArrayList<DetallesPedido> detalles) {
+        this.detalles = detalles;
+    }
+
     @Override
     public String toString() {
         return "Pedidos{" +
@@ -72,6 +82,7 @@ public class Pedidos {
                 ", usuarioId=" + usuarioId +
                 ", fechaCreacion=" + fechaCreacion +
                 ", estado='" + estado + '\'' +
+                ", detalles=" + detalles +
                 '}';
     }
 }

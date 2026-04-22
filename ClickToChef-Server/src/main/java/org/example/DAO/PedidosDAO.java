@@ -42,7 +42,7 @@ public class PedidosDAO {
     }
 
     public static ArrayList<Pedidos> obtenerTodos() {
-        String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos";
+        String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE estado = 'abierta'";
         ArrayList<Pedidos> pedidos = new ArrayList<>();
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -63,11 +63,16 @@ public class PedidosDAO {
             throw new RuntimeException("Error al obtener los pedidos", e);
         }
 
+        // Cargar detalles después de cerrar el ResultSet de pedidos
+        for (Pedidos p : pedidos) {
+            p.setDetalles(DetallesPedidoDAO.obtenerPorPedido(p.getId()));
+        }
+
         return pedidos;
     }
 
     public static ArrayList<Pedidos> obtenerPorUsuario(int usuarioId) {
-        String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE usuario_id = ?";
+        String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE usuario_id = ? AND estado = 'abierta'";
         ArrayList<Pedidos> pedidos = new ArrayList<>();
 
         try (Connection conexion = ConexionDB.getConexion();
@@ -90,8 +95,14 @@ public class PedidosDAO {
             throw new RuntimeException("Error al obtener los pedidos del usuario", e);
         }
 
+        // Cargar detalles después de cerrar el ResultSet de pedidos
+        for (Pedidos p : pedidos) {
+            p.setDetalles(DetallesPedidoDAO.obtenerPorPedido(p.getId()));
+        }
+
         return pedidos;
     }
+
 
     private static String convertirEstadoPedidoADB(EstadoPedido estadoPedido) {
         return estadoPedido.name().toLowerCase();

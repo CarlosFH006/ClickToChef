@@ -17,21 +17,19 @@ const Api = (() => {
                 break;
             case 'DETALLES_PEDIDO_RESPONSE': {
                 console.log('[Api] DETALLES_PEDIDO_RESPONSE recibido, items:', msg.payload?.length);
-                const detalles = msg.payload.map(d => new Pedido({
-                    id:               d.id,
-                    pedido_id:        d.pedidoId,
-                    producto_id:      d.productoId,
-                    nombre_producto:  d.nombreProducto,
-                    cantidad:         d.cantidad,
-                    notas_especiales: d.notasEspeciales,
-                    estado:           d.estado,
-                    hora:             d.horaPedido
-                }));
+                const detalles = msg.payload.map(d => _mapearDetalle(d));
                 console.log('[Api] Primer detalle:', detalles[0]);
                 _dispatch('DETALLES_PEDIDO_RESPONSE', detalles);
                 break;
             }
+            case 'DETALLE_UPDATED': {
+                console.log('[Api] DETALLE_UPDATED recibido, id:', msg.payload?.id);
+                const detalle = _mapearDetalle(msg.payload);
+                _dispatch('DETALLE_UPDATED', detalle);
+                break;
+            }
             case 'UPDATE_ESTADO_DETALLE_RESPONSE':
+
                 _dispatch('UPDATE_ESTADO_DETALLE_RESPONSE', msg.payload);
                 break;
             case 'SERVER_ERROR':
@@ -41,6 +39,19 @@ const Api = (() => {
             default:
                 console.warn('[Api] Tipo de mensaje desconocido:', msg.type);
         }
+    }
+
+    function _mapearDetalle(d) {
+        return new Pedido({
+            id:               d.id,
+            pedido_id:        d.pedidoId,
+            producto_id:      d.productoId,
+            nombre_producto:  d.nombreProducto,
+            cantidad:         d.cantidad,
+            notas_especiales: d.notasEspeciales,
+            estado:           d.estado,
+            hora:             d.horaPedido
+        });
     }
 
     function _dispatch(type, payload) {

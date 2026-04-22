@@ -68,7 +68,7 @@ const PedidosScreen = () => {
           ) : (
             <PedidoFList
               pedidos={pedidos}
-              onPedidoPress={(p) => console.log('Pedido seleccionado:', p.id)}
+              onPedidoPress={(p) => router.push(`/(clicktochef-app)/(stack)/pedidos/${p.id}`)}
             />
           )}
         </View>

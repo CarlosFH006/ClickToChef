@@ -143,6 +143,26 @@ class SocketClient {
         }
         break;
 
+      case 'DETALLE_UPDATED':
+        if (data.payload) {
+          console.log('[Socket] Detalle actualizado:', data.payload.id);
+          usePedidosStore.getState().updateDetallePedido(data.payload);
+        }
+        break;
+
+      case 'UPDATE_ESTADO_DETALLE_RESPONSE':
+        if (data.payload) {
+          const { success, id } = data.payload;
+          if (!success) {
+            Alert.alert("Error", `No se pudo actualizar el estado del plato #${id}`);
+          } else {
+            console.log(`[Socket] Confirmación: Plato #${id} actualizado correctamente.`);
+          }
+        }
+        break;
+
+
+
       case 'CREAR_PEDIDO_RESPONSE':
         const { success: orderSuccess, pedidoId } = data.payload;
         if (orderSuccess) {

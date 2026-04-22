@@ -4,11 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class ClienteHilo extends Thread {
     private Socket socket;
     private final Gson gson = new Gson();
-    private PrintWriter writer;
+    private OutputStream outputStream;
 
     public ClienteHilo(String name, Socket socket) {
         super(name);
@@ -17,8 +18,13 @@ public class ClienteHilo extends Thread {
 
     @Override
     public void run() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            this.writer = new PrintWriter(socket.getOutputStream(), true);
+        try {
+            socket.setTcpNoDelay(true);
+        } catch (Exception e) {
+            System.err.println("[" + getName() + "] No se pudo configurar TCP_NODELAY: " + e.getMessage());
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
+            this.outputStream = socket.getOutputStream();
             System.out.println(">>> [" + getName() + "] Cliente conectado desde " + socket.getInetAddress());
 
             //Lee todos los mensajes que recibe del cliente
@@ -108,10 +114,15 @@ public class ClienteHilo extends Thread {
         send(json);
     }
 
-    //Envia mensaje si el PrintWriter existe
+    //Envia mensaje con delimitador \n explícito y codificación UTF-8
     private synchronized void send(String json) {
-        if (writer != null) {
-            writer.println(json);
+        if (outputStream != null) {
+            try {
+                outputStream.write((json + "\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.flush();
+            } catch (IOException e) {
+                System.err.println("[" + getName() + "] Error al enviar mensaje: " + e.getMessage());
+            }
         }
     }
 

@@ -181,6 +181,14 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    public static String generarDetalleUpdated(DetallesPedido detalle) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "DETALLE_UPDATED");
+        respuesta.add("payload", gson.toJsonTree(detalle));
+        return gson.toJson(respuesta);
+    }
+
+
     //Genera la respuesta de actualizar el estado del plato
     public static String generarUpdateEstadoDetalleResponse(boolean success, int id) {
         JsonObject respuesta = new JsonObject();

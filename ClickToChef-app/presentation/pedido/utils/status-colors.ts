@@ -14,7 +14,6 @@ export const getPedidoStatusColor = (estado: Pedidos['estado']): string => {
   switch (estado) {
     case 'ABIERTA':   return '#fbbf24';
     case 'CERRADA':   return '#4ade80';
-    case 'CANCELADA': return '#f87171';
     default:          return '#94a3b8';
   }
 };
@@ -23,7 +22,6 @@ export const getPedidoStatusIcon = (estado: Pedidos['estado']) => {
   switch (estado) {
     case 'ABIERTA':   return 'restaurant-outline';
     case 'CERRADA':   return 'checkmark-circle-outline';
-    case 'CANCELADA': return 'close-circle-outline';
     default:          return 'help-circle-outline';
   }
 };
@@ -41,7 +39,37 @@ export const getPedidoStatusLabel = (estado: Pedidos['estado']): string => {
   switch (estado) {
     case 'ABIERTA':   return 'Abierta';
     case 'CERRADA':   return 'Cerrada';
-    case 'CANCELADA': return 'Cancelada';
     default:          return estado;
   }
 };
+
+export const getDetalleStatusColor = (estado: string): string => {
+  switch (estado) {
+    case 'PENDIENTE': return '#94a3b8';
+    case 'EN_COCINA': return '#fbbf24';
+    case 'LISTO':     return '#4ade80';
+    case 'SERVIDO':   return '#3b82f6';
+    default:          return '#94a3b8';
+  }
+};
+
+export const getDetalleStatusIcon = (estado: string) => {
+  switch (estado) {
+    case 'PENDIENTE': return 'time-outline';
+    case 'EN_COCINA': return 'flame-outline';
+    case 'LISTO':     return 'restaurant-outline';
+    case 'SERVIDO':   return 'checkmark-done-outline';
+    default:          return 'help-circle-outline';
+  }
+};
+
+export const getDetalleStatusLabel = (estado: string): string => {
+  switch (estado) {
+    case 'PENDIENTE': return 'Pendiente';
+    case 'EN_COCINA': return 'En Cocina';
+    case 'LISTO':     return 'Listo';
+    case 'SERVIDO':   return 'Servido';
+    default:          return estado;
+  }
+};
+
