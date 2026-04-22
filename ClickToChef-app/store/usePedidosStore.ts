@@ -21,28 +21,30 @@ export const usePedidosStore = create<PedidosState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   
   updateDetallePedido: (detalle) => {
-    // Si el plato se marca como LISTO, mostramos una alerta al usuario
-    if (detalle.estado === 'LISTO') {
-      Alert.alert(
-        "Plato listo para servir",
-        `${detalle.nombreProducto} del pedido #${detalle.pedidoId} listo para servir.`
-      );
-    }
+    set((state) => {
+      const pedidoAfectado = state.pedidos.find(p => p.id === detalle.pedidoId);
 
-    set((state) => ({
-      pedidos: state.pedidos.map(p => {
-        if (p.id !== detalle.pedidoId) return p;
-        
-        // Si ya existe el detalle, lo actualizamos; si no, lo añadimos
-        const exists = p.detalles.some(d => d.id === detalle.id);
-        return {
-          ...p,
-          detalles: exists 
-            ? p.detalles.map(d => d.id === detalle.id ? detalle : d)
-            : [...p.detalles, detalle]
-        };
-      })
-    }));
+      if (detalle.estado === 'LISTO' && pedidoAfectado) {
+        Alert.alert(
+          "Plato listo para servir",
+          `${detalle.nombreProducto} del pedido #${detalle.pedidoId} listo para servir.`
+        );
+      }
+
+      return {
+        pedidos: state.pedidos.map(p => {
+          if (p.id !== detalle.pedidoId) return p;
+
+          const exists = p.detalles.some(d => d.id === detalle.id);
+          return {
+            ...p,
+            detalles: exists
+              ? p.detalles.map(d => d.id === detalle.id ? detalle : d)
+              : [...p.detalles, detalle]
+          };
+        })
+      };
+    });
   },
 }));
 

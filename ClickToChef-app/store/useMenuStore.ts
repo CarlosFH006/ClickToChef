@@ -9,6 +9,7 @@ interface MenuState {
   // Acciones
   setMenu: (categorias: Categoria[]) => void;
   setLoading: (loading: boolean) => void;
+  setProductoDisponible: (productoId: number, disponible: boolean) => void;
 }
 
 export const useMenuStore = create<MenuState>((set) => ({
@@ -17,4 +18,12 @@ export const useMenuStore = create<MenuState>((set) => ({
 
   setMenu: (categorias) => set({ categorias, isLoading: false }),
   setLoading: (loading) => set({ isLoading: loading }),
+  setProductoDisponible: (productoId, disponible) => set((state) => ({
+    categorias: state.categorias.map(cat => ({
+      ...cat,
+      productos: cat.productos.map(p =>
+        p.id === productoId ? { ...p, disponible } : p
+      )
+    }))
+  })),
 }));

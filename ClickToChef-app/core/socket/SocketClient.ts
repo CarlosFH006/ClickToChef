@@ -45,16 +45,11 @@ class SocketClient {
 
     //El evento data se dispara cuando el servidor envía datos
     this.client.on('data', (data: Buffer | string) => {
-      /*
-        Acumular datos en el buffer porque TCP puede fragmentar mensajes.
-        Solo procesar líneas completas (terminadas en \n).
-        trim() elimina \r de servidores Windows y espacios sobrantes.
-      */
-      this.buffer = (this.buffer || '') + data.toString();
-      const lines = this.buffer.split('\n');
-      this.buffer = lines.pop() ?? '';
+      this.buffer += data.toString();
+      const { objects, remaining } = this.extractJsonObjects(this.buffer);
+      this.buffer = remaining;
 
-      lines.map(l => l.trim()).filter(Boolean).forEach(msg => {
+      objects.forEach((msg: string) => {
         try {
           const parsedData: ServerMessage = JSON.parse(msg);
           this.handleServerMessage(parsedData);
@@ -182,8 +177,8 @@ class SocketClient {
 
           if (!success && data.type === 'RESERVAR_PRODUCTO_RESPONSE') {
             console.warn(`[Socket] Reserva fallida para producto ${productoId}. Marcando como no disponible.`);
-            //Restar el producto añadido sin stock
-            useOrderStore.getState().updateQuantity(productoId, cantidad);
+            useOrderStore.getState().updateQuantity(productoId, -cantidad);
+            useMenuStore.getState().setProductoDisponible(productoId, false);
             Alert.alert("Stock insuficiente", "No hay suficiente stock para reservar la cantidad solicitada.");
           }
         }
@@ -241,6 +236,49 @@ class SocketClient {
         'Se perdió la conexión con el servidor. Comprueba la red e inténtalo de nuevo.'
       );
     }
+  }
+
+  private extractJsonObjects(buffer: string): { objects: string[]; remaining: string } {
+    const objects: string[] = [];
+    let i = 0;
+
+    while (i < buffer.length) {
+      while (i < buffer.length && buffer[i] !== '{') i++;
+      if (i >= buffer.length) break;
+
+      const start = i;
+      let depth = 0;
+      let inString = false;
+      let escaped = false;
+
+      while (i < buffer.length) {
+        const ch = buffer[i];
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\' && inString) {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = !inString;
+        } else if (!inString) {
+          if (ch === '{') depth++;
+          else if (ch === '}') {
+            depth--;
+            if (depth === 0) {
+              objects.push(buffer.substring(start, i + 1));
+              i++;
+              break;
+            }
+          }
+        }
+        i++;
+      }
+
+      if (depth > 0) {
+        return { objects, remaining: buffer.substring(start) };
+      }
+    }
+
+    return { objects, remaining: '' };
   }
 
   //Desconectar del servidor
