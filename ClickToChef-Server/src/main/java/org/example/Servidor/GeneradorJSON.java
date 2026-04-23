@@ -78,10 +78,10 @@ public class GeneradorJSON {
     }
 
     //Genera actualización de pedidos
-    public static String generarPedidosUpdated(ArrayList<Pedidos> lista) {
+    public static String generarPedidosUpdated(Pedidos pedido) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "PEDIDOS_UPDATED");
-        respuesta.add("payload", gson.toJsonTree(lista));
+        respuesta.add("payload", gson.toJsonTree(pedido));
 
         return gson.toJson(respuesta);
     }
@@ -197,6 +197,28 @@ public class GeneradorJSON {
         JsonObject payload = new JsonObject();
         payload.addProperty("success", success);
         payload.addProperty("id", id);
+
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast ligero con solo los IDs de productos no disponibles
+    public static String generarStockUpdated(ArrayList<Integer> noDisponibles) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "STOCK_UPDATED");
+        respuesta.add("payload", gson.toJsonTree(noDisponibles));
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta de cerrar mesa
+    public static String generarCerrarMesaResponse(boolean success, int pedidoId, double totalImporte) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CERRAR_MESA_RESPONSE");
+
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        payload.addProperty("pedidoId", pedidoId);
+        payload.addProperty("totalImporte", totalImporte);
 
         respuesta.add("payload", payload);
         return gson.toJson(respuesta);

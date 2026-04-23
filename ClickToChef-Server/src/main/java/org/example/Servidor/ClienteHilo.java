@@ -2,10 +2,8 @@ package org.example.Servidor;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.example.DAO.CategoriasDAO;
 import org.example.DAO.MesasDAO;
 import org.example.DAO.ProductosDAO;
-import org.example.DTO.CategoriaPlato;
 import org.example.DTO.EstadoMesa;
 import java.io.*;
 import java.net.Socket;
@@ -18,6 +16,7 @@ public class ClienteHilo extends Thread {
     private Socket socket;
     private final Gson gson = new Gson();
     private OutputStream outputStream;
+    //Variables para almacenar reservas activas y mesas reservadas
     private final Map<Integer, Integer> reservasActivas = new HashMap<>();
     private Integer mesaReservadaId = null;
 
@@ -29,6 +28,11 @@ public class ClienteHilo extends Thread {
     @Override
     public void run() {
         try {
+            /*
+                Desactiva el algoritmo de Nagle
+                Esto evita que el servidor acumule paquetes pequeños para enviarlos juntos,
+                asegurando que los mensajes se envíen inmediatamente.
+            */
             socket.setTcpNoDelay(true);
         } catch (Exception e) {
             System.err.println("[" + getName() + "] No se pudo configurar TCP_NODELAY: " + e.getMessage());
@@ -46,6 +50,7 @@ public class ClienteHilo extends Thread {
         } catch (IOException e) {
             System.err.println("[" + getName() + "] Error de red: " + e.getMessage());
         } finally {
+            //Libera las reservas activas y elimina al cliente
             liberarReservasActivas();
             Servidor.removeCliente(this);
             closeConnection();
@@ -78,6 +83,7 @@ public class ClienteHilo extends Thread {
                     respuesta = FuncionesServidor.procesarUpdateMesaStatus(payload);
                     if (payload != null && payload.has("id") && payload.has("estado")) {
                         String estado = payload.get("estado").getAsString();
+                        //Si la mesa se reserva, se almacena su ID
                         if ("RESERVADA".equalsIgnoreCase(estado)) {
                             mesaReservadaId = payload.get("id").getAsInt();
                         } else if ("LIBRE".equalsIgnoreCase(estado)) {
@@ -97,12 +103,16 @@ public class ClienteHilo extends Thread {
                         try {
                             JsonObject respJson = gson.fromJson(respuesta, JsonObject.class);
                             JsonObject respPayload = respJson.getAsJsonObject("payload");
+                            //Si la reserva es exitosa, se almacenan los productos reservados
                             if (respPayload != null && respPayload.has("success") && respPayload.get("success").getAsBoolean()) {
                                 int prodId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
                                 int cant = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
+                                //Se almacenan los productos reservados, sumando las cantidades si ya existían
                                 reservasActivas.merge(prodId, cant, Integer::sum);
                             }
-                        } catch (Exception ignored) {}
+                        } catch (Exception e) {
+                            System.err.println("[" + getName() + "] Error al reservar el producto: " + e.getMessage());
+                        }
                     }
                     break;
                 case "LIBERAR_RESERVA":
@@ -110,7 +120,9 @@ public class ClienteHilo extends Thread {
                     if (payload != null) {
                         int prodId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
                         int cant = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
+                        //Se actualizan las cantidades de los productos reservados, restando las cantidades
                         reservasActivas.merge(prodId, -cant, Integer::sum);
+                        //Se eliminan los productos reservados cuya cantidad sea menor o igual a 0
                         reservasActivas.values().removeIf(v -> v <= 0);
                     }
                     break;
@@ -129,14 +141,23 @@ public class ClienteHilo extends Thread {
                         try {
                             JsonObject respJson = gson.fromJson(respuesta, JsonObject.class);
                             JsonObject respPayload = respJson.getAsJsonObject("payload");
+                            //Si el pedido es exitoso, se elimina la mesa reservada
                             if (respPayload != null && respPayload.has("success") && respPayload.get("success").getAsBoolean()) {
                                 mesaReservadaId = null;
                             }
-                        } catch (Exception ignored) {}
+                        } catch (Exception e) {
+                            System.err.println("[" + getName() + "] Error al procesar el pedido: " + e.getMessage());
+                        }
                     }
+                    break;
+                case "INSERTAR_DETALLES":
+                    respuesta = FuncionesServidor.procesarInsertarDetalles(payload);
                     break;
                 case "UPDATE_ESTADO_DETALLE":
                     respuesta = FuncionesServidor.procesarUpdateEstadoDetalle(payload);
+                    break;
+                case "CERRAR_MESA":
+                    respuesta = FuncionesServidor.procesarCerrarMesa(payload);
                     break;
                 default:
                     System.out.println("[" + getName() + "] Tipo desconocido: " + tipo);
@@ -153,10 +174,12 @@ public class ClienteHilo extends Thread {
         }
     }
 
+    //Metodo publico para enviar mensajes al cliente desde fuera de la Clase
     public void sendMessage(String json) {
         send(json);
     }
 
+    //Metodo privado para enviar mensajes al cliente, sincronizado para evitar que se envien dos mensajes a la vez
     private synchronized void send(String json) {
         if (outputStream != null) {
             try {
@@ -168,9 +191,10 @@ public class ClienteHilo extends Thread {
         }
     }
 
+    //Libera las reservas activas
     private void liberarReservasActivas() {
         boolean huboCambios = false;
-
+        //Si hay reservas activas, liberarlas
         if (!reservasActivas.isEmpty()) {
             System.out.println("[" + getName() + "] Liberando " + reservasActivas.size() + " tipo(s) de reserva por desconexión");
             for (Map.Entry<Integer, Integer> entry : reservasActivas.entrySet()) {
@@ -184,7 +208,7 @@ public class ClienteHilo extends Thread {
             }
             reservasActivas.clear();
         }
-
+        //Si hay mesa reservada, liberarla
         if (mesaReservadaId != null) {
             try {
                 MesasDAO.actualizarEstadoMesa(mesaReservadaId, EstadoMesa.LIBRE);
@@ -195,10 +219,10 @@ public class ClienteHilo extends Thread {
                 System.err.println("[" + getName() + "] Error liberando mesa " + mesaReservadaId + ": " + e.getMessage());
             }
         }
-
+        
         if (huboCambios) {
-            ArrayList<CategoriaPlato> catalogo = CategoriasDAO.categoriasplatos();
-            Servidor.broadcast(GeneradorJSON.generarMenuUpdated(catalogo));
+            ArrayList<Integer> noDisponibles = ProductosDAO.obtenerNoDisponibles();
+            Servidor.broadcast(GeneradorJSON.generarStockUpdated(noDisponibles));
         }
     }
 

@@ -48,7 +48,7 @@ public class WebSocketServidor extends WebSocketServer {
     //Al iniciar el servidor
     @Override
     public void onStart() {
-        System.out.println("WebSocketServer iniciado");
+        System.out.println("WebSocketServer iniciado en el puerto: "+getPort());
     }
 
     //Enviar broadcast a todos los clientes

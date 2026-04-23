@@ -16,6 +16,7 @@ public class Servidor {
 
         try {
             ServerSocket serverSocket = new ServerSocket(puerto);
+            System.out.println("ServerSocket iniciado en el puerto: " + puerto);
             int numCliente = 1;
             while (true) {
                 Socket socket = serverSocket.accept();

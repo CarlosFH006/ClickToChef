@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { usePedidosStore } from '../../../../store/usePedidosStore'
 import { useAuthStore } from '../../../../presentation/auth/store/useAuthStore'
 import { getPedidosUsuarioAction } from '../../../../core/actions/get-pedidos-usuario-action'
+import { getMenuAction } from '../../../../core/actions/get-menu-action'
 import PedidoFList from '../../../../presentation/pedido/components/pedidos/PedidoFList'
 import { Colors } from '../../../../constants/theme'
 
@@ -13,8 +14,10 @@ const PedidosScreen = () => {
   const { pedidos, isLoading } = usePedidosStore();
   const { user } = useAuthStore();
 
+  //Cargar menu y pedidos del usuario
   useEffect(() => {
     if (user?.id) {
+      getMenuAction();
       getPedidosUsuarioAction(user.id);
     }
   }, [user]);

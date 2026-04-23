@@ -9,6 +9,7 @@ const LoginScreen = () => {
   const login = useAuthStore((state) => state.login);
   const status = useAuthStore((state) => state.status);
 
+  //Detectar si cambia el estado a autenticado para redirigir al usuario
   useEffect(() => {
     if (status === 'authenticated') {
       router.replace('/(clicktochef-app)/mesas');

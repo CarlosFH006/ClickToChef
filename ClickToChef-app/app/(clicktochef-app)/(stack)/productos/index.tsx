@@ -1,9 +1,9 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, ScrollView } from 'react-native'
+import { View, Text, FlatList, Pressable, ActivityIndicator, ScrollView, TextInput } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useMenuStore } from '../../../../store/useMenuStore'
-import { getMenuAction } from '../../../../core/actions/get-menu-action'
 import CategoriaFList from '../../../../presentation/pedido/components/productos/CategoriaFList'
+import MenuBusquedaFList from '../../../../presentation/pedido/components/productos/MenuBusquedaFList'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { useOrderStore } from '../../../../store/useOrderStore'
 import { updateMesaStatusAction } from '../../../../core/actions/update-mesa-status-action'
@@ -14,8 +14,14 @@ const ProductosIndex = () => {
   const { categorias, isLoading } = useMenuStore();
   const { items, getTotal } = useOrderStore();
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const { mesaId } = useLocalSearchParams();
+  const [busqueda, setBusqueda] = useState('');
+  const { mesaId, pedidoId } = useLocalSearchParams();
   const navigation = useNavigation();
+
+  const todosLosProductos = categorias.flatMap(c => c.productos);
+  const resultadosBusqueda = todosLosProductos.filter(p =>
+    p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   //Al salir de la pantalla de productos, se libera la mesa y se limpia el pedido
   useEffect(() => {
@@ -31,17 +37,15 @@ const ProductosIndex = () => {
         currentItems.forEach(item => {
           liberarReservaAction(item.id, item.cantidad);
         });
-        updateMesaStatusAction(Number(mesaId), 'LIBRE');
+        if (!pedidoId) {
+          updateMesaStatusAction(Number(mesaId), 'LIBRE');
+        }
         useOrderStore.getState().clearOrder();
       }
     });
     //Limpiar el listener al salir de la pantalla
     return unsubscribe;
   }, [navigation, mesaId]);
-
-  useEffect(() => {
-    getMenuAction();
-  }, []);
 
   useEffect(() => {
     if (categorias.length > 0 && selectedCategoryId === null) {
@@ -78,34 +82,50 @@ const ProductosIndex = () => {
           </Text>
         </View>
 
-        {/* Categorías Horizontales */}
-        <View className="py-2 mb-2">
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={categorias}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() => setSelectedCategoryId(item.id)}
-                className={`mr-3 px-4 py-2 rounded-full border ${selectedCategoryId === item.id
-                  ? 'bg-primary border-primary'
-                  : 'bg-transparent border-borde'
-                  }`}
-              >
-                <Text className={`font-titulo text-sm ${selectedCategoryId === item.id ? 'text-superficie' : 'text-secundario'
-                  }`}>
-                  {item.nombre}
-                </Text>
-              </Pressable>
-            )}
+        {/* Buscador */}
+        <View className="px-5 py-2">
+          <TextInput
+            value={busqueda}
+            onChangeText={setBusqueda}
+            placeholder="Buscar producto..."
+            placeholderTextColor="#71717a"
+            className="bg-fondo border border-borde rounded-xl px-4 py-3 font-cuerpo text-sm text-principal"
           />
         </View>
 
-        
+        {/* Categorías Horizontales — ocultas al buscar */}
+        {busqueda === '' && (
+          <View className="py-2 mb-2">
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={categorias}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={{ paddingHorizontal: 20 }}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => setSelectedCategoryId(item.id)}
+                  className={`mr-3 px-4 py-2 rounded-full border ${selectedCategoryId === item.id
+                    ? 'bg-primary border-primary'
+                    : 'bg-transparent border-borde'
+                    }`}
+                >
+                  <Text className={`font-titulo text-sm ${selectedCategoryId === item.id ? 'text-superficie' : 'text-secundario'
+                    }`}>
+                    {item.nombre}
+                  </Text>
+                </Pressable>
+              )}
+            />
+          </View>
+        )}
+
         <View className="flex-1">
-          <CategoriaFList categorias={filteredCategorias} />
+          {busqueda === '' ? (
+            <CategoriaFList categorias={filteredCategorias} />
+          ) : (
+            <MenuBusquedaFList productos={resultadosBusqueda} busqueda={busqueda} />
+          )}
         </View>
         
 
@@ -113,7 +133,7 @@ const ProductosIndex = () => {
         {items.length > 0 && (
           <View className="px-5 py-4 bg-superficie border-t border-borde shadow-lg">
             <Pressable
-              onPress={() => router.push('/(clicktochef-app)/(stack)/pedido')}
+              onPress={() => router.push({ pathname: '/(clicktochef-app)/(stack)/pedido', params: { pedidoId } })}
               className="flex-row items-center justify-between p-4 rounded-2xl bg-primary active:opacity-90"
             >
               <View className="flex-row items-center">

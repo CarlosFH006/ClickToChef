@@ -29,12 +29,18 @@ services:
       - POSTGRES_USER=odoo
     volumes:
       - ./data/odoo_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   odoo:
     image: odoo:latest
     container_name: clicktochef_odoo
     depends_on:
-      - db_odoo
+      db_odoo:
+        condition: service_healthy
     ports:
       - "8069:8069"
     environment:

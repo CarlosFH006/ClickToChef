@@ -14,9 +14,9 @@ public class DetallesPedidoDAO {
     public static boolean insertarDetallePedido(DetallesPedido detallePedido) {
         String sql = "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, notas_especiales, estado, hora_pedido) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setInt(1, detallePedido.getPedidoId());
             statement.setInt(2, detallePedido.getProductoId());
             statement.setInt(3, detallePedido.getCantidad());
@@ -37,10 +37,10 @@ public class DetallesPedidoDAO {
                      "WHERE dp.estado <> 'servido'";
         ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 DetallesPedido detalle = new DetallesPedido(
                         resultSet.getInt("id"),
@@ -68,23 +68,22 @@ public class DetallesPedidoDAO {
                      "JOIN productos p ON dp.producto_id = p.id " +
                      "WHERE dp.id = ?";
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setInt(1, id);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return new DetallesPedido(
-                            resultSet.getInt("id"),
-                            resultSet.getInt("pedido_id"),
-                            resultSet.getInt("producto_id"),
-                            resultSet.getString("nombre_producto"),
-                            resultSet.getInt("cantidad"),
-                            resultSet.getString("notas_especiales"),
-                            convertirEstadoDetalleAEnum(resultSet.getString("estado")),
-                            resultSet.getTimestamp("hora_pedido")
-                    );
-                }
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return new DetallesPedido(
+                        resultSet.getInt("id"),
+                        resultSet.getInt("pedido_id"),
+                        resultSet.getInt("producto_id"),
+                        resultSet.getString("nombre_producto"),
+                        resultSet.getInt("cantidad"),
+                        resultSet.getString("notas_especiales"),
+                        convertirEstadoDetalleAEnum(resultSet.getString("estado")),
+                        resultSet.getTimestamp("hora_pedido")
+                );
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al obtener el detalle del pedido " + id, e);
@@ -101,24 +100,23 @@ public class DetallesPedidoDAO {
                      "WHERE dp.pedido_id = ?";
         ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setInt(1, pedidoId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    DetallesPedido detalle = new DetallesPedido(
-                            resultSet.getInt("id"),
-                            resultSet.getInt("pedido_id"),
-                            resultSet.getInt("producto_id"),
-                            resultSet.getString("nombre_producto"),
-                            resultSet.getInt("cantidad"),
-                            resultSet.getString("notas_especiales"),
-                            convertirEstadoDetalleAEnum(resultSet.getString("estado")),
-                            resultSet.getTimestamp("hora_pedido")
-                    );
-                    detalles.add(detalle);
-                }
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                DetallesPedido detalle = new DetallesPedido(
+                        resultSet.getInt("id"),
+                        resultSet.getInt("pedido_id"),
+                        resultSet.getInt("producto_id"),
+                        resultSet.getString("nombre_producto"),
+                        resultSet.getInt("cantidad"),
+                        resultSet.getString("notas_especiales"),
+                        convertirEstadoDetalleAEnum(resultSet.getString("estado")),
+                        resultSet.getTimestamp("hora_pedido")
+                );
+                detalles.add(detalle);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al obtener los detalles del pedido " + pedidoId, e);
@@ -130,9 +128,9 @@ public class DetallesPedidoDAO {
     public static boolean updateEstado(int id, EstadoDetallePedido nuevoEstado) {
         String sql = "UPDATE detalles_pedido SET estado = ? WHERE id = ?";
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setString(1, convertirEstadoDetalleADB(nuevoEstado));
             statement.setInt(2, id);
             return statement.executeUpdate() > 0;

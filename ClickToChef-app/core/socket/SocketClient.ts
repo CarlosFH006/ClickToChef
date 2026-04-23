@@ -1,5 +1,6 @@
 import { Alert } from 'react-native';
 import TcpSocket from 'react-native-tcp-socket';
+import { router } from 'expo-router';
 import { useMesaStore } from '../../store/useMesaStore';
 import { useMenuStore } from '../../store/useMenuStore';
 import { usePedidosStore } from '../../store/usePedidosStore';
@@ -23,8 +24,10 @@ class SocketClient {
   private client: TcpSocket.Socket | null = null;
   private host: string = process.env.EXPO_PUBLIC_SERVER_HOST!;
   private port: number = Number(process.env.EXPO_PUBLIC_SERVER_PORT);
+  //Buffer para manejar datos parciales
   private buffer: string = '';
 
+  //Constructor de la clase
   constructor() {
     this.client = null;
   }
@@ -46,15 +49,15 @@ class SocketClient {
     //El evento data se dispara cuando el servidor envía datos
     this.client.on('data', (data: Buffer | string) => {
       this.buffer += data.toString();
-      const { objects, remaining } = this.extractJsonObjects(this.buffer);
-      this.buffer = remaining;
-
-      objects.forEach((msg: string) => {
+      const lines = this.buffer.split('\n');
+      this.buffer = lines.pop() ?? '';
+      lines.forEach((line: string) => {
+        if (!line.trim()) return;
         try {
-          const parsedData: ServerMessage = JSON.parse(msg);
+          const parsedData: ServerMessage = JSON.parse(line);
           this.handleServerMessage(parsedData);
         } catch (error) {
-          console.error('[Socket] Error JSON:', error, msg);
+          console.error('[Socket] Error JSON:', error, line);
         }
       });
     });
@@ -125,19 +128,38 @@ class SocketClient {
         }
         break;
 
-      //Actualizar pedidos en tiempo real
       case 'PEDIDOS_USUARIO_RESPONSE':
-      case 'PEDIDOS_UPDATED':
         if (data.payload) {
           const { user } = useAuthStore.getState();
           if (user) {
+            //Filtrar los pedidos del usuario
             const filtered = (data.payload as any[]).filter(p => p.usuarioId === user.id);
-            console.log(`[Socket] ${data.type} recibidos:`, filtered.length);
+            console.log(`[Socket] PEDIDOS_USUARIO_RESPONSE recibidos:`, filtered.length);
             usePedidosStore.getState().setPedidos(filtered);
           }
         }
         break;
 
+      //Actualizar lista de pedidos
+      case 'PEDIDOS_UPDATED':
+        if (data.payload) {
+          const { user } = useAuthStore.getState();
+          const pedido = data.payload;
+          if (user && pedido.usuarioId === user.id) {
+            //Si el pedido está cerrado, eliminarlo de la lista
+            if (pedido.estado === 'CERRADA') {
+              console.log(`[Socket] Pedido ${pedido.id} cerrado, eliminando de la lista`);
+              usePedidosStore.getState().removePedido(pedido.id);
+            } else {
+              //Si el pedido no está cerrado, añadirlo a la lista
+              console.log(`[Socket] Pedido ${pedido.id} actualizado/añadido`);
+              usePedidosStore.getState().upsertPedido(pedido);
+            }
+          }
+        }
+        break;
+
+      //Actualizar detalle del pedido
       case 'DETALLE_UPDATED':
         if (data.payload) {
           console.log('[Socket] Detalle actualizado:', data.payload.id);
@@ -145,6 +167,7 @@ class SocketClient {
         }
         break;
 
+      //Controlar la respuesta del cambio del estado del plato
       case 'UPDATE_ESTADO_DETALLE_RESPONSE':
         if (data.payload) {
           const { success, id } = data.payload;
@@ -156,8 +179,7 @@ class SocketClient {
         }
         break;
 
-
-
+      //Controlar la respuesta de la creación del pedido
       case 'CREAR_PEDIDO_RESPONSE':
         const { success: orderSuccess, pedidoId } = data.payload;
         if (orderSuccess) {
@@ -168,19 +190,61 @@ class SocketClient {
         }
         break;
 
+      //Controlar la respuesta de la inserción de los detalles del pedido
+      case 'INSERTAR_DETALLES_RESPONSE':
+        if (data.payload?.success) {
+          console.log(`[Socket] Detalles añadidos al pedido ${data.payload.pedidoId}`);
+          Alert.alert("Productos añadidos", `Los productos han sido enviados a cocina.`);
+          router.back();
+        } else {
+          Alert.alert("Error", "No se pudieron añadir los productos al pedido.");
+        }
+        break;
+
+      //Controlar la respuesta de la reserva del producto
       case 'RESERVAR_PRODUCTO_RESPONSE':
+      //Controlar la respuesta de la liberación de la reserva del producto
       case 'LIBERAR_RESERVA_RESPONSE':
+      //Controlar la respuesta de la finalización de la reserva del producto
       case 'FINALIZAR_RESERVA_RESPONSE':
         if (data.payload) {
           const { success, productoId, cantidad } = data.payload;
           console.log(`[Socket] ${data.type}: success=${success}, productoId=${productoId}, cantidad=${cantidad}`);
 
+          //Si la reserva falla, devolver el pedido a la cantidad anterior
           if (!success && data.type === 'RESERVAR_PRODUCTO_RESPONSE') {
             console.warn(`[Socket] Reserva fallida para producto ${productoId}. Marcando como no disponible.`);
             useOrderStore.getState().updateQuantity(productoId, -cantidad);
             useMenuStore.getState().setProductoDisponible(productoId, false);
             Alert.alert("Stock insuficiente", "No hay suficiente stock para reservar la cantidad solicitada.");
           }
+        }
+        break;
+
+      //Actualizar stock
+      case 'STOCK_UPDATED':
+        if (data.payload) {
+          const noDisponibles: number[] = data.payload;
+          const { categorias } = useMenuStore.getState();
+          //Filtrar todos los productos que se reciban como no disponibles
+          categorias.flatMap(c => c.productos).forEach(p =>
+            useMenuStore.getState().setProductoDisponible(p.id, !noDisponibles.includes(p.id))
+          );
+        }
+        break;
+
+      //Mostrar errores del servidor
+      case 'SERVER_ERROR':
+        Alert.alert('Error del servidor', data.payload?.message ?? 'Error desconocido');
+        break;
+
+      //Controlar la respuesta de la finalización de la reserva del producto
+      case 'CERRAR_MESA_RESPONSE':
+        if (data.payload?.success) {
+          Alert.alert('Pedido cerrado', `El pedido #${data.payload.pedidoId} ha sido cerrado correctamente.`);
+          router.back();
+        } else {
+          Alert.alert('Error', 'No se pudo cerrar el pedido. Inténtalo de nuevo.');
         }
         break;
 
@@ -236,49 +300,6 @@ class SocketClient {
         'Se perdió la conexión con el servidor. Comprueba la red e inténtalo de nuevo.'
       );
     }
-  }
-
-  private extractJsonObjects(buffer: string): { objects: string[]; remaining: string } {
-    const objects: string[] = [];
-    let i = 0;
-
-    while (i < buffer.length) {
-      while (i < buffer.length && buffer[i] !== '{') i++;
-      if (i >= buffer.length) break;
-
-      const start = i;
-      let depth = 0;
-      let inString = false;
-      let escaped = false;
-
-      while (i < buffer.length) {
-        const ch = buffer[i];
-        if (escaped) {
-          escaped = false;
-        } else if (ch === '\\' && inString) {
-          escaped = true;
-        } else if (ch === '"') {
-          inString = !inString;
-        } else if (!inString) {
-          if (ch === '{') depth++;
-          else if (ch === '}') {
-            depth--;
-            if (depth === 0) {
-              objects.push(buffer.substring(start, i + 1));
-              i++;
-              break;
-            }
-          }
-        }
-        i++;
-      }
-
-      if (depth > 0) {
-        return { objects, remaining: buffer.substring(start) };
-      }
-    }
-
-    return { objects, remaining: '' };
   }
 
   //Desconectar del servidor

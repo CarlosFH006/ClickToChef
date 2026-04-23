@@ -12,6 +12,7 @@ interface Props {
 const DetalleCard = ({ detalle }: Props) => {
   const statusColor = getDetalleStatusColor(detalle.estado);
   
+  //Convertir la hora del pedido a un formato legible
   const date = detalle.horaPedido ? new Date(detalle.horaPedido.replace(' ', 'T')) : null;
   const validDate = date && !isNaN(date.getTime());
   const timeStr = validDate ? date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '--:--';

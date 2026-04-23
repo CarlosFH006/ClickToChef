@@ -1,6 +1,5 @@
-import { View, Text, ActivityIndicator } from 'react-native'
-import React, { useEffect } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, ActivityIndicator } from 'react-native'
+import React from 'react'
 import { Redirect, Tabs } from 'expo-router'
 import { useAuthStore } from '../../presentation/auth/store/useAuthStore'
 import { useThemeColor } from '../../presentation/theme/hooks/use-theme-color'
@@ -12,6 +11,7 @@ const CheckAuthenticationLayout = () => {
     const backgroundColor = useThemeColor({}, 'background');
     const primaryColor = useThemeColor({}, 'primary');
 
+    //Comprobar si el usuario esta autenticado
     if (status === 'checking') {
         return (
             <View className="flex-1 justify-center items-center" style={{ backgroundColor }}>
@@ -23,7 +23,7 @@ const CheckAuthenticationLayout = () => {
     if (status === 'unauthenticated') {
         return <Redirect href="/auth/login" />
     }
-
+    
     return (
         <Tabs screenOptions={{
             headerShadowVisible: false,

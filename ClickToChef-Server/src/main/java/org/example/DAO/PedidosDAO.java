@@ -15,26 +15,24 @@ public class PedidosDAO {
     public static int insertarPedido(Pedidos pedido) {
         String sql = "INSERT INTO pedidos (mesa_id, usuario_id, fecha_creacion, estado) VALUES (?, ?, ?, ?)";
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setInt(1, pedido.getMesaId());
             statement.setInt(2, pedido.getUsuarioId());
             statement.setTimestamp(3, pedido.getFechaCreacion());
             statement.setString(4, convertirEstadoPedidoADB(pedido.getEstado()));
-            
+
             int affectedRows = statement.executeUpdate();
             if (affectedRows == 0) {
                 return -1;
             }
 
-            //Devuelve el ID del pedido
-            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    return generatedKeys.getInt(1);
-                } else {
-                    return -1;
-                }
+            ResultSet generatedKeys = statement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            } else {
+                return -1;
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el pedido", e);
@@ -45,10 +43,10 @@ public class PedidosDAO {
         String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE estado = 'abierta'";
         ArrayList<Pedidos> pedidos = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Pedidos pedido = new Pedidos(
                         resultSet.getInt("id"),
@@ -63,7 +61,6 @@ public class PedidosDAO {
             throw new RuntimeException("Error al obtener los pedidos", e);
         }
 
-        // Cargar detalles después de cerrar el ResultSet de pedidos
         for (Pedidos p : pedidos) {
             p.setDetalles(DetallesPedidoDAO.obtenerPorPedido(p.getId()));
         }
@@ -75,27 +72,25 @@ public class PedidosDAO {
         String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE usuario_id = ? AND estado = 'abierta'";
         ArrayList<Pedidos> pedidos = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setInt(1, usuarioId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    Pedidos pedido = new Pedidos(
-                            resultSet.getInt("id"),
-                            resultSet.getInt("mesa_id"),
-                            resultSet.getInt("usuario_id"),
-                            resultSet.getTimestamp("fecha_creacion"),
-                            convertirEstadoPedidoAEnum(resultSet.getString("estado"))
-                    );
-                    pedidos.add(pedido);
-                }
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Pedidos pedido = new Pedidos(
+                        resultSet.getInt("id"),
+                        resultSet.getInt("mesa_id"),
+                        resultSet.getInt("usuario_id"),
+                        resultSet.getTimestamp("fecha_creacion"),
+                        convertirEstadoPedidoAEnum(resultSet.getString("estado"))
+                );
+                pedidos.add(pedido);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al obtener los pedidos del usuario", e);
         }
 
-        // Cargar detalles después de cerrar el ResultSet de pedidos
         for (Pedidos p : pedidos) {
             p.setDetalles(DetallesPedidoDAO.obtenerPorPedido(p.getId()));
         }
@@ -103,6 +98,47 @@ public class PedidosDAO {
         return pedidos;
     }
 
+    public static Pedidos obtenerPedidoPorId(int id) {
+        String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE id = ?";
+        Pedidos pedido = null;
+
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, id);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                pedido = new Pedidos(
+                        resultSet.getInt("id"),
+                        resultSet.getInt("mesa_id"),
+                        resultSet.getInt("usuario_id"),
+                        resultSet.getTimestamp("fecha_creacion"),
+                        convertirEstadoPedidoAEnum(resultSet.getString("estado"))
+                );
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener el pedido", e);
+        }
+
+        if (pedido != null) {
+            pedido.setDetalles(DetallesPedidoDAO.obtenerPorPedido(pedido.getId()));
+        }
+
+        return pedido;
+    }
+
+    public static boolean cerrarPedido(int id) {
+        String sql = "UPDATE pedidos SET estado = 'cerrada' WHERE id = ?";
+
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar cerrar el pedido", e);
+        }
+    }
 
     private static String convertirEstadoPedidoADB(EstadoPedido estadoPedido) {
         return estadoPedido.name().toLowerCase();

@@ -12,7 +12,8 @@ interface Props {
 
 const PedidoCard = ({ pedido, onPress }: Props) => {
   const statusColor = getPedidoStatusColor(pedido.estado);
-  // Java Timestamp.toString() → "2025-01-15 10:22:45.0" — replace space with T for ISO parsing
+
+  //Convertir la fecha del pedido a un formato legible
   const date = pedido.fechaCreacion ? new Date(pedido.fechaCreacion.replace(' ', 'T')) : null;
   const validDate = date && !isNaN(date.getTime());
   const dateStr = validDate ? date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '--';

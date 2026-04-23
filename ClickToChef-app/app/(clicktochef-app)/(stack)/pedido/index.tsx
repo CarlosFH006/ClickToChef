@@ -1,15 +1,20 @@
 import { View, Text, Pressable, ScrollView } from 'react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useOrderStore } from '../../../../store/useOrderStore'
 import ProductoFList from '../../../../presentation/pedido/components/productos/ProductoFList'
 import useFinalizarPedido from '../../../../presentation/pedido/hooks/useFinalizarPedido'
+import useInsertarDetalles from '../../../../presentation/pedido/hooks/useInsertarDetalles'
 
 const PedidoIndex = () => {
   const { items, getTotal, mesaId } = useOrderStore();
   const { finalizarPedido } = useFinalizarPedido();
+  const { insertarDetalles } = useInsertarDetalles();
+  //Detectar si recibe un id de pedido para saber si se esta añadiendo a un pedido o se esta creando uno nuevo
+  const { pedidoId } = useLocalSearchParams();
+  const esAdicion = !!pedidoId;
 
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
@@ -53,13 +58,20 @@ const PedidoIndex = () => {
             <Pressable
               className="w-full py-4 rounded-2xl items-center justify-center bg-primary active:opacity-90"
               onPress={async () => {
-                const success = await finalizarPedido();
-                if (success) {
-                  router.dismissAll();
+                if (esAdicion) {
+                  const success = await insertarDetalles(Number(pedidoId));
+                  //Eliminar la pila hasta volver al [id].tsx
+                  if (success) router.dismiss(2);
+                } else {
+                  const success = await finalizarPedido();
+                  //Eliminar toda la pila
+                  if (success) router.dismissAll();
                 }
               }}
             >
-              <Text className="font-titulo text-superficie text-lg">Confirmar Pedido</Text>
+              <Text className="font-titulo text-superficie text-lg">
+                {esAdicion ? 'Añadir a pedido' : 'Confirmar Pedido'}
+              </Text>
             </Pressable>
           </View>
         )}

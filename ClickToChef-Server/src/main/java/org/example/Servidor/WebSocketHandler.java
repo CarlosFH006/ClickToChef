@@ -54,11 +54,17 @@ public class WebSocketHandler {
                 case "CREAR_PEDIDO":
                     respuesta = FuncionesServidor.procesarCrearPedido(payload);
                     break;
+                case "INSERTAR_DETALLES":
+                    respuesta = FuncionesServidor.procesarInsertarDetalles(payload);
+                    break;
                 case "UPDATE_ESTADO_DETALLE":
                     respuesta = FuncionesServidor.procesarUpdateEstadoDetalle(payload);
                     break;
                 case "GET_DETALLES_PEDIDO":
                     respuesta = FuncionesServidor.procesarGetDetallesPedido();
+                    break;
+                case "CERRAR_MESA":
+                    respuesta = FuncionesServidor.procesarCerrarMesa(payload);
                     break;
                 default:
                     System.out.println("[WebSocket] Tipo desconocido: " + tipo);

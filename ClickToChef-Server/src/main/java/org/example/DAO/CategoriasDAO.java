@@ -14,9 +14,9 @@ public class CategoriasDAO {
     public static boolean insertarCategoria(Categorias categoria) {
         String sql = "INSERT INTO categorias (nombre) VALUES (?)";
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setString(1, categoria.getNombre());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -28,10 +28,10 @@ public class CategoriasDAO {
         String sql = "SELECT id, nombre FROM categorias";
         ArrayList<Categorias> categorias = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Categorias categoria = new Categorias(
                         resultSet.getInt("id"),
@@ -73,10 +73,10 @@ public class CategoriasDAO {
                 """;
         ArrayList<CategoriaPlato> categoriasPlatos = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 CategoriaPlato categoriaPlato = new CategoriaPlato(
                         resultSet.getInt("categoria_id"),

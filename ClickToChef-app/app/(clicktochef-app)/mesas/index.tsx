@@ -16,6 +16,7 @@ const MesasScreen = () => {
     getMesasAction();
   }, []);
 
+  //Contar mesas por estado
   const estados = {
     libres: mesas.filter(m => m.estado === 'LIBRE').length,
     reservadas: mesas.filter(m => m.estado === 'RESERVADA').length,

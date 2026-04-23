@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.example.DAO.*;
 import org.example.DTO.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
 //Funciones para ejecutar en las llamadas de ServerSocket y de WebSocket
@@ -77,9 +78,8 @@ public class FuncionesServidor {
         System.out.println("[FuncionesServidor] Reservando producto " + productoId + " (cantidad " + cantidad + ")");
 
         boolean success = ProductosDAO.reservarProducto(productoId, cantidad);
-        //Si se completa la reserva llama a su función de broadcast
         if (success) {
-            broadcastCatalogo();
+            broadcastNoDisponibles();
         }
 
         return GeneradorJSON.generarReservaResponse("RESERVAR_PRODUCTO_RESPONSE", productoId, cantidad, success);
@@ -96,7 +96,7 @@ public class FuncionesServidor {
 
         try {
             ProductosDAO.liberarReserva(productoId, cantidad);
-            broadcastCatalogo();
+            broadcastNoDisponibles();
             return GeneradorJSON.generarReservaResponse("LIBERAR_RESERVA_RESPONSE", productoId, cantidad, true);
         } catch (Exception e) {
             //Si falla la liberación de la reserva de stock se devuelve un error
@@ -117,7 +117,6 @@ public class FuncionesServidor {
 
         try {
             ProductosDAO.finalizarReserva(productoId, cantidad);
-            broadcastCatalogo();
             return GeneradorJSON.generarReservaResponse("FINALIZAR_RESERVA_RESPONSE", productoId, cantidad, true);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al finalizar reserva: " + e.getMessage());
@@ -163,13 +162,53 @@ public class FuncionesServidor {
             }
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " creado con " + (exitoDetalles ? "éxito" : "errores parciales"));
-            broadcastPedidos();
+            broadcastPedido(pedidoId);
             broadcastDetallesPedido();
 
             return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al crear pedido: " + e.getMessage());
             return GeneradorJSON.generarError("Error interno al procesar el pedido: " + e.getMessage());
+        }
+    }
+
+    public static String procesarInsertarDetalles(JsonObject payload) {
+        if (payload == null || !payload.has("pedidoId") || !payload.has("items")) {
+            return GeneradorJSON.generarError("Payload de INSERTAR_DETALLES incompleto");
+        }
+
+        int pedidoId = payload.get("pedidoId").getAsInt();
+        JsonArray items = payload.getAsJsonArray("items");
+
+        System.out.println("[FuncionesServidor] Insertando " + items.size() + " detalle(s) en pedido " + pedidoId);
+
+        try {
+            boolean exitoDetalles = true;
+            for (int i = 0; i < items.size(); i++) {
+                JsonObject item = items.get(i).getAsJsonObject();
+                DetallesPedido detalle = new DetallesPedido(
+                    pedidoId,
+                    item.get("id").getAsInt(),
+                    item.get("cantidad").getAsInt(),
+                    item.has("notas") ? item.get("notas").getAsString() : "",
+                    EstadoDetallePedido.PENDIENTE,
+                    new java.sql.Timestamp(System.currentTimeMillis())
+                );
+                if (!DetallesPedidoDAO.insertarDetallePedido(detalle)) {
+                    exitoDetalles = false;
+                }
+            }
+
+            if (exitoDetalles) {
+                broadcastPedido(pedidoId);
+                broadcastDetallesPedido();
+            }
+
+            System.out.println("[FuncionesServidor] Detalles insertados en pedido " + pedidoId + (exitoDetalles ? " con éxito" : " con errores"));
+            return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al insertar detalles: " + e.getMessage());
+            return GeneradorJSON.generarError("Error interno al insertar detalles: " + e.getMessage());
         }
     }
 
@@ -201,23 +240,66 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarCerrarMesa(JsonObject payload) {
+        if (payload == null || !payload.has("pedidoId") || !payload.has("totalImporte") || !payload.has("metodoPago")) {
+            return GeneradorJSON.generarError("Payload de CERRAR_MESA incompleto");
+        }
+
+        int pedidoId = payload.get("pedidoId").getAsInt();
+        double totalImporte = payload.get("totalImporte").getAsDouble();
+        MetodoPago metodoPago;
+        try {
+            metodoPago = MetodoPago.valueOf(payload.get("metodoPago").getAsString().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return GeneradorJSON.generarError("Método de pago inválido: " + payload.get("metodoPago").getAsString());
+        }
+
+        System.out.println("[FuncionesServidor] Cerrando mesa para pedido " + pedidoId);
+
+        try {
+            Pedidos pedido = PedidosDAO.obtenerPedidoPorId(pedidoId);
+            if (pedido == null) {
+                return GeneradorJSON.generarError("Pedido " + pedidoId + " no encontrado o ya cerrado");
+            }
+            int mesaId = pedido.getMesaId();
+
+            Tickets ticket = new Tickets(pedidoId, totalImporte, new Timestamp(System.currentTimeMillis()), "DESCONOCIDA", metodoPago);
+            boolean ticketCreado = TicketsDAO.insertarTicket(ticket);
+            if (!ticketCreado) {
+                return GeneradorJSON.generarError("No se pudo registrar el ticket del pedido " + pedidoId);
+            }
+
+            boolean pedidoCerrado = PedidosDAO.cerrarPedido(pedidoId);
+
+            MesasDAO.actualizarEstadoMesa(mesaId, EstadoMesa.LIBRE);
+            Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
+            broadcastPedido(pedidoId);
+
+            System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cerrado, ticket registrado, mesa " + mesaId + " liberada");
+            return GeneradorJSON.generarCerrarMesaResponse(ticketCreado && pedidoCerrado, pedidoId, totalImporte);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al cerrar mesa: " + e.getMessage());
+            return GeneradorJSON.generarError("Error interno al cerrar la mesa: " + e.getMessage());
+        }
+    }
+
     //Funciones de broadcast
-    private static void broadcastCatalogo() {
-        ArrayList<CategoriaPlato> lista = CategoriasDAO.categoriasplatos();
-        Servidor.broadcast(GeneradorJSON.generarMenuUpdated(lista));
-        System.out.println("[FuncionesServidor] Catálogo broadcast (" + lista.size() + " categorías)");
+    private static void broadcastNoDisponibles() {
+        ArrayList<Integer> noDisponibles = ProductosDAO.obtenerNoDisponibles();
+        Servidor.broadcast(GeneradorJSON.generarStockUpdated(noDisponibles));
+        System.out.println("[FuncionesServidor] Stock broadcast (" + noDisponibles.size() + " no disponibles)");
     }
 
     private static void broadcastDetallesPedido() {
         ArrayList<DetallesPedido> lista = DetallesPedidoDAO.obtenerTodos();
-        Servidor.broadcast(GeneradorJSON.generarDetallesPedidoResponse(lista));
+        WebSocketServidor.broadcastGlobal(GeneradorJSON.generarDetallesPedidoResponse(lista));
         System.out.println("[FuncionesServidor] Detalles pedido broadcast (" + lista.size() + " detalles)");
     }
 
-    private static void broadcastPedidos() {
-        ArrayList<Pedidos> lista = PedidosDAO.obtenerTodos();
-        Servidor.broadcast(GeneradorJSON.generarPedidosUpdated(lista));
-        System.out.println("[FuncionesServidor] Pedidos broadcast (" + lista.size() + " pedidos)");
+    private static void broadcastPedido(int id) {
+        Pedidos pedido = PedidosDAO.obtenerPedidoPorId(id);
+        Servidor.broadcast(GeneradorJSON.generarPedidosUpdated(pedido));
+        System.out.println("[FuncionesServidor] Pedido broadcast (ID: " + id + ")");
     }
 
     private static void broadcastDetalleActualizado(int id) {
