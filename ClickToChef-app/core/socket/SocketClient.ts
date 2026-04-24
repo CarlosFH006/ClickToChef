@@ -248,6 +248,24 @@ class SocketClient {
         }
         break;
 
+      case 'DETALLE_DELETED':
+        if (data.payload) {
+          console.log('[Socket] Detalle eliminado:', data.payload.id);
+          usePedidosStore.getState().removeDetalle(data.payload.id);
+        }
+        break;
+
+      case 'ELIMINAR_DETALLE_RESPONSE':
+        if (data.payload) {
+          const { success, id } = data.payload;
+          if (!success) {
+            Alert.alert('Error', `No se pudo eliminar el plato #${id}. Solo se pueden eliminar platos pendientes.`);
+          } else {
+            console.log(`[Socket] Detalle #${id} eliminado.`);
+          }
+        }
+        break;
+
       //Controlar la respuesta de la finalización de la reserva del producto
       case 'CERRAR_MESA_RESPONSE':
         if (data.payload?.success) {

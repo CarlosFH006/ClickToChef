@@ -174,6 +174,9 @@ public class ClienteHilo extends Thread {
                 case "CANCELAR_PEDIDO":
                     respuesta = FuncionesServidor.procesarCancelarPedido(payload);
                     break;
+                case "ELIMINAR_DETALLE":
+                    respuesta = FuncionesServidor.procesarEliminarDetalle(payload);
+                    break;
                 default:
                     System.out.println("[" + getName() + "] Tipo desconocido: " + tipo);
                     respuesta = GeneradorJSON.generarError("Acción no reconocida en el servidor");

@@ -140,6 +140,18 @@ public class DetallesPedidoDAO {
         }
     }
 
+    public static boolean eliminarDetalle(int id) {
+        String sql = "DELETE FROM detalles_pedido WHERE id = ?";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al eliminar el detalle del pedido", e);
+        }
+    }
+
     private static String convertirEstadoDetalleADB(EstadoDetallePedido estadoDetallePedido) {
         return estadoDetallePedido.name().toLowerCase().replace('_', ' ');
     }

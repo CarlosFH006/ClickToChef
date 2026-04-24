@@ -33,6 +33,12 @@ const Api = (() => {
             }
 
             // Actualización en tiempo real cuando cambia el estado de un plato.
+            case 'DETALLE_DELETED': {
+                console.log('[Api] DETALLE_DELETED recibido, id:', msg.payload?.id);
+                _dispatch('DETALLE_DELETED', msg.payload);
+                break;
+            }
+
             case 'DETALLE_UPDATED': {
                 console.log('[Api] DETALLE_UPDATED recibido, id:', msg.payload?.id);
                 _dispatch('DETALLE_UPDATED', msg.payload);

@@ -79,7 +79,7 @@ const PedidoDetalleScreen = () => {
           </View>
 
           {pedido.detalles && pedido.detalles.length > 0 ? (
-            <DetalleFList detalles={pedido.detalles} />
+            <DetalleFList detalles={pedido.detalles} pedidoAbierto={pedido.estado === 'ABIERTA'} />
           ) : (
             <View className="items-center py-10 opacity-40">
               <Ionicons name="restaurant-outline" size={48} color="gray" />

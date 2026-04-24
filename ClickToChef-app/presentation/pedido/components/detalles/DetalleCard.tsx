@@ -1,15 +1,17 @@
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, Alert } from 'react-native';
 import { DetallePedido } from '../../../../type/pedidos-interface';
 import { Ionicons } from '@expo/vector-icons';
 import { getDetalleStatusColor, getDetalleStatusIcon, getDetalleStatusLabel } from '../../utils/status-colors';
 import { updateEstadoDetalleAction } from '../../../../core/actions/update-estado-detalle-action';
+import { eliminarDetalleAction } from '../../../../core/actions/eliminar-detalle-action';
 
 interface Props {
   detalle: DetallePedido;
+  pedidoAbierto?: boolean;
 }
 
-const DetalleCard = ({ detalle }: Props) => {
+const DetalleCard = ({ detalle, pedidoAbierto = false }: Props) => {
   const statusColor = getDetalleStatusColor(detalle.estado);
   
   //Convertir la hora del pedido a un formato legible
@@ -62,12 +64,32 @@ const DetalleCard = ({ detalle }: Props) => {
 
         {/* Botón Servir si está LISTO */}
         {detalle.estado === 'LISTO' && (
-          <Pressable 
+          <Pressable
             className="mt-4 py-3.5 bg-success rounded-xl flex-row items-center justify-center active:opacity-90"
             onPress={() => updateEstadoDetalleAction(detalle.id, 'SERVIDO')}
           >
             <Ionicons name="restaurant-outline" size={18} color="white" />
             <Text className="font-titulo text-sm text-white ml-2">Servir plato</Text>
+          </Pressable>
+        )}
+
+        {/* Botón Eliminar si está PENDIENTE y el pedido está abierto */}
+        {pedidoAbierto && detalle.estado === 'PENDIENTE' && (
+          <Pressable
+            className="mt-4 py-3.5 rounded-xl flex-row items-center justify-center active:opacity-90 border border-red-200 bg-red-50"
+            onPress={() =>
+              Alert.alert(
+                'Eliminar plato',
+                `¿Eliminar ${detalle.nombreProducto} del pedido?`,
+                [
+                  { text: 'Cancelar', style: 'cancel' },
+                  { text: 'Eliminar', style: 'destructive', onPress: () => eliminarDetalleAction(detalle.id) },
+                ]
+              )
+            }
+          >
+            <Ionicons name="trash-outline" size={18} color="#ef4444" />
+            <Text className="font-titulo text-sm ml-2" style={{ color: '#ef4444' }}>Eliminar plato</Text>
           </Pressable>
         )}
       </View>

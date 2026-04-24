@@ -45,6 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDetalle(detalle);
     });
 
+    Api.on('DETALLE_DELETED', ({ id }) => {
+        detallesActuales = detallesActuales.filter(d => d.id !== id);
+        renderKanban();
+    });
+
     // Drop zones — se registran UNA SOLA VEZ
     ESTADOS.forEach(estado => {
         //Bucle de registro de columnas

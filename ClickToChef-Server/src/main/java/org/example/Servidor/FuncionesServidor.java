@@ -117,6 +117,7 @@ public class FuncionesServidor {
 
         try {
             ProductosDAO.finalizarReserva(productoId, cantidad);
+            broadcastIngredientes();
             return GeneradorJSON.generarReservaResponse("FINALIZAR_RESERVA_RESPONSE", productoId, cantidad, true);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al finalizar reserva: " + e.getMessage());
@@ -375,6 +376,40 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarEliminarDetalle(JsonObject payload) {
+        if (payload == null || !payload.has("id")) {
+            return GeneradorJSON.generarError("Payload de ELIMINAR_DETALLE incompleto");
+        }
+
+        int id = payload.get("id").getAsInt();
+        System.out.println("[FuncionesServidor] Eliminando detalle " + id);
+
+        try {
+            DetallesPedido detalle = DetallesPedidoDAO.obtenerPorId(id);
+            if (detalle == null) {
+                return GeneradorJSON.generarEliminarDetalleResponse(false, id);
+            }
+            if (detalle.getEstado() != EstadoDetallePedido.PENDIENTE) {
+                System.out.println("[FuncionesServidor] Detalle " + id + " no está en PENDIENTE, no se puede eliminar");
+                return GeneradorJSON.generarEliminarDetalleResponse(false, id);
+            }
+
+            ProductosDAO.restaurarStock(detalle.getProductoId(), detalle.getCantidad());
+            boolean eliminado = DetallesPedidoDAO.eliminarDetalle(id);
+
+            if (eliminado) {
+                broadcastNoDisponibles();
+                Servidor.broadcast(GeneradorJSON.generarDetalleDeleted(id));
+            }
+
+            System.out.println("[FuncionesServidor] Detalle " + id + (eliminado ? " eliminado" : " no eliminado"));
+            return GeneradorJSON.generarEliminarDetalleResponse(eliminado, id);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al eliminar detalle: " + e.getMessage());
+            return GeneradorJSON.generarError("Error interno al eliminar el detalle: " + e.getMessage());
+        }
+    }
+
     //Funciones de broadcast
     private static void broadcastNoDisponibles() {
         ArrayList<Integer> noDisponibles = ProductosDAO.obtenerNoDisponibles();
@@ -392,6 +427,12 @@ public class FuncionesServidor {
         Pedidos pedido = PedidosDAO.obtenerPedidoPorId(id);
         Servidor.broadcast(GeneradorJSON.generarPedidosUpdated(pedido));
         System.out.println("[FuncionesServidor] Pedido broadcast (ID: " + id + ")");
+    }
+
+    private static void broadcastIngredientes() {
+        ArrayList<Ingredientes> lista = IngredientesDAO.obtenerTodos();
+        WebSocketServidor.broadcastGlobal(GeneradorJSON.generarIngredientesResponse(lista));
+        System.out.println("[FuncionesServidor] Ingredientes broadcast (" + lista.size() + " ingredientes)");
     }
 
     private static void broadcastDetalleActualizado(int id, EstadoDetallePedido estado) {

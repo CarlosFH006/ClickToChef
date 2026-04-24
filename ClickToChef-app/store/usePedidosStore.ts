@@ -11,6 +11,7 @@ interface PedidosState {
   setPedidos: (pedidos: Pedidos[]) => void;
   setLoading: (loading: boolean) => void;
   updateDetallePedido: (detalle: { id: number; estado: DetallePedido['estado'] }) => void;
+  removeDetalle: (detalleId: number) => void;
   upsertPedido: (pedido: Pedidos) => void;
   removePedido: (id: number) => void;
 }
@@ -46,6 +47,14 @@ export const usePedidosStore = create<PedidosState>((set) => ({
       };
     });
   },
+
+  //Eliminar un detalle de su pedido
+  removeDetalle: (detalleId) => set((state) => ({
+    pedidos: state.pedidos.map(p => ({
+      ...p,
+      detalles: p.detalles.filter(d => d.id !== detalleId)
+    }))
+  })),
 
   //Insertar o actualizar un pedido
   upsertPedido: (pedido) => set((state) => {

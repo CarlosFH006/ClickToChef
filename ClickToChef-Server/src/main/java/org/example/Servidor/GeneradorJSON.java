@@ -286,6 +286,27 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    //Broadcast cuando se elimina un detalle
+    public static String generarDetalleDeleted(int id) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "DETALLE_DELETED");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta de eliminar detalle
+    public static String generarEliminarDetalleResponse(boolean success, int id) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "ELIMINAR_DETALLE_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        payload.addProperty("id", id);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
     //Genera el error del servidor
     public static String generarError(String mensaje) {
         JsonObject error = new JsonObject();

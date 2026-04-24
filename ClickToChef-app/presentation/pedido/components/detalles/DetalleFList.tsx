@@ -5,9 +5,10 @@ import DetalleCard from './DetalleCard';
 
 interface Props {
   detalles: DetallePedido[];
+  pedidoAbierto?: boolean;
 }
 
-const DetalleFList = ({ detalles }: Props) => {
+const DetalleFList = ({ detalles, pedidoAbierto = false }: Props) => {
   return (
     <FlatList
       data={detalles}
@@ -16,6 +17,7 @@ const DetalleFList = ({ detalles }: Props) => {
       renderItem={({ item }) => (
         <DetalleCard
           detalle={item}
+          pedidoAbierto={pedidoAbierto}
         />
       )}
 

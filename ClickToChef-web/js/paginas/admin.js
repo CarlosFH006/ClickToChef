@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </tr></thead>
                         <tbody>
                             ${(p.detalles ?? []).map(d => `
-                                <tr>
+                                <tr data-detalle-id="${d.id}">
                                     <td class="py-1 pr-4 text-principal">${d.nombreProducto}</td>
                                     <td class="py-1 pr-4 text-secundario">${d.cantidad}</td>
                                     <td class="py-1 pr-4">${_badgeEstadoDetalle(d.estado)}</td>
@@ -166,9 +166,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reaccionar a broadcasts en tiempo real
     Api.on('MESA_UPDATED',    () => Api.getMesas());
-    Api.on('STOCK_UPDATED',   (noDisponibles) => _actualizarStockProductos(noDisponibles));
-    Api.on('PEDIDOS_UPDATED', () => Api.getPedidosAdmin());
+    Api.on('STOCK_UPDATED',   (noDisponibles) => { _actualizarStockProductos(noDisponibles); Api.getIngredientes(); });
+    Api.on('PEDIDOS_UPDATED', () => { Api.getPedidosAdmin(); Api.getIngredientes(); });
     Api.on('TICKET_CREADO',   () => Api.getTickets());
+    Api.on('DETALLE_DELETED', ({ id }) => {
+        document.querySelectorAll(`[data-detalle-id="${id}"]`).forEach(tr => tr.remove());
+        Api.getPedidosAdmin();
+        Api.getIngredientes();
+    });
 
     WebSocketService.connect();
 });
