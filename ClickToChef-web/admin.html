@@ -6,12 +6,222 @@
     <title>ClickToChef — Administración</title>
     <link rel="icon" type="image/png" href="assets/icons/logo-clicktochef.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/admin.css">
 </head>
-<body data-page="admin">
+<body class="bg-fondo min-h-screen">
 
-    <h1>Panel administracion</h1>
-    
+    <!-- Header -->
+    <header class="bg-superficie border-b border-borde px-6 py-4 flex items-center gap-3">
+        <img src="assets/icons/logo-clicktochef.png" alt="ClickToChef" class="w-8 h-8 object-contain">
+        <h1 class="text-xl font-bold text-principal">Administración</h1>
+        <span id="ws-status" class="ml-auto text-xs px-2 py-1 rounded-full bg-gray-100 text-secundario">Conectando...</span>
+        <a href="index.html" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 text-error text-sm font-semibold hover:bg-red-100 transition-colors duration-150 ml-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Salir
+        </a>
+    </header>
+
+    <div class="flex h-[calc(100vh-65px)]">
+
+        <!-- Sidebar -->
+        <aside class="w-56 bg-superficie border-r border-borde flex flex-col py-4 gap-1 shrink-0">
+            <button onclick="mostrarPanel('mesas')"    class="panel-btn active" id="btn-mesas">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
+                Mesas
+            </button>
+            <button onclick="mostrarPanel('tickets')"  class="panel-btn" id="btn-tickets">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Tickets
+            </button>
+            <button onclick="mostrarPanel('pedidos')"  class="panel-btn" id="btn-pedidos">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                Pedidos
+            </button>
+            <button onclick="mostrarPanel('usuarios')" class="panel-btn" id="btn-usuarios">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Usuarios
+            </button>
+            <button onclick="mostrarPanel('productos')" class="panel-btn" id="btn-productos">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                Productos
+            </button>
+        </aside>
+
+        <!-- Contenido -->
+        <main class="flex-1 overflow-y-auto p-6">
+
+            <!-- Panel Mesas -->
+            <section id="panel-mesas" class="panel">
+                <h2 class="text-lg font-bold text-principal mb-4">Mesas</h2>
+                <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-fondo border-b border-borde">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Nº</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Capacidad</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-mesas" class="divide-y divide-borde">
+                            <tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Panel Tickets -->
+            <section id="panel-tickets" class="panel hidden">
+                <h2 class="text-lg font-bold text-principal mb-4">Tickets</h2>
+                <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-fondo border-b border-borde">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">ID</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Pedido</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Total</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Método pago</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Fecha</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Ref. Odoo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-tickets" class="divide-y divide-borde">
+                            <tr><td colspan="6" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Panel Pedidos -->
+            <section id="panel-pedidos" class="panel hidden">
+                <h2 class="text-lg font-bold text-principal mb-4">Pedidos</h2>
+                <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-fondo border-b border-borde">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">ID</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Mesa</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Usuario</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Estado</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-pedidos" class="divide-y divide-borde">
+                            <tr><td colspan="5" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Panel Usuarios -->
+            <section id="panel-usuarios" class="panel hidden">
+                <h2 class="text-lg font-bold text-principal mb-4">Usuarios</h2>
+                <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-fondo border-b border-borde">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">ID</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Usuario</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Rol</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-usuarios" class="divide-y divide-borde">
+                            <tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Panel Productos -->
+            <section id="panel-productos" class="panel hidden">
+                <h2 class="text-lg font-bold text-principal mb-4">Productos</h2>
+
+                <!-- Sub-pestañas -->
+                <div class="flex border-b border-borde mb-4">
+                    <button class="subtab-btn active" id="subtab-categorias"   onclick="mostrarSubPanel('categorias')">Categorías</button>
+                    <button class="subtab-btn"         id="subtab-productos-lista" onclick="mostrarSubPanel('productos-lista')">Productos</button>
+                    <button class="subtab-btn"         id="subtab-ingredientes" onclick="mostrarSubPanel('ingredientes')">Ingredientes</button>
+                </div>
+
+                <!-- Sub-panel Categorías -->
+                <div id="subpanel-categorias" class="bg-superficie rounded-2xl border border-borde overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-fondo border-b border-borde">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">ID</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Nombre</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Productos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-categorias" class="divide-y divide-borde">
+                            <tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Sub-panel Productos -->
+                <div id="subpanel-productos-lista" class="hidden">
+                    <div id="filtros-categoria" class="flex flex-wrap gap-2 mb-4"></div>
+                    <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-fondo border-b border-borde">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">ID</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Nombre</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Categoría</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Precio</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Disponible</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-productos" class="divide-y divide-borde">
+                            <tr><td colspan="5" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <!-- Sub-panel Ingredientes -->
+                <div id="subpanel-ingredientes" class="hidden bg-superficie rounded-2xl border border-borde overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-fondo border-b border-borde">
+                            <tr>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">ID</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Nombre</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Stock actual</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Stock reservado</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Unidad</th>
+                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-ingredientes" class="divide-y divide-borde">
+                            <tr><td colspan="6" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/services/websocket.js"></script>
+    <script src="js/services/api.js"></script>
+    <script src="js/paginas/admin.js"></script>
+
+    <script>
+        function mostrarPanel(nombre) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.panel-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('panel-' + nombre).classList.remove('hidden');
+            document.getElementById('btn-' + nombre).classList.add('active');
+        }
+
+        function mostrarSubPanel(nombre) {
+            document.querySelectorAll('[id^="subpanel-"]').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('subpanel-' + nombre).classList.remove('hidden');
+            document.getElementById('subtab-' + nombre).classList.add('active');
+        }
+    </script>
 </body>
 </html>

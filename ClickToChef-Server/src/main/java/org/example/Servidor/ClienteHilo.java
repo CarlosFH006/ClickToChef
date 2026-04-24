@@ -156,6 +156,18 @@ public class ClienteHilo extends Thread {
                 case "UPDATE_ESTADO_DETALLE":
                     respuesta = FuncionesServidor.procesarUpdateEstadoDetalle(payload);
                     break;
+                case "GET_PEDIDOS_ADMIN":
+                    respuesta = FuncionesServidor.procesarGetPedidosAdmin();
+                    break;
+                case "GET_USUARIOS":
+                    respuesta = FuncionesServidor.procesarGetUsuarios();
+                    break;
+                case "GET_INGREDIENTES":
+                    respuesta = FuncionesServidor.procesarGetIngredientes();
+                    break;
+                case "GET_TICKETS":
+                    respuesta = FuncionesServidor.procesarGetTickets();
+                    break;
                 case "CERRAR_MESA":
                     respuesta = FuncionesServidor.procesarCerrarMesa(payload);
                     break;

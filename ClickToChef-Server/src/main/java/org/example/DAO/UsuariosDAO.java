@@ -53,6 +53,31 @@ public class UsuariosDAO {
         return usuarios;
     }
 
+    public static ArrayList<Usuarios> obtenerTodosSinPassword() {
+        String sql = "SELECT id, username, nombre_completo, rol FROM usuarios";
+        ArrayList<Usuarios> usuarios = new ArrayList<>();
+
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Usuarios usuario = new Usuarios(
+                        resultSet.getInt("id"),
+                        resultSet.getString("username"),
+                        null,
+                        resultSet.getString("nombre_completo"),
+                        convertirRolUsuarioAEnum(resultSet.getString("rol"))
+                );
+                usuarios.add(usuario);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener los usuarios", e);
+        }
+
+        return usuarios;
+    }
+
     private static String convertirRolUsuarioADB(RolUsuario rolUsuario) {
         return rolUsuario.name().toLowerCase();
     }

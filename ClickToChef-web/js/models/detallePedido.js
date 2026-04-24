@@ -1,11 +1,11 @@
-class Pedido {
-    constructor({ id, pedido_id, producto_id, nombre_producto, cantidad, notas_especiales, estado, hora }) {
+class DetallePedido {
+    constructor({ id, pedidoId, productoId, nombreProducto, cantidad, notasEspeciales, estado, hora }) {
         this.id = id;
-        this.pedido_id = pedido_id;
-        this.producto_id = producto_id;
-        this.nombre_producto = nombre_producto;
+        this.pedidoId = pedidoId;
+        this.productoId = productoId;
+        this.nombreProducto = nombreProducto;
         this.cantidad = cantidad;
-        this.notas_especiales = notas_especiales;
+        this.notasEspeciales = notasEspeciales;
         this.estado = estado;
         this.hora = hora || new Date().toISOString();
     }

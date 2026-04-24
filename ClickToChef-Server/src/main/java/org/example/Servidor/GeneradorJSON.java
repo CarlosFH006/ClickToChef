@@ -4,9 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.example.DTO.DetallesPedido;
+import org.example.DTO.EstadoDetallePedido;
 import org.example.DTO.Mesas;
 import org.example.DTO.CategoriaPlato;
 import org.example.DTO.Pedidos;
+import org.example.DTO.Tickets;
 import org.example.DTO.Usuarios;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -181,10 +183,13 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
-    public static String generarDetalleUpdated(DetallesPedido detalle) {
+    public static String generarDetalleUpdated(int id, EstadoDetallePedido estado) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "DETALLE_UPDATED");
-        respuesta.add("payload", gson.toJsonTree(detalle));
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("estado", estado.name());
+        respuesta.add("payload", payload);
         return gson.toJson(respuesta);
     }
 
@@ -207,6 +212,50 @@ public class GeneradorJSON {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "STOCK_UPDATED");
         respuesta.add("payload", gson.toJsonTree(noDisponibles));
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast cuando se crea un nuevo ticket al cerrar una mesa
+    public static String generarTicketCreado(int pedidoId, double totalImporte, String metodoPago) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "TICKET_CREADO");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("pedidoId", pedidoId);
+        payload.addProperty("totalImporte", totalImporte);
+        payload.addProperty("metodoPago", metodoPago);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta con los pedidos abiertos y sus detalles para el admin
+    public static String generarPedidosAdminResponse(ArrayList lista) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "PEDIDOS_ADMIN_RESPONSE");
+        respuesta.add("payload", gson.toJsonTree(lista));
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta con todos los usuarios sin contraseña
+    public static String generarUsuariosResponse(ArrayList lista) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "USUARIOS_RESPONSE");
+        respuesta.add("payload", gson.toJsonTree(lista));
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta con todos los ingredientes
+    public static String generarIngredientesResponse(ArrayList lista) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "INGREDIENTES_RESPONSE");
+        respuesta.add("payload", gson.toJsonTree(lista));
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta con todos los tickets
+    public static String generarTicketsResponse(ArrayList<Tickets> tickets) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "TICKETS_RESPONSE");
+        respuesta.add("payload", gson.toJsonTree(tickets));
         return gson.toJson(respuesta);
     }
 

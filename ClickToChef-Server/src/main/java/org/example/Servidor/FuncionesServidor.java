@@ -222,7 +222,7 @@ public class FuncionesServidor {
 
         boolean success = DetallesPedidoDAO.updateEstado(id, nuevoEstado);
         if (success) {
-            broadcastDetalleActualizado(id);
+            broadcastDetalleActualizado(id, nuevoEstado);
         }
 
         return GeneradorJSON.generarUpdateEstadoDetalleResponse(success, id);
@@ -237,6 +237,50 @@ public class FuncionesServidor {
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al obtener detalles: " + e.getMessage());
             return GeneradorJSON.generarError("Error al obtener detalles: " + e.getMessage());
+        }
+    }
+
+    public static String procesarGetPedidosAdmin() {
+        try {
+            ArrayList<Pedidos> lista = PedidosDAO.obtenerTodos();
+            System.out.println("[FuncionesServidor] Pedidos admin obtenidos: " + lista.size());
+            return GeneradorJSON.generarPedidosAdminResponse(lista);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al obtener pedidos admin: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al obtener pedidos: " + e.getMessage());
+        }
+    }
+
+    public static String procesarGetUsuarios() {
+        try {
+            ArrayList<Usuarios> lista = UsuariosDAO.obtenerTodosSinPassword();
+            System.out.println("[FuncionesServidor] Usuarios obtenidos: " + lista.size());
+            return GeneradorJSON.generarUsuariosResponse(lista);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al obtener usuarios: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al obtener usuarios: " + e.getMessage());
+        }
+    }
+
+    public static String procesarGetIngredientes() {
+        try {
+            ArrayList<Ingredientes> lista = IngredientesDAO.obtenerTodos();
+            System.out.println("[FuncionesServidor] Ingredientes obtenidos: " + lista.size());
+            return GeneradorJSON.generarIngredientesResponse(lista);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al obtener ingredientes: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al obtener ingredientes: " + e.getMessage());
+        }
+    }
+
+    public static String procesarGetTickets() {
+        try {
+            ArrayList<Tickets> lista = TicketsDAO.obtenerTodos();
+            System.out.println("[FuncionesServidor] Tickets obtenidos: " + lista.size());
+            return GeneradorJSON.generarTicketsResponse(lista);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al obtener tickets: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al obtener tickets: " + e.getMessage());
         }
     }
 
@@ -273,6 +317,7 @@ public class FuncionesServidor {
 
             MesasDAO.actualizarEstadoMesa(mesaId, EstadoMesa.LIBRE);
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
+            Servidor.broadcast(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
             broadcastPedido(pedidoId);
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cerrado, ticket registrado, mesa " + mesaId + " liberada");
@@ -302,11 +347,8 @@ public class FuncionesServidor {
         System.out.println("[FuncionesServidor] Pedido broadcast (ID: " + id + ")");
     }
 
-    private static void broadcastDetalleActualizado(int id) {
-        DetallesPedido detalle = DetallesPedidoDAO.obtenerPorId(id);
-        if (detalle != null) {
-            Servidor.broadcast(GeneradorJSON.generarDetalleUpdated(detalle));
-            System.out.println("[FuncionesServidor] Detalle pedido actualizado broadcast (ID: " + id + ")");
-        }
+    private static void broadcastDetalleActualizado(int id, EstadoDetallePedido estado) {
+        Servidor.broadcast(GeneradorJSON.generarDetalleUpdated(id, estado));
+        System.out.println("[FuncionesServidor] Detalle pedido actualizado broadcast (ID: " + id + ")");
     }
 }
