@@ -37,7 +37,7 @@ CREATE TABLE pedidos (
     mesa_id INT NOT NULL,
     usuario_id INT NOT NULL,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    estado ENUM('abierta', 'cerrada') DEFAULT 'abierta',
+    estado ENUM('abierta', 'cerrada', 'cancelado') DEFAULT 'abierta',
     FOREIGN KEY (mesa_id) REFERENCES mesas(id),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );

@@ -146,12 +146,12 @@ class SocketClient {
           const { user } = useAuthStore.getState();
           const pedido = data.payload;
           if (user && pedido.usuarioId === user.id) {
-            //Si el pedido está cerrado, eliminarlo de la lista
-            if (pedido.estado === 'CERRADA') {
-              console.log(`[Socket] Pedido ${pedido.id} cerrado, eliminando de la lista`);
+            //Si el pedido está cerrado o cancelado, eliminarlo de la lista
+            if (pedido.estado === 'CERRADA' || pedido.estado === 'CANCELADO') {
+              console.log(`[Socket] Pedido ${pedido.id} ${pedido.estado.toLowerCase()}, eliminando de la lista`);
               usePedidosStore.getState().removePedido(pedido.id);
             } else {
-              //Si el pedido no está cerrado, añadirlo a la lista
+              //Si el pedido no está cerrado ni cancelado, añadirlo a la lista
               console.log(`[Socket] Pedido ${pedido.id} actualizado/añadido`);
               usePedidosStore.getState().upsertPedido(pedido);
             }
@@ -236,6 +236,16 @@ class SocketClient {
       //Mostrar errores del servidor
       case 'SERVER_ERROR':
         Alert.alert('Error del servidor', data.payload?.message ?? 'Error desconocido');
+        break;
+
+      //Controlar la respuesta de la cancelación del pedido
+      case 'CANCELAR_PEDIDO_RESPONSE':
+        if (data.payload?.success) {
+          Alert.alert('Pedido cancelado', `El pedido #${data.payload.pedidoId} ha sido cancelado.`);
+          router.back();
+        } else {
+          Alert.alert('No se puede cancelar', 'El pedido tiene platos en preparación, listos o ya servidos.');
+        }
         break;
 
       //Controlar la respuesta de la finalización de la reserva del producto

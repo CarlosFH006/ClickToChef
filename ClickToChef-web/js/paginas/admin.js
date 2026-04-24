@@ -254,8 +254,9 @@ function toggleDetalles(pedidoId) {
 
 function _badgeEstadoPedido(estado) {
     const mapa = {
-        ABIERTA:  ['Abierta',  'success'],
-        CERRADA:  ['Cerrada',  'error'],
+        ABIERTA:   ['Abierta',   'success'],
+        CERRADA:   ['Cerrada',   'error'],
+        CANCELADO: ['Cancelado', 'warning'],
     };
     const [texto, tipo] = mapa[estado?.toUpperCase()] || [estado, 'primary'];
     return _badge(texto, tipo);

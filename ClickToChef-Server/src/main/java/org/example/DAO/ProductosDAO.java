@@ -145,6 +145,35 @@ public class ProductosDAO {
         }
     }
 
+    public static synchronized void restaurarStock(int productoId, int cantidad) {
+        String sqlReceta = "SELECT ingrediente_id, cantidad_necesaria FROM recetas WHERE producto_id = ?";
+        String sqlUpdate = "UPDATE ingredientes SET stock_actual = stock_actual + ? WHERE id = ?";
+
+        try {
+            Connection conn = ConexionDB.getConexion();
+            conn.setAutoCommit(false);
+            try {
+                PreparedStatement psReceta = conn.prepareStatement(sqlReceta);
+                psReceta.setInt(1, productoId);
+                ResultSet rs = psReceta.executeQuery();
+                while (rs.next()) {
+                    double totalARestaurar = rs.getDouble("cantidad_necesaria") * cantidad;
+                    PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate);
+                    psUpdate.setDouble(1, totalARestaurar);
+                    psUpdate.setInt(2, rs.getInt("ingrediente_id"));
+                    psUpdate.executeUpdate();
+                }
+                conn.commit();
+                conn.setAutoCommit(true);
+            } catch (Exception e) {
+                conn.rollback();
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static synchronized void finalizarReserva(int productoId, int cantidad) {
         String sqlReceta = "SELECT ingrediente_id, cantidad_necesaria FROM recetas WHERE producto_id = ?";
         String sqlUpdate = "UPDATE ingredientes SET " +

@@ -14,6 +14,6 @@ export interface Pedidos {
   mesaId: number;
   usuarioId: number;
   fechaCreacion: string;
-  estado: 'ABIERTA' | 'CERRADA';
+  estado: 'ABIERTA' | 'CERRADA' | 'CANCELADO';
   detalles: DetallePedido[];
 }

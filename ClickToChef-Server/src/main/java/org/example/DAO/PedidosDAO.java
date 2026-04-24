@@ -140,6 +140,19 @@ public class PedidosDAO {
         }
     }
 
+    public static boolean cancelarPedido(int id) {
+        String sql = "UPDATE pedidos SET estado = 'cancelado' WHERE id = ? AND estado = 'abierta'";
+
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al cancelar el pedido", e);
+        }
+    }
+
     private static String convertirEstadoPedidoADB(EstadoPedido estadoPedido) {
         return estadoPedido.name().toLowerCase();
     }

@@ -259,6 +259,19 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    //Genera la respuesta de cancelar pedido
+    public static String generarCancelarPedidoResponse(boolean success, int pedidoId) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CANCELAR_PEDIDO_RESPONSE");
+
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        payload.addProperty("pedidoId", pedidoId);
+
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
     //Genera la respuesta de cerrar mesa
     public static String generarCerrarMesaResponse(boolean success, int pedidoId, double totalImporte) {
         JsonObject respuesta = new JsonObject();

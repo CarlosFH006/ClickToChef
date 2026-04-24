@@ -14,17 +14,19 @@ export const getMesaStatusColor = (estado: MesaEstado): string => {
 
 export const getPedidoStatusColor = (estado: Pedidos['estado']): string => {
   switch (estado) {
-    case 'ABIERTA':   return '#fbbf24';
-    case 'CERRADA':   return '#4ade80';
-    default:          return '#94a3b8';
+    case 'ABIERTA':    return '#fbbf24';
+    case 'CERRADA':    return '#4ade80';
+    case 'CANCELADO':  return '#f87171';
+    default:           return '#94a3b8';
   }
 };
 
 export const getPedidoStatusIcon = (estado: Pedidos['estado']) => {
   switch (estado) {
-    case 'ABIERTA':   return 'restaurant-outline';
-    case 'CERRADA':   return 'checkmark-circle-outline';
-    default:          return 'help-circle-outline';
+    case 'ABIERTA':    return 'restaurant-outline';
+    case 'CERRADA':    return 'checkmark-circle-outline';
+    case 'CANCELADO':  return 'close-circle-outline';
+    default:           return 'help-circle-outline';
   }
 };
 
@@ -39,9 +41,10 @@ export const getMesaStatusLabel = (estado: MesaEstado): string => {
 
 export const getPedidoStatusLabel = (estado: Pedidos['estado']): string => {
   switch (estado) {
-    case 'ABIERTA':   return 'Abierta';
-    case 'CERRADA':   return 'Cerrada';
-    default:          return estado;
+    case 'ABIERTA':    return 'Abierta';
+    case 'CERRADA':    return 'Cerrada';
+    case 'CANCELADO':  return 'Cancelado';
+    default:           return estado;
   }
 };
 

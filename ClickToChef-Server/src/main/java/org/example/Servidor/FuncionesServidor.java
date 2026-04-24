@@ -317,7 +317,7 @@ public class FuncionesServidor {
 
             MesasDAO.actualizarEstadoMesa(mesaId, EstadoMesa.LIBRE);
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
-            Servidor.broadcast(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
+            WebSocketServidor.broadcastGlobal(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
             broadcastPedido(pedidoId);
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cerrado, ticket registrado, mesa " + mesaId + " liberada");
@@ -325,6 +325,53 @@ public class FuncionesServidor {
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al cerrar mesa: " + e.getMessage());
             return GeneradorJSON.generarError("Error interno al cerrar la mesa: " + e.getMessage());
+        }
+    }
+
+    public static String procesarCancelarPedido(JsonObject payload) {
+        if (payload == null || !payload.has("pedidoId")) {
+            return GeneradorJSON.generarError("Payload de CANCELAR_PEDIDO incompleto");
+        }
+
+        int pedidoId = payload.get("pedidoId").getAsInt();
+        System.out.println("[FuncionesServidor] Cancelando pedido " + pedidoId);
+
+        try {
+            Pedidos pedido = PedidosDAO.obtenerPedidoPorId(pedidoId);
+            if (pedido == null) {
+                return GeneradorJSON.generarError("Pedido " + pedidoId + " no encontrado");
+            }
+
+            // Verificar que todos los detalles estén en PENDIENTE
+            boolean todosEnPendiente = pedido.getDetalles().stream()
+                    .allMatch(d -> d.getEstado() == EstadoDetallePedido.PENDIENTE);
+            if (!todosEnPendiente) {
+                System.out.println("[FuncionesServidor] Pedido " + pedidoId + " no se puede cancelar: hay detalles en preparación o ya servidos");
+                return GeneradorJSON.generarCancelarPedidoResponse(false, pedidoId);
+            }
+
+            // Restaurar stock de cada detalle del pedido
+            for (DetallesPedido d : pedido.getDetalles()) {
+                ProductosDAO.restaurarStock(d.getProductoId(), d.getCantidad());
+            }
+
+            boolean cancelado = PedidosDAO.cancelarPedido(pedidoId);
+            if (!cancelado) {
+                return GeneradorJSON.generarError("No se pudo cancelar el pedido " + pedidoId + " (puede que ya no esté abierto)");
+            }
+
+            int mesaId = pedido.getMesaId();
+            MesasDAO.actualizarEstadoMesa(mesaId, EstadoMesa.LIBRE);
+            Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
+            broadcastNoDisponibles();
+            broadcastPedido(pedidoId);
+            broadcastDetallesPedido();
+
+            System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cancelado, stock restaurado, mesa " + mesaId + " liberada");
+            return GeneradorJSON.generarCancelarPedidoResponse(true, pedidoId);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al cancelar pedido: " + e.getMessage());
+            return GeneradorJSON.generarError("Error interno al cancelar el pedido: " + e.getMessage());
         }
     }
 

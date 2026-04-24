@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import React, { useState, useRef } from 'react';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +9,7 @@ import DetalleFList from '../../../../presentation/pedido/components/detalles/De
 import CerrarPedidoModal from '../../../../presentation/pedido/components/pedidos/CerrarPedidoModal';
 import { Colors } from '../../../../constants/theme';
 import { getPedidoStatusColor, getPedidoStatusLabel } from '../../../../presentation/pedido/utils/status-colors';
+import { cancelarPedidoAction } from '../../../../core/actions/cancelar-pedido-action';
 
 const PedidoDetalleScreen = () => {
   const { id } = useLocalSearchParams();
@@ -44,6 +45,8 @@ const PedidoDetalleScreen = () => {
   }
 
   const statusColor = getPedidoStatusColor(pedido.estado);
+  const puedeCancelar = pedido.estado === 'ABIERTA' &&
+    (pedido.detalles?.length === 0 || pedido.detalles?.every(d => d.estado === 'PENDIENTE'));
 
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
@@ -86,9 +89,9 @@ const PedidoDetalleScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Botón Añadir productos */}
+      {/* Botones Añadir productos + Cancelar pedido */}
       {pedido.estado === 'ABIERTA' && (
-        <View className="px-5 pt-5 bg-superficie">
+        <View className="px-5 pt-5 bg-superficie gap-3">
           <Pressable
             className="border border-primary py-3 rounded-2xl flex-row items-center justify-center active:opacity-70"
             onPress={() => {
@@ -104,6 +107,22 @@ const PedidoDetalleScreen = () => {
             <Ionicons name="add-circle-outline" size={20} color={Colors.light.primary} />
             <Text className="text-primary font-titulo text-base ml-2">Añadir productos</Text>
           </Pressable>
+          {puedeCancelar && <Pressable
+            className="border border-red-400 py-3 rounded-2xl flex-row items-center justify-center active:opacity-70"
+            onPress={() =>
+              Alert.alert(
+                'Cancelar pedido',
+                `¿Estás seguro de que quieres cancelar el pedido #${pedido.id}? Se restaurará el stock.`,
+                [
+                  { text: 'No', style: 'cancel' },
+                  { text: 'Sí, cancelar', style: 'destructive', onPress: () => cancelarPedidoAction(pedido.id) },
+                ]
+              )
+            }
+          >
+            <Ionicons name="close-circle-outline" size={20} color="#f87171" />
+            <Text className="font-titulo text-base ml-2" style={{ color: '#f87171' }}>Cancelar pedido</Text>
+          </Pressable>}
         </View>
       )}
 

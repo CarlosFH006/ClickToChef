@@ -34,7 +34,8 @@ public class DetallesPedidoDAO {
                      "dp.cantidad, dp.notas_especiales, dp.estado, dp.hora_pedido " +
                      "FROM detalles_pedido dp " +
                      "JOIN productos p ON dp.producto_id = p.id " +
-                     "WHERE dp.estado <> 'servido'";
+                     "JOIN pedidos pe ON dp.pedido_id = pe.id " +
+                     "WHERE dp.estado <> 'servido' AND pe.estado = 'abierta'";
         ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
         try {
