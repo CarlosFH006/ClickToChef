@@ -32,7 +32,7 @@ const ProductosIndex = () => {
       console.log('Navegación detectada al salir:', actionType);
 
       //Si se sale de la pantalla de productos, se libera la mesa y se limpia el pedido
-      if ((actionType === 'GO_BACK' || actionType === 'POP') && mesaId) {
+      if (actionType === 'POP' && mesaId) {
         const currentItems = useOrderStore.getState().items;
         currentItems.forEach(item => {
           liberarReservaAction(item.id, item.cantidad);

@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.example.DTO.DetallesPedido;
 import org.example.DTO.EstadoDetallePedido;
+import org.example.DTO.Ingredientes;
 import org.example.DTO.Mesas;
 import org.example.DTO.CategoriaPlato;
 import org.example.DTO.Pedidos;
@@ -228,7 +229,7 @@ public class GeneradorJSON {
     }
 
     //Genera la respuesta con los pedidos abiertos y sus detalles para el admin
-    public static String generarPedidosAdminResponse(ArrayList lista) {
+    public static String generarPedidosAdminResponse(ArrayList<Pedidos> lista) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "PEDIDOS_ADMIN_RESPONSE");
         respuesta.add("payload", gson.toJsonTree(lista));
@@ -236,7 +237,7 @@ public class GeneradorJSON {
     }
 
     //Genera la respuesta con todos los usuarios sin contraseña
-    public static String generarUsuariosResponse(ArrayList lista) {
+    public static String generarUsuariosResponse(ArrayList<Usuarios> lista) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "USUARIOS_RESPONSE");
         respuesta.add("payload", gson.toJsonTree(lista));
@@ -244,7 +245,7 @@ public class GeneradorJSON {
     }
 
     //Genera la respuesta con todos los ingredientes
-    public static String generarIngredientesResponse(ArrayList lista) {
+    public static String generarIngredientesResponse(ArrayList<Ingredientes> lista) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "INGREDIENTES_RESPONSE");
         respuesta.add("payload", gson.toJsonTree(lista));
@@ -291,6 +292,17 @@ public class GeneradorJSON {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "DETALLE_DELETED");
         JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta de actualizar el estado de una mesa
+    public static String generarUpdateMesaStatusResponse(boolean success, int id) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "UPDATE_MESA_STATUS_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
         payload.addProperty("id", id);
         respuesta.add("payload", payload);
         return gson.toJson(respuesta);

@@ -7,7 +7,7 @@ import { ProductoPedido } from '../type/pedido-interface';
 interface OrderState {
   mesaId: number | null;
   items: ProductoPedido[];
-  
+
   // Acciones
   setMesa: (id: number | null) => void;
   addItem: (producto: any) => void; // El producto que viene del catálogo

@@ -248,6 +248,13 @@ class SocketClient {
         }
         break;
 
+      case 'UPDATE_MESA_STATUS_RESPONSE':
+        if (data.payload && !data.payload.success) {
+          Alert.alert('Mesa no disponible', 'Esta mesa ya ha sido reservada por otro usuario.');
+          router.back();
+        }
+        break;
+
       case 'DETALLE_DELETED':
         if (data.payload) {
           console.log('[Socket] Detalle eliminado:', data.payload.id);
