@@ -71,10 +71,12 @@ class SocketClient {
 
     //Manejar cierre de conexión
     this.client.on('close', () => {
-      console.log('[Socket] Conexión cerrada');
+      console.log('[Socket] Conexión cerrada. Reconectando en 3s...');
       this.buffer = '';
-      //Si sucede un cierre, el cliente se pone en null para que se pueda reconectar
       this.client = null;
+      router.replace('/(clicktochef-app)/mesas');
+      Alert.alert('Conexión perdida', 'Se ha perdido la conexión con el servidor. Reconectando...');
+      setTimeout(() => this.connect(), 3000);
     });
   }
 
