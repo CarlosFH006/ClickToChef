@@ -3,6 +3,7 @@ import { View, Text, Pressable, Alert } from 'react-native';
 import { DetallePedido } from '../../../../type/pedidos-interface';
 import { Ionicons } from '@expo/vector-icons';
 import { getDetalleStatusColor, getDetalleStatusIcon, getDetalleStatusLabel } from '../../utils/status-colors';
+import { parseGsonDate } from '../../utils/parse-date';
 import { updateEstadoDetalleAction } from '../../../../core/actions/update-estado-detalle-action';
 import { eliminarDetalleAction } from '../../../../core/actions/eliminar-detalle-action';
 
@@ -15,9 +16,10 @@ const DetalleCard = ({ detalle, pedidoAbierto = false }: Props) => {
   const statusColor = getDetalleStatusColor(detalle.estado);
   
   //Convertir la hora del pedido a un formato legible
-  const date = detalle.horaPedido ? new Date(detalle.horaPedido.replace(' ', 'T')) : null;
-  const validDate = date && !isNaN(date.getTime());
-  const timeStr = validDate ? date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+  const date = parseGsonDate(detalle.horaPedido);
+  const timeStr = date
+    ? `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+    : '--:--';
 
   return (
     <View
@@ -37,11 +39,31 @@ const DetalleCard = ({ detalle, pedidoAbierto = false }: Props) => {
             </View>
           </View>
 
-          <View className="flex-row items-center px-3 py-1.5 rounded-full" style={{ backgroundColor: statusColor + '18' }}>
-            <Ionicons name={getDetalleStatusIcon(detalle.estado) as any} size={13} color={statusColor} />
-            <Text className="font-titulo text-xs ml-1" style={{ color: statusColor }}>
-              {getDetalleStatusLabel(detalle.estado)}
-            </Text>
+          <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center px-3 py-1.5 rounded-full" style={{ backgroundColor: statusColor + '18' }}>
+              <Ionicons name={getDetalleStatusIcon(detalle.estado) as any} size={13} color={statusColor} />
+              <Text className="font-titulo text-xs ml-1" style={{ color: statusColor }}>
+                {getDetalleStatusLabel(detalle.estado)}
+              </Text>
+            </View>
+            {pedidoAbierto && detalle.estado === 'PENDIENTE' && (
+              <Pressable
+                className="w-7 h-7 rounded-full items-center justify-center active:opacity-70"
+                style={{ backgroundColor: '#fef2f2' }}
+                onPress={() =>
+                  Alert.alert(
+                    'Eliminar plato',
+                    `¿Eliminar ${detalle.nombreProducto} del pedido?`,
+                    [
+                      { text: 'Cancelar', style: 'cancel' },
+                      { text: 'Eliminar', style: 'destructive', onPress: () => eliminarDetalleAction(detalle.id) },
+                    ]
+                  )
+                }
+              >
+                <Ionicons name="trash-outline" size={14} color="#ef4444" />
+              </Pressable>
+            )}
           </View>
         </View>
 
@@ -73,25 +95,6 @@ const DetalleCard = ({ detalle, pedidoAbierto = false }: Props) => {
           </Pressable>
         )}
 
-        {/* Botón Eliminar si está PENDIENTE y el pedido está abierto */}
-        {pedidoAbierto && detalle.estado === 'PENDIENTE' && (
-          <Pressable
-            className="mt-4 py-3.5 rounded-xl flex-row items-center justify-center active:opacity-90 border border-red-200 bg-red-50"
-            onPress={() =>
-              Alert.alert(
-                'Eliminar plato',
-                `¿Eliminar ${detalle.nombreProducto} del pedido?`,
-                [
-                  { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Eliminar', style: 'destructive', onPress: () => eliminarDetalleAction(detalle.id) },
-                ]
-              )
-            }
-          >
-            <Ionicons name="trash-outline" size={18} color="#ef4444" />
-            <Text className="font-titulo text-sm ml-2" style={{ color: '#ef4444' }}>Eliminar plato</Text>
-          </Pressable>
-        )}
       </View>
     </View>
   );

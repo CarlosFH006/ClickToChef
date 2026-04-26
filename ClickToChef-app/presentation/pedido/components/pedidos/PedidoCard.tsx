@@ -3,6 +3,7 @@ import { View, Text, Pressable } from 'react-native';
 import { Pedidos } from '../../../../type/pedidos-interface';
 import { Ionicons } from '@expo/vector-icons';
 import { getPedidoStatusColor, getPedidoStatusIcon, getPedidoStatusLabel } from '../../utils/status-colors';
+import { parseGsonDate } from '../../utils/parse-date';
 import { Colors } from '../../../../constants/theme';
 
 interface Props {
@@ -14,10 +15,13 @@ const PedidoCard = ({ pedido, onPress }: Props) => {
   const statusColor = getPedidoStatusColor(pedido.estado);
 
   //Convertir la fecha del pedido a un formato legible
-  const date = pedido.fechaCreacion ? new Date(pedido.fechaCreacion.replace(' ', 'T')) : null;
-  const validDate = date && !isNaN(date.getTime());
-  const dateStr = validDate ? date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '--';
-  const timeStr = validDate ? date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+  const date = parseGsonDate(pedido.fechaCreacion);
+  const dateStr = date
+    ? `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
+    : '--';
+  const timeStr = date
+    ? `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+    : '--:--';
 
   return (
     <Pressable

@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
-import React, { useState, useRef } from 'react';
-import { useLocalSearchParams, router, Stack } from 'expo-router';
+import React, { useState, useRef, useEffect } from 'react';
+import { useLocalSearchParams, router, Stack, useNavigation } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { usePedidosStore } from '../../../../store/usePedidosStore';
@@ -18,6 +18,7 @@ const PedidoDetalleScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   //Use ref para evitar que se pulse dos veces el boton de añadir productos
   const navegando = useRef(false);
+  const navigation = useNavigation();
 
   const pedido = pedidos.find((p) => p.id === Number(id));
 
@@ -28,6 +29,12 @@ const PedidoDetalleScreen = () => {
   }
   //Recorre todos los detalles del pedido y reduce almacena en acc el precio de cada detalle
   const total = pedido?.detalles?.reduce((acc, d) => acc + getPrecio(d.productoId) * d.cantidad, 0) ?? 0;
+
+  useEffect(() => {
+    if (pedido) {
+      navigation.setOptions({title: `Pedido #${pedido.id}`});
+    }
+  }, [navigation, pedido]);
 
   if (!pedido) {
     return (
@@ -50,34 +57,17 @@ const PedidoDetalleScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
-      <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
-      <View className="flex-row items-center px-5 py-4 border-b border-borde">
-        <Pressable onPress={() => router.back()} className="mr-4">
-          <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
-        </Pressable>
-        <View>
-          <Text className="font-titulo text-xl text-principal">Pedido #{pedido.id}</Text>
-          <Text className="font-cuerpo text-xs text-secundario">Mesa {pedido.mesaId}</Text>
-        </View>
-        <View className="flex-1" />
-        <View className="px-3 py-1 rounded-full" style={{ backgroundColor: statusColor + '18' }}>
-          <Text className="font-titulo text-xs" style={{ color: statusColor }}>
-            {getPedidoStatusLabel(pedido.estado)}
-          </Text>
-        </View>
+      {/* Subheader fijo */}
+      <View className="flex-row justify-between items-center px-5 py-3 border-b border-borde">
+        <Text className="font-titulo text-base text-principal">Productos</Text>
+        <Text className="font-cuerpo text-sm text-secundario">
+          {pedido.detalles?.length || 0} items
+        </Text>
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="p-5">
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="font-titulo text-lg text-principal">Productos</Text>
-            <Text className="font-cuerpo text-sm text-secundario">
-              {pedido.detalles?.length || 0} items
-            </Text>
-          </View>
-
           {pedido.detalles && pedido.detalles.length > 0 ? (
             <DetalleFList detalles={pedido.detalles} pedidoAbierto={pedido.estado === 'ABIERTA'} />
           ) : (
@@ -89,11 +79,11 @@ const PedidoDetalleScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Botones Añadir productos + Cancelar pedido */}
+      {/* Botones inferiores */}
       {pedido.estado === 'ABIERTA' && (
-        <View className="px-5 pt-5 bg-superficie gap-3">
+        <View className="px-5 py-4 border-t border-borde bg-superficie flex-row gap-3">
           <Pressable
-            className="border border-primary py-3 rounded-2xl flex-row items-center justify-center active:opacity-70"
+            className="flex-1 border border-primary py-3 rounded-2xl flex-row items-center justify-center active:opacity-70"
             onPress={() => {
               if (navegando.current) return;
               navegando.current = true;
@@ -104,36 +94,38 @@ const PedidoDetalleScreen = () => {
               setTimeout(() => { navegando.current = false; }, 1000);
             }}
           >
-            <Ionicons name="add-circle-outline" size={20} color={Colors.light.primary} />
-            <Text className="text-primary font-titulo text-base ml-2">Añadir productos</Text>
+            <Ionicons name="add-circle-outline" size={18} color={Colors.light.primary} />
+            <Text className="text-primary font-titulo text-sm ml-1.5">Añadir</Text>
           </Pressable>
-          {puedeCancelar && <Pressable
-            className="border border-red-400 py-3 rounded-2xl flex-row items-center justify-center active:opacity-70"
-            onPress={() =>
-              Alert.alert(
-                'Cancelar pedido',
-                `¿Estás seguro de que quieres cancelar el pedido #${pedido.id}? Se restaurará el stock.`,
-                [
-                  { text: 'No', style: 'cancel' },
-                  { text: 'Sí, cancelar', style: 'destructive', onPress: () => cancelarPedidoAction(pedido.id) },
-                ]
-              )
-            }
-          >
-            <Ionicons name="close-circle-outline" size={20} color="#f87171" />
-            <Text className="font-titulo text-base ml-2" style={{ color: '#f87171' }}>Cancelar pedido</Text>
-          </Pressable>}
+          {puedeCancelar && (
+            <Pressable
+              className="flex-1 border border-red-300 py-3 rounded-2xl flex-row items-center justify-center active:opacity-70"
+              onPress={() =>
+                Alert.alert(
+                  'Cancelar pedido',
+                  `¿Cancelar el pedido #${pedido.id}? Se restaurará el stock.`,
+                  [
+                    { text: 'No', style: 'cancel' },
+                    { text: 'Sí, cancelar', style: 'destructive', onPress: () => cancelarPedidoAction(pedido.id) },
+                  ]
+                )
+              }
+            >
+              <Ionicons name="close-circle-outline" size={18} color="#f87171" />
+              <Text className="font-titulo text-sm ml-1.5" style={{ color: '#f87171' }}>Cancelar</Text>
+            </Pressable>
+          )}
         </View>
       )}
 
       {/* Botón Finalizar Pedido */}
       {pedido.detalles && pedido.detalles.length > 0 && pedido.detalles.every(d => d.estado === 'SERVIDO') && (
-        <View className="p-5 border-t border-borde bg-superficie">
+        <View className="px-5 py-4 border-t border-borde bg-superficie">
           <Pressable
-            className="bg-primary py-4 rounded-2xl flex-row items-center justify-center shadow-sm active:opacity-90"
+            className="bg-primary py-4 rounded-2xl flex-row items-center justify-center active:opacity-90"
             onPress={() => setModalVisible(true)}
           >
-            <Ionicons name="checkmark-done-circle" size={22} color="white" />
+            <Ionicons name="checkmark-done-circle" size={20} color="white" />
             <Text className="text-white font-titulo text-base ml-2">Finalizar pedido</Text>
           </Pressable>
         </View>

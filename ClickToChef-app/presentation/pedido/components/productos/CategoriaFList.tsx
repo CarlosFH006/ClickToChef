@@ -20,7 +20,7 @@ const CategoriaFList = ({ categorias }: Props) => {
         <View className="mb-6">
           <View className="px-5 py-3 bg-fondo border-y border-borde flex-row items-center">
             <Ionicons name="restaurant-outline" size={14} color="#71717a" />
-            <Text className="font-titulo text-sm text-secundario uppercase tracking-widest ml-2">
+            <Text className="font-titulo text-sm text-secundario uppercase tracking-widest ml-2" numberOfLines={1}>
               {categoria.nombre}
             </Text>
           </View>

@@ -69,84 +69,84 @@ const ProductosIndex = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-5 pt-3 pb-1">
-          <View className="flex-row items-center">
-            <Text className="font-titulo text-2xl text-principal">Mesa {mesaId}</Text>
-            <View className="bg-primary/[8%] px-2.5 py-0.5 rounded-full ml-2">
-              <Text className="font-cuerpo text-xs text-primary">Catálogo</Text>
-            </View>
-          </View>
-          <Text className="font-cuerpo text-sm text-secundario mt-0.5">
-            Añade los productos del pedido
-          </Text>
-        </View>
 
-        {/* Buscador */}
-        <View className="px-5 py-2">
-          <TextInput
-            value={busqueda}
-            onChangeText={setBusqueda}
-            placeholder="Buscar producto..."
-            placeholderTextColor="#71717a"
-            className="bg-fondo border border-borde rounded-xl px-4 py-3 font-cuerpo text-sm text-principal"
+      {/* Cabecera estática */}
+      <View className="px-5 pt-3 pb-1">
+        <View className="flex-row items-center">
+          <Text className="font-titulo text-2xl text-principal">Mesa {mesaId}</Text>
+          <View className="bg-primary/[8%] px-2.5 py-0.5 rounded-full ml-2">
+            <Text className="font-cuerpo text-xs text-primary">Catálogo</Text>
+          </View>
+        </View>
+        <Text className="font-cuerpo text-sm text-secundario mt-0.5">
+          Añade los productos del pedido
+        </Text>
+      </View>
+
+      {/* Buscador estático */}
+      <View className="px-5 py-2">
+        <TextInput
+          value={busqueda}
+          onChangeText={setBusqueda}
+          placeholder="Buscar producto..."
+          placeholderTextColor="#71717a"
+          className="bg-fondo border border-borde rounded-xl px-4 py-3 font-cuerpo text-sm text-principal"
+        />
+      </View>
+
+      {/* Categorías estáticas — ocultas al buscar */}
+      {busqueda === '' && (
+        <View className="py-2 mb-2">
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={categorias}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => setSelectedCategoryId(item.id)}
+                className={`mr-3 px-4 py-2 rounded-full border ${selectedCategoryId === item.id
+                  ? 'bg-primary border-primary'
+                  : 'bg-transparent border-borde'
+                  }`}
+              >
+                <Text className={`font-titulo text-sm ${selectedCategoryId === item.id ? 'text-superficie' : 'text-secundario'
+                  }`}>
+                  {item.nombre}
+                </Text>
+              </Pressable>
+            )}
           />
         </View>
+      )}
 
-        {/* Categorías Horizontales — ocultas al buscar */}
-        {busqueda === '' && (
-          <View className="py-2 mb-2">
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={categorias}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={{ paddingHorizontal: 20 }}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => setSelectedCategoryId(item.id)}
-                  className={`mr-3 px-4 py-2 rounded-full border ${selectedCategoryId === item.id
-                    ? 'bg-primary border-primary'
-                    : 'bg-transparent border-borde'
-                    }`}
-                >
-                  <Text className={`font-titulo text-sm ${selectedCategoryId === item.id ? 'text-superficie' : 'text-secundario'
-                    }`}>
-                    {item.nombre}
-                  </Text>
-                </Pressable>
-              )}
-            />
-          </View>
-        )}
-
-        <View className="flex-1">
-          {busqueda === '' ? (
-            <CategoriaFList categorias={filteredCategorias} />
-          ) : (
-            <MenuBusquedaFList productos={resultadosBusqueda} busqueda={busqueda} />
-          )}
-        </View>
-        
-
-        {/* Botón Resumen Pedido */}
-        {items.length > 0 && (
-          <View className="px-5 py-4 bg-superficie border-t border-borde shadow-lg">
-            <Pressable
-              onPress={() => router.push({ pathname: '/(clicktochef-app)/(stack)/pedido', params: { pedidoId } })}
-              className="flex-row items-center justify-between p-4 rounded-2xl bg-primary active:opacity-90"
-            >
-              <View className="flex-row items-center">
-                <View className="bg-white/20 w-8 h-8 rounded-lg items-center justify-center mr-3">
-                  <Text className="text-superficie font-titulo">{totalItems}</Text>
-                </View>
-                <Text className="text-superficie font-titulo text-lg">Resumen Pedido</Text>
-              </View>
-              <Text className="text-superficie font-titulo text-lg">{getTotal().toFixed(2)}€</Text>
-            </Pressable>
-          </View>
+      {/* Lista scrollable */}
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {busqueda === '' ? (
+          <CategoriaFList categorias={filteredCategorias} />
+        ) : (
+          <MenuBusquedaFList productos={resultadosBusqueda} busqueda={busqueda} />
         )}
       </ScrollView>
+
+      {/* Botón Resumen Pedido — fijo en la parte inferior */}
+      {items.length > 0 && (
+        <View className="px-5 py-4 bg-superficie border-t border-borde shadow-lg">
+          <Pressable
+            onPress={() => router.push({ pathname: '/(clicktochef-app)/(stack)/pedido', params: { pedidoId } })}
+            className="flex-row items-center justify-between p-4 rounded-2xl bg-primary active:opacity-90"
+          >
+            <View className="flex-row items-center">
+              <View className="bg-white/20 w-8 h-8 rounded-lg items-center justify-center mr-3">
+                <Text className="text-superficie font-titulo">{totalItems}</Text>
+              </View>
+              <Text className="text-superficie font-titulo text-lg">Resumen Pedido</Text>
+            </View>
+            <Text className="text-superficie font-titulo text-lg">{getTotal().toFixed(2)}€</Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   )
 }

@@ -15,11 +15,7 @@ const MenuCard = ({ producto }: Props) => {
 
   return (
     <View className="border-b border-borde">
-      <Pressable
-        className={`flex-row items-center justify-between px-5 py-5 ${disponible ? 'active:bg-fondo' : 'opacity-60'}`}
-        onPress={handleAdd}
-        disabled={!disponible}
-      >
+      <View className={`flex-row items-center justify-between px-5 py-5 ${!disponible ? 'opacity-60' : ''}`}>
         <View className="flex-1">
           <Text className="font-titulo text-base text-principal">{producto.nombre}</Text>
           <Text className="font-cuerpo text-sm text-secundario">{producto.precio.toFixed(2)}€</Text>
@@ -32,12 +28,14 @@ const MenuCard = ({ producto }: Props) => {
         </View>
 
         {cantidad === 0 ? (
-          <View
-            className="w-10 h-10 rounded-full items-center justify-center"
+          <Pressable
+            onPress={handleAdd}
+            disabled={!disponible}
+            className="w-10 h-10 rounded-full items-center justify-center active:opacity-70"
             style={{ backgroundColor: disponible ? primary + '15' : '#f3f4f6' }}
           >
             <Ionicons name="add" size={24} color={disponible ? primary : '#9ca3af'} />
-          </View>
+          </Pressable>
         ) : (
           <View className="flex-row items-center bg-fondo rounded-full p-1">
             <Pressable
@@ -60,7 +58,7 @@ const MenuCard = ({ producto }: Props) => {
             </Pressable>
           </View>
         )}
-      </Pressable>
+      </View>
     </View>
   );
 };
