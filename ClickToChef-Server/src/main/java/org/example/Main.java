@@ -4,9 +4,11 @@ import org.example.DAO.ConexionDB;
 import org.example.Servidor.ObtenerProperties;
 import org.example.Servidor.Servidor;
 import org.example.Servidor.WebSocketServidor;
+import java.util.TimeZone;
 
 public class Main {
     public static void main(String[] args){
+        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Madrid"));
         int puerto = Integer.parseInt(ObtenerProperties.obtenerParametro("webserver.port"));
 
         //CargaInicial.cargaInicialDatos();
