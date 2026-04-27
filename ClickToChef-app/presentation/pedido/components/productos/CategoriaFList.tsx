@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, FlatList } from 'react-native';
 import { Categoria } from '../../../../type/menu-inetrface';
-import MenuCard from './MenuCard';
+import MenuFList from './MenuFList';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
@@ -20,14 +20,12 @@ const CategoriaFList = ({ categorias }: Props) => {
         <View className="mb-6">
           <View className="px-5 py-3 bg-fondo border-y border-borde flex-row items-center">
             <Ionicons name="restaurant-outline" size={14} color="#71717a" />
-            <Text className="font-titulo text-sm text-secundario uppercase tracking-widest ml-2">
+            <Text className="font-titulo text-sm text-secundario uppercase tracking-widest ml-2" numberOfLines={1}>
               {categoria.nombre}
             </Text>
           </View>
 
-          {categoria.productos.map((producto) => (
-            <MenuCard key={producto.id} producto={producto} />
-          ))}
+          <MenuFList productos={categoria.productos} />
         </View>
       )}
     />

@@ -1,7 +1,9 @@
 import socketClient from "../socket/SocketClient";
 
+//Acción para actualizar el estado de una mesa
 export const updateMesaStatusAction = async (id: number, estado: string) => {
   try {
+    //Enviar solicitud al servidor
     socketClient.send({
       type: 'UPDATE_MESA_STATUS',
       payload: {

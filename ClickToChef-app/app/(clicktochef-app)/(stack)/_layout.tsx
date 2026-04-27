@@ -14,10 +14,11 @@ const StackLayout = () => {
       headerTintColor: textColor,
       headerShadowVisible: false,
     }}>
-      <Stack.Screen name="pedidos/index" options={{ title: 'Pedidos' }} />  
+      <Stack.Screen name="pedidos/index" options={{ title: 'Pedidos' }} />
       <Stack.Screen name="mesa/index" options={{ title: 'Mesa' }} />
       <Stack.Screen name="productos/index" options={{ title: 'Productos' }} />
       <Stack.Screen name="pedido/index" options={{ title: 'Pedido' }} />
+      <Stack.Screen name="pedidos/[id]" options={{title: 'Detalle del pedido'}}/>
     </Stack>
   )
 }

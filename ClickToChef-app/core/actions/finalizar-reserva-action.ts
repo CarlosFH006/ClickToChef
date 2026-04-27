@@ -1,7 +1,9 @@
 import socketClient from "../socket/SocketClient";
 
+//Acción para finalizar una reserva
 export const finalizarReservaAction = async (productoId: number, cantidad: number = 1) => {
   try {
+    //Enviar solicitud al servidor
     socketClient.send({
       type: 'FINALIZAR_RESERVA',
       payload: {

@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Mesa } from '../../../../type/mesa-interface';
 import { updateMesaStatusAction } from '../../../../core/actions/update-mesa-status-action';
 import { router } from 'expo-router';
 import { useOrderStore } from '../../../../store/useOrderStore';
-import { getMesaStatusColor, getMesaStatusLabel } from '../../utils/status-colors';
+import { getMesaStatusColor, getMesaStatusLabel } from '../../helpers/status-colors';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
@@ -16,6 +16,9 @@ const MesaCard = ({ mesa, pedido = false }: Props) => {
   const statusColor = getMesaStatusColor(mesa.estado);
   const isDisabled = pedido && mesa.estado !== 'LIBRE';
 
+  //Usar ref para evitar que se pueda navegar dos veces a la misma mesa
+  const navegando = useRef(false);
+
   return (
     <Pressable
       className="m-2 rounded-2xl flex-1 overflow-hidden bg-superficie shadow-md active:opacity-75"
@@ -23,11 +26,15 @@ const MesaCard = ({ mesa, pedido = false }: Props) => {
       disabled={isDisabled}
       onPress={async () => {
         if (pedido && mesa.estado === 'LIBRE') {
+          //Evitar que se pueda navegar dos veces a la misma mesa
+          if (navegando.current) return;
+          navegando.current = true;
           const success = await updateMesaStatusAction(mesa.id, 'RESERVADA');
           if (success) {
             useOrderStore.getState().setMesa(mesa.id);
             router.push({ pathname: '/(clicktochef-app)/(stack)/productos', params: { mesaId: mesa.id } });
           }
+          setTimeout(() => { navegando.current = false; }, 1000);
         }
       }}
     >

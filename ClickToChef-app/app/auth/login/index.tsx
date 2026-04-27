@@ -9,6 +9,7 @@ const LoginScreen = () => {
   const login = useAuthStore((state) => state.login);
   const status = useAuthStore((state) => state.status);
 
+  //Detectar si cambia el estado a autenticado para redirigir al usuario
   useEffect(() => {
     if (status === 'authenticated') {
       router.replace('/(clicktochef-app)/mesas');
@@ -19,14 +20,19 @@ const LoginScreen = () => {
 
   const onLogin = async () => {
     const { username, pass } = form;
-    if (username.length === 0 || pass.length === 0) {
+    if (username.trim().length === 0 || pass.trim().length === 0) {
       Alert.alert('Error', 'Por favor completa ambos campos');
       return;
     }
-    const success = await login(username, pass);
-    if (!success) {
-      Alert.alert('Error', 'No se pudo conectar con el servidor');
-    }
+
+    login(username, pass);
+    //Si en 5 segundos no se ha autenticado, mostrar error de conexión
+    setTimeout(() => {
+      if (useAuthStore.getState().status === 'checking') {
+        useAuthStore.setState({ status: 'unauthenticated' });
+        Alert.alert('Sin conexión', 'No se pudo conectar con el servidor. Comprueba la red e inténtalo de nuevo.');
+      }
+    }, 5000);
   };
 
   return (

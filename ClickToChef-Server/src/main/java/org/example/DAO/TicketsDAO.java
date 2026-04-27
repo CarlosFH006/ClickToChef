@@ -8,16 +8,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class TicketsDAO {
 
     public static boolean insertarTicket(Tickets ticket) {
         String sql = "INSERT INTO tickets (pedido_id, total_importe, fecha_pago, referencia_factura_odoo, metodo_pago) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setInt(1, ticket.getPedidoId());
             statement.setDouble(2, ticket.getTotalImporte());
             statement.setTimestamp(3, ticket.getFechaPago());
@@ -33,10 +32,10 @@ public class TicketsDAO {
         String sql = "SELECT id, pedido_id, total_importe, fecha_pago, referencia_factura_odoo, metodo_pago FROM tickets";
         ArrayList<Tickets> tickets = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Tickets ticket = new Tickets(
                         resultSet.getInt("id"),

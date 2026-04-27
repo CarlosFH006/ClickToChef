@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { usePedidosStore } from '../../../../store/usePedidosStore'
 import { useAuthStore } from '../../../../presentation/auth/store/useAuthStore'
 import { getPedidosUsuarioAction } from '../../../../core/actions/get-pedidos-usuario-action'
+import { getMenuAction } from '../../../../core/actions/get-menu-action'
 import PedidoFList from '../../../../presentation/pedido/components/pedidos/PedidoFList'
 import { Colors } from '../../../../constants/theme'
 
@@ -13,8 +14,10 @@ const PedidosScreen = () => {
   const { pedidos, isLoading } = usePedidosStore();
   const { user } = useAuthStore();
 
+  //Cargar menu y pedidos del usuario
   useEffect(() => {
     if (user?.id) {
+      getMenuAction();
       getPedidosUsuarioAction(user.id);
     }
   }, [user]);
@@ -30,7 +33,7 @@ const PedidosScreen = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-superficie" edges={[]}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
@@ -44,7 +47,7 @@ const PedidosScreen = () => {
           </View>
         </View>
 
-        {/* CTA nuevo pedido */}
+        {/* Nuevo pedido */}
         <View className="px-5 mb-4">
           <Pressable
             className="flex-row items-center justify-center py-4 rounded-2xl bg-primary active:opacity-90"
@@ -68,7 +71,7 @@ const PedidosScreen = () => {
           ) : (
             <PedidoFList
               pedidos={pedidos}
-              onPedidoPress={(p) => console.log('Pedido seleccionado:', p.id)}
+              onPedidoPress={(p) => router.push(`/(clicktochef-app)/(stack)/pedidos/${p.id}`)}
             />
           )}
         </View>

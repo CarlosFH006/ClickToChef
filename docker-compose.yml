@@ -14,6 +14,11 @@ services:
     volumes:
       - ./data/clicktochef.sql:/docker-entrypoint-initdb.d/clicktochef.sql
       - ./data/mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-padminDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db_odoo:
     image: postgres:15
@@ -24,12 +29,18 @@ services:
       - POSTGRES_USER=odoo
     volumes:
       - ./data/odoo_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   odoo:
     image: odoo:latest
     container_name: clicktochef_odoo
     depends_on:
-      - db_odoo
+      db_odoo:
+        condition: service_healthy
     ports:
       - "8069:8069"
     environment:
@@ -39,3 +50,32 @@ services:
     volumes:
       - ./data/odoo_web_data:/var/lib/odoo
       - ./extra-addons:/mnt/extra-addons
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8069/web/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    
+  web-cocina:
+    image: httpd:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./ClickToChef-web:/usr/local/apache2/htdocs/
+
+  backend:
+    build:
+      context: ./ClickToChef-Server
+      dockerfile: Dockerfile
+    container_name: clicktochef_backend
+    depends_on:
+      db_app:
+        condition: service_healthy
+      odoo:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    volumes:
+      - ./ClickToChef-Server/config.properties:/app/config.properties

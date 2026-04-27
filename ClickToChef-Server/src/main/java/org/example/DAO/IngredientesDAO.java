@@ -32,16 +32,15 @@ public class IngredientesDAO {
     public static boolean insertarIngrediente(Ingredientes ingrediente) {
         String sql = "INSERT INTO ingredientes (nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setString(1, ingrediente.getNombre());
             statement.setDouble(2, ingrediente.getStockActual());
             statement.setDouble(3, ingrediente.getStockReservado());
             statement.setString(4, ingrediente.getMetodoMedida().name().toLowerCase());
             statement.setString(5, ingrediente.getTipoIngrediente().name().toLowerCase());
             statement.setInt(6, ingrediente.getOdooProductId());
-
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el ingrediente", e);
@@ -52,10 +51,10 @@ public class IngredientesDAO {
         String sql = "SELECT id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id FROM ingredientes";
         ArrayList<Ingredientes> ingredientes = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Ingredientes ingrediente = new Ingredientes(
                         resultSet.getInt("id"),
@@ -78,9 +77,9 @@ public class IngredientesDAO {
     public static boolean actualizarOdooProductId(int ingredienteId, int odooProductId) {
         String sql = "UPDATE ingredientes SET odoo_product_id = ? WHERE id = ?";
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setInt(1, odooProductId);
             statement.setInt(2, ingredienteId);
             return statement.executeUpdate() > 0;

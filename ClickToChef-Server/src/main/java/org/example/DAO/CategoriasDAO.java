@@ -14,9 +14,9 @@ public class CategoriasDAO {
     public static boolean insertarCategoria(Categorias categoria) {
         String sql = "INSERT INTO categorias (nombre) VALUES (?)";
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setString(1, categoria.getNombre());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -28,10 +28,10 @@ public class CategoriasDAO {
         String sql = "SELECT id, nombre FROM categorias";
         ArrayList<Categorias> categorias = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Categorias categoria = new Categorias(
                         resultSet.getInt("id"),
@@ -48,6 +48,8 @@ public class CategoriasDAO {
 
     public static ArrayList<CategoriaPlato> categoriasplatos() {
         //Case sirve para crear una variable booleana en una consulta, devuelve true o false segun la condición del when.
+        
+        //Select 1 para no recibir la base de datos completa, porque para Exists con que haya una respuesta es suficiente
         String sql = """
                 SELECT
                     c.id AS categoria_id,
@@ -57,10 +59,10 @@ public class CategoriasDAO {
                     p.precio,
                     CASE
                         WHEN EXISTS (
-                            SELECT 1\s
+                            SELECT 1
                             FROM recetas r
                             JOIN ingredientes i ON r.ingrediente_id = i.id
-                            WHERE r.producto_id = p.id\s
+                            WHERE r.producto_id = p.id
                             AND (i.stock_actual - i.stock_reservado) < r.cantidad_necesaria
                         ) THEN FALSE
                         ELSE TRUE
@@ -71,10 +73,10 @@ public class CategoriasDAO {
                 """;
         ArrayList<CategoriaPlato> categoriasPlatos = new ArrayList<>();
 
-        try (Connection conexion = ConexionDB.getConexion();
-             PreparedStatement statement = conexion.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 CategoriaPlato categoriaPlato = new CategoriaPlato(
                         resultSet.getInt("categoria_id"),

@@ -17,6 +17,7 @@ const ProductoCard = ({ producto, showNotas = false }: Props) => {
   const { handleAdd, handleRemove, cantidad } = useProductoActions(producto);
   const primary = Colors.light.primary;
 
+  //Guardar las notas del producto y si estaban abiertas al volver a entrar
   const notasActuales = 'notas' in producto ? (producto.notas ?? '') : '';
   const [notasOpen, setNotasOpen] = useState(notasActuales.length > 0);
 

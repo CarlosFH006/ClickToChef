@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Pedidos } from '../../../../type/pedidos-interface';
 import { Ionicons } from '@expo/vector-icons';
-import { getPedidoStatusColor, getPedidoStatusIcon, getPedidoStatusLabel } from '../../utils/status-colors';
+import { getPedidoStatusColor, getPedidoStatusIcon, getPedidoStatusLabel } from '../../helpers/status-colors';
+import { parseGsonDate } from '../../helpers/parse-date';
 import { Colors } from '../../../../constants/theme';
 
 interface Props {
@@ -12,11 +13,15 @@ interface Props {
 
 const PedidoCard = ({ pedido, onPress }: Props) => {
   const statusColor = getPedidoStatusColor(pedido.estado);
-  // Java Timestamp.toString() → "2025-01-15 10:22:45.0" — replace space with T for ISO parsing
-  const date = pedido.fechaCreacion ? new Date(pedido.fechaCreacion.replace(' ', 'T')) : null;
-  const validDate = date && !isNaN(date.getTime());
-  const dateStr = validDate ? date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '--';
-  const timeStr = validDate ? date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+
+  //Convertir la fecha del pedido a un formato legible
+  const date = parseGsonDate(pedido.fechaCreacion);
+  const dateStr = date
+    ? `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
+    : '--';
+  const timeStr = date
+    ? `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+    : '--:--';
 
   return (
     <Pressable

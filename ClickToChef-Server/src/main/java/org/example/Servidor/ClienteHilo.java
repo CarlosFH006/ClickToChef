@@ -1,23 +1,24 @@
 package org.example.Servidor;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import org.example.DAO.ProductosDAO;
-import org.example.DAO.UsuariosDAO;
 import org.example.DAO.MesasDAO;
-import org.example.DAO.CategoriasDAO;
-import org.example.DAO.PedidosDAO;
-import org.example.DAO.DetallesPedidoDAO;
-import org.example.DTO.*;
+import org.example.DAO.ProductosDAO;
+import org.example.DTO.EstadoMesa;
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ClienteHilo extends Thread {
     private Socket socket;
     private final Gson gson = new Gson();
-    private PrintWriter writer;
+    private OutputStream outputStream;
+    //Variables para almacenar reservas activas y mesas reservadas
+    private final Map<Integer, Integer> reservasActivas = new HashMap<>();
+    private Integer mesaReservadaId = null;
 
     public ClienteHilo(String name, Socket socket) {
         super(name);
@@ -26,10 +27,18 @@ public class ClienteHilo extends Thread {
 
     @Override
     public void run() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            // Importante: autoflush en true para que el móvil reciba los datos al instante
-            this.writer = new PrintWriter(socket.getOutputStream(), true);
-
+        try {
+            /*
+                Desactiva el algoritmo de Nagle
+                Esto evita que el servidor acumule paquetes pequeños para enviarlos juntos,
+                asegurando que los mensajes se envíen inmediatamente.
+            */
+            socket.setTcpNoDelay(true);
+        } catch (Exception e) {
+            System.err.println("[" + getName() + "] No se pudo configurar TCP_NODELAY: " + e.getMessage());
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
+            this.outputStream = socket.getOutputStream();
             System.out.println(">>> [" + getName() + "] Cliente conectado desde " + socket.getInetAddress());
 
             String jsonRecibido;
@@ -41,321 +50,197 @@ public class ClienteHilo extends Thread {
         } catch (IOException e) {
             System.err.println("[" + getName() + "] Error de red: " + e.getMessage());
         } finally {
+            //Libera las reservas activas y elimina al cliente
+            liberarReservasActivas();
             Servidor.removeCliente(this);
             closeConnection();
         }
     }
 
-    private void handleReservarProducto(JsonObject payload) {
-        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
-            sendError("Payload de RESERVAR_PRODUCTO incompleto");
-            return;
-        }
-
-        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
-        int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
-        System.out.println("[" + getName() + "] Reservando producto " + productoId + "...");
-
-        boolean success = ProductosDAO.reservarProducto(productoId, cantidad);
-        sendReservaResponse("RESERVAR_PRODUCTO_RESPONSE", productoId, cantidad, success);
-
-        if (success) {
-            broadcastCatalogo();
-        }
-    }
-
-    private void handleLiberarReserva(JsonObject payload) {
-        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
-            sendError("Payload de LIBERAR_RESERVA incompleto");
-            return;
-        }
-
-        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
-        int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
-        System.out.println("[" + getName() + "] Liberando reserva de producto " + productoId + " (cantidad " + cantidad + ")...");
-
-        try {
-            ProductosDAO.liberarReserva(productoId, cantidad);
-            sendReservaResponse("LIBERAR_RESERVA_RESPONSE", productoId, cantidad, true);
-            broadcastCatalogo();
-        } catch (Exception e) {
-            System.err.println("[" + getName() + "] Error al liberar reserva: " + e.getMessage());
-            sendReservaResponse("LIBERAR_RESERVA_RESPONSE", productoId, cantidad, false);
-        }
-    }
-
-    private void handleFinalizarReserva(JsonObject payload) {
-        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
-            sendError("Payload de FINALIZAR_RESERVA incompleto");
-            return;
-        }
-
-        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
-        int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
-        System.out.println("[" + getName() + "] Finalizando reserva de producto " + productoId + " (cantidad " + cantidad + ")...");
-
-        try {
-            ProductosDAO.finalizarReserva(productoId, cantidad);
-            sendReservaResponse("FINALIZAR_RESERVA_RESPONSE", productoId, cantidad, true);
-            broadcastCatalogo();
-        } catch (Exception e) {
-            System.err.println("[" + getName() + "] Error al finalizar reserva: " + e.getMessage());
-            sendReservaResponse("FINALIZAR_RESERVA_RESPONSE", productoId, cantidad, false);
-        }
-    }
-
-    private void sendReservaResponse(String type, int productoId, int cantidad, boolean success) {
-        writer.println(GeneradorJSON.generarReservaResponse(type, productoId, cantidad, success));
-    }
-
-    /**
-     * Orquestador de peticiones.
-     * Lee el "type" del JSON enviado por el móvil y llama al método
-     * correspondiente.
-     */
     private void processRequest(String json) {
         try {
             JsonObject peticion = gson.fromJson(json, JsonObject.class);
 
             if (!peticion.has("type")) {
-                sendError("Formato de petición inválido: falta campo 'type'");
+                send(GeneradorJSON.generarError("Formato de petición inválido: falta campo 'type'"));
                 return;
             }
 
             String tipo = peticion.get("type").getAsString();
 
+            JsonObject payload = peticion.has("payload") && peticion.get("payload").isJsonObject()
+                    ? peticion.getAsJsonObject("payload") : null;
+            String respuesta;
+
             switch (tipo) {
                 case "LOGIN":
-                    handleLogin(peticion.getAsJsonObject("payload"));
+                    respuesta = FuncionesServidor.procesarLogin(payload);
                     break;
-
                 case "GET_MESAS":
-                    handleGetMesas();
+                    respuesta = FuncionesServidor.procesarGetMesas();
                     break;
-
                 case "UPDATE_MESA_STATUS":
-                    handleUpdateMesaStatus(peticion.getAsJsonObject("payload"));
+                    respuesta = FuncionesServidor.procesarUpdateMesaStatus(payload);
+                    if (payload != null && payload.has("id") && payload.has("estado")) {
+                        String estado = payload.get("estado").getAsString();
+                        //Si la mesa se reserva, se almacena su ID
+                        if ("RESERVADA".equalsIgnoreCase(estado)) {
+                            mesaReservadaId = payload.get("id").getAsInt();
+                        } else if ("LIBRE".equalsIgnoreCase(estado)) {
+                            mesaReservadaId = null;
+                        }
+                    }
                     break;
-
                 case "GET_MENU":
-                    handleGetMenu();
+                    respuesta = FuncionesServidor.procesarGetMenu();
                     break;
-                
                 case "GET_PEDIDOS_USUARIO":
-                    handleGetPedidosUsuario(peticion.getAsJsonObject("payload"));
+                    respuesta = FuncionesServidor.procesarGetPedidosUsuario(payload);
                     break;
-
                 case "RESERVAR_PRODUCTO":
-                    handleReservarProducto(peticion.getAsJsonObject("payload"));
+                    respuesta = FuncionesServidor.procesarReservarProducto(payload);
+                    if (payload != null && respuesta != null) {
+                        try {
+                            JsonObject respJson = gson.fromJson(respuesta, JsonObject.class);
+                            JsonObject respPayload = respJson.getAsJsonObject("payload");
+                            //Si la reserva es exitosa, se almacenan los productos reservados
+                            if (respPayload != null && respPayload.has("success") && respPayload.get("success").getAsBoolean()) {
+                                int prodId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+                                int cant = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
+                                //Se almacenan los productos reservados, sumando las cantidades si ya existían
+                                reservasActivas.merge(prodId, cant, Integer::sum);
+                            }
+                        } catch (Exception e) {
+                            System.err.println("[" + getName() + "] Error al reservar el producto: " + e.getMessage());
+                        }
+                    }
                     break;
-
                 case "LIBERAR_RESERVA":
-                    handleLiberarReserva(peticion.getAsJsonObject("payload"));
+                    respuesta = FuncionesServidor.procesarLiberarReserva(payload);
+                    if (payload != null) {
+                        int prodId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+                        int cant = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
+                        //Se actualizan las cantidades de los productos reservados, restando las cantidades
+                        reservasActivas.merge(prodId, -cant, Integer::sum);
+                        //Se eliminan los productos reservados cuya cantidad sea menor o igual a 0
+                        reservasActivas.values().removeIf(v -> v <= 0);
+                    }
                     break;
-
                 case "FINALIZAR_RESERVA":
-                    handleFinalizarReserva(peticion.getAsJsonObject("payload"));
+                    respuesta = FuncionesServidor.procesarFinalizarReserva(payload);
+                    if (payload != null) {
+                        int prodId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+                        int cant = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
+                        reservasActivas.merge(prodId, -cant, Integer::sum);
+                        reservasActivas.values().removeIf(v -> v <= 0);
+                    }
                     break;
-
                 case "CREAR_PEDIDO":
-                    handleCrearPedido(peticion.getAsJsonObject("payload"));
+                    respuesta = FuncionesServidor.procesarCrearPedido(payload);
+                    if (respuesta != null) {
+                        try {
+                            JsonObject respJson = gson.fromJson(respuesta, JsonObject.class);
+                            JsonObject respPayload = respJson.getAsJsonObject("payload");
+                            //Si el pedido es exitoso, se elimina la mesa reservada
+                            if (respPayload != null && respPayload.has("success") && respPayload.get("success").getAsBoolean()) {
+                                mesaReservadaId = null;
+                            }
+                        } catch (Exception e) {
+                            System.err.println("[" + getName() + "] Error al procesar el pedido: " + e.getMessage());
+                        }
+                    }
                     break;
-
+                case "INSERTAR_DETALLES":
+                    respuesta = FuncionesServidor.procesarInsertarDetalles(payload);
+                    break;
+                case "UPDATE_ESTADO_DETALLE":
+                    respuesta = FuncionesServidor.procesarUpdateEstadoDetalle(payload);
+                    break;
+                case "GET_PEDIDOS_ADMIN":
+                    respuesta = FuncionesServidor.procesarGetPedidosAdmin();
+                    break;
+                case "GET_USUARIOS":
+                    respuesta = FuncionesServidor.procesarGetUsuarios();
+                    break;
+                case "GET_INGREDIENTES":
+                    respuesta = FuncionesServidor.procesarGetIngredientes();
+                    break;
+                case "GET_TICKETS":
+                    respuesta = FuncionesServidor.procesarGetTickets();
+                    break;
+                case "CERRAR_MESA":
+                    respuesta = FuncionesServidor.procesarCerrarMesa(payload);
+                    break;
+                case "CANCELAR_PEDIDO":
+                    respuesta = FuncionesServidor.procesarCancelarPedido(payload);
+                    break;
+                case "ELIMINAR_DETALLE":
+                    respuesta = FuncionesServidor.procesarEliminarDetalle(payload);
+                    break;
                 default:
                     System.out.println("[" + getName() + "] Tipo desconocido: " + tipo);
-                    sendError("Acción no reconocida en el servidor");
+                    respuesta = GeneradorJSON.generarError("Acción no reconocida en el servidor");
             }
+
+            if (respuesta != null) {
+                send(respuesta);
+            }
+
         } catch (Exception e) {
             System.err.println("[" + getName() + "] Error al parsear JSON: " + e.getMessage());
-            sendError("Error interno procesando JSON");
+            send(GeneradorJSON.generarError("Error interno procesando JSON"));
         }
     }
 
-    /**
-     * Actualiza el estado de una mesa y notifica a todos los clientes (broadcast)
-     */
-    private void handleUpdateMesaStatus(JsonObject payload) {
-        if (payload == null || !payload.has("id") || !payload.has("estado")) {
-            sendError("Payload de actualización incompleto");
-            return;
-        }
-
-        int id = payload.get("id").getAsInt();
-        String estadoStr = payload.get("estado").getAsString();
-        EstadoMesa nuevoEstado = EstadoMesa.valueOf(estadoStr.toUpperCase());
-
-        System.out.println("[" + getName() + "] Actualizando mesa " + id + " a " + nuevoEstado);
-
-        boolean exito = MesasDAO.actualizarEstadoMesa(id, nuevoEstado);
-
-        if (exito) {
-            // Si la base de datos se actualizó, notificamos a TODOS
-            Servidor.broadcast(GeneradorJSON.generarMesaUpdated(id, estadoStr.toUpperCase()));
-        } else {
-            sendError("No se pudo actualizar la mesa en la base de datos");
-        }
-    }
-
-    /**
-     * Envía el catálogo actualizado a todos los clientes (broadcast)
-     */
-    private void broadcastCatalogo() {
-        ArrayList<CategoriaPlato> lista = CategoriasDAO.categoriasplatos();
-        String json = GeneradorJSON.generarMenuUpdated(lista);
-        Servidor.broadcast(json);
-        System.out.println("[" + getName() + "] Catálogo actualizado y enviado a todos los clientes (" + lista.size() + " categorías)");
-    }
-
-    /**
-     * Envía la lista completa de pedidos a todos los clientes (broadcast)
-     */
-    private void broadcastPedidos() {
-        ArrayList<Pedidos> lista = PedidosDAO.obtenerTodos();
-        Servidor.broadcast(GeneradorJSON.generarPedidosUpdated(lista));
-        System.out.println("[" + getName() + "] Lista de pedidos actualizada y broadcast enviado (" + lista.size() + " pedidos)");
-    }
-
-    /**
-     * Utilidad para enviar mensajes individuales al cliente
-     */
+    //Metodo publico para enviar mensajes al cliente desde fuera de la Clase
     public void sendMessage(String json) {
-        if (writer != null) {
-            writer.println(json);
-        }
+        send(json);
     }
 
-    /**
-     * Obtiene la lista de mesas y la envía al cliente
-     */
-    private void handleGetMesas() {
-        System.out.println("[" + getName() + "] Obteniendo lista de mesas...");
-
-        ArrayList<Mesas> listaMesas = MesasDAO.obtenerTodas();
-        writer.println(GeneradorJSON.generarMesasResponse(listaMesas));
-        System.out.println("[" + getName() + "] Lista de mesas enviada (" + listaMesas.size() + " mesas)");
-    }
-
-    /**
-     * Obtiene el menú (categorías y productos) y lo envía en formato jerárquico
-     */
-    private void handleGetMenu() {
-        System.out.println("[" + getName() + "] Obteniendo menú...");
-
-        ArrayList<CategoriaPlato> lista = CategoriasDAO.categoriasplatos();
-        writer.println(GeneradorJSON.generarMenuResponse(lista));
-        System.out.println("[" + getName() + "] Menú enviado (" + lista.size() + " categorías)");
-    }
-
-    /**
-     * Crea un pedido y sus detalles en la base de datos
-     */
-    private void handleCrearPedido(JsonObject payload) {
-        if (payload == null || !payload.has("mesaId") || !payload.has("usuarioId") || !payload.has("items")) {
-            sendError("Payload de CREAR_PEDIDO incompleto");
-            return;
-        }
-
-        int mesaId = payload.get("mesaId").getAsInt();
-        int usuarioId = payload.get("usuarioId").getAsInt();
-        JsonArray items = payload.getAsJsonArray("items");
-
-        System.out.println("[" + getName() + "] Creando pedido para mesa " + mesaId + " por usuario " + usuarioId + "...");
-
-        try {
-            // 1. Crear la cabecera del pedido
-            Pedidos nuevoPedido = new Pedidos(mesaId, usuarioId, new java.sql.Timestamp(System.currentTimeMillis()), EstadoPedido.ABIERTA);
-            int pedidoId = PedidosDAO.insertarPedido(nuevoPedido);
-
-            if (pedidoId == -1) {
-                sendError("No se pudo crear la cabecera del pedido");
-                return;
+    //Metodo privado para enviar mensajes al cliente, sincronizado para evitar que se envien dos mensajes a la vez
+    private synchronized void send(String json) {
+        if (outputStream != null) {
+            try {
+                outputStream.write((json + "\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.flush();
+            } catch (IOException e) {
+                System.err.println("[" + getName() + "] Error al enviar mensaje: " + e.getMessage());
             }
+        }
+    }
 
-            // 2. Crear los detalles del pedido
-            boolean exitoDetalles = true;
-            for (int i = 0; i < items.size(); i++) {
-                JsonObject itemJson = items.get(i).getAsJsonObject();
-                int productoId = itemJson.get("id").getAsInt();
-                int cantidad = itemJson.get("cantidad").getAsInt();
-                String notas = itemJson.has("notas") ? itemJson.get("notas").getAsString() : "";
-
-                DetallesPedido detalle = new DetallesPedido(
-                    pedidoId,
-                    productoId,
-                    cantidad,
-                    notas,
-                    EstadoDetallePedido.PENDIENTE,
-                    new java.sql.Timestamp(System.currentTimeMillis())
-                );
-                
-                if (!DetallesPedidoDAO.insertarDetallePedido(detalle)) {
-                    exitoDetalles = false;
+    //Libera las reservas activas
+    private void liberarReservasActivas() {
+        boolean huboCambios = false;
+        //Si hay reservas activas, liberarlas
+        if (!reservasActivas.isEmpty()) {
+            System.out.println("[" + getName() + "] Liberando " + reservasActivas.size() + " tipo(s) de reserva por desconexión");
+            for (Map.Entry<Integer, Integer> entry : reservasActivas.entrySet()) {
+                try {
+                    ProductosDAO.liberarReserva(entry.getKey(), entry.getValue());
+                    System.out.println("[" + getName() + "] Reserva liberada: producto " + entry.getKey() + " x" + entry.getValue());
+                    huboCambios = true;
+                } catch (Exception e) {
+                    System.err.println("[" + getName() + "] Error liberando reserva producto " + entry.getKey() + ": " + e.getMessage());
                 }
             }
-
-            // 3. Responder al cliente
-            writer.println(GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId));
-            System.out.println("[" + getName() + "] Pedido " + pedidoId + " creado con " + (exitoDetalles ? "éxito" : "errores parciales"));
-
-            // 4. Notificar a todos los clientes que hay una actualización en los pedidos
-            broadcastPedidos();
-
-        } catch (Exception e) {
-            System.err.println("[" + getName() + "] Error al crear pedido: " + e.getMessage());
-            sendError("Error interno al procesar el pedido: " + e.getMessage());
+            reservasActivas.clear();
         }
-    }
-
-    /**
-     * Obtiene los pedidos asignados a un usuario específico
-     */
-    private void handleGetPedidosUsuario(JsonObject payload) {
-        if (payload == null || !payload.has("usuarioId")) {
-            sendError("Payload de GET_PEDIDOS_USUARIO incompleto");
-            return;
+        //Si hay mesa reservada, liberarla
+        if (mesaReservadaId != null) {
+            try {
+                MesasDAO.actualizarEstadoMesa(mesaReservadaId, EstadoMesa.LIBRE);
+                System.out.println("[" + getName() + "] Mesa " + mesaReservadaId + " liberada por desconexión");
+                Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaReservadaId, "LIBRE"));
+                mesaReservadaId = null;
+            } catch (Exception e) {
+                System.err.println("[" + getName() + "] Error liberando mesa " + mesaReservadaId + ": " + e.getMessage());
+            }
         }
-
-        int usuarioId = payload.get("usuarioId").getAsInt();
-        System.out.println("[" + getName() + "] Obteniendo pedidos para el usuario " + usuarioId + "...");
-
-        ArrayList<Pedidos> lista = PedidosDAO.obtenerPorUsuario(usuarioId);
-        writer.println(GeneradorJSON.generarPedidosUsuarioResponse(lista));
-        System.out.println("[" + getName() + "] Lista de pedidos enviada para el usuario " + usuarioId + " (" + lista.size() + " pedidos)");
-    }
-
-    /**
-     * Gestiona la autenticación consultando al DAO y respondiendo al SocketClient
-     */
-    private void handleLogin(JsonObject payload) {
-        if (payload == null) {
-            sendError("Payload de login vacío");
-            return;
-        }
-
-        String user = payload.has("username") ? payload.get("username").getAsString() : "";
-        String pass = payload.has("pass") ? payload.get("pass").getAsString() : "";
-
-        System.out.println("[" + getName() + "] Procesando login para: " + user);
-
-        // Llamada a tu DAO de Base de Datos
-        Usuarios usuarioValidado = UsuariosDAO.login(user, pass);
-
-        // Enviamos la respuesta
-        writer.println(GeneradorJSON.generarLoginResponse(usuarioValidado, pass));
         
-        if (usuarioValidado != null) {
-            System.out.println("[" + getName() + "] Login OK para " + user);
-        } else {
-            System.out.println("[" + getName() + "] Login fallido para " + user);
-        }
-    }
-
-    /**
-     * Utilidad para enviar mensajes de error genéricos al móvil
-     */
-    private void sendError(String mensaje) {
-        if (writer != null) {
-            writer.println(GeneradorJSON.generarError(mensaje));
+        if (huboCambios) {
+            ArrayList<Integer> noDisponibles = ProductosDAO.obtenerNoDisponibles();
+            Servidor.broadcast(GeneradorJSON.generarStockUpdated(noDisponibles));
         }
     }
 

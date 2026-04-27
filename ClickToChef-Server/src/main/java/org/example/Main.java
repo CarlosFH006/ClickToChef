@@ -1,15 +1,31 @@
 package org.example;
 
-import org.example.Odoo.CargaInicial;
+import org.example.DAO.ConexionDB;
+import org.example.Servidor.ObtenerProperties;
 import org.example.Servidor.Servidor;
+import org.example.Servidor.WebSocketServidor;
+import java.util.TimeZone;
 
 public class Main {
-    public static void main(String[] args) {
-        CargaInicial.cargaInicialDatos();
+    public static void main(String[] args){
+        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Madrid"));
+        int puerto = Integer.parseInt(ObtenerProperties.obtenerParametro("webserver.port"));
 
-        Servidor.server();
+        //CargaInicial.cargaInicialDatos();
 
+        Thread servidorThread = new Thread(() -> Servidor.server());
+        servidorThread.start();
+
+        WebSocketServidor ws = new WebSocketServidor(puerto);
+        ws.start();
+
+        try {
+            servidorThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("[Main] Servidor TCP finalizado. Cerrando conexión a la base de datos...");
+        ConexionDB.cerrarConexion();
     }
-
-
 }

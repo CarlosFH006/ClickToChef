@@ -1,6 +1,5 @@
-import { View, Text, ActivityIndicator } from 'react-native'
-import React, { useEffect } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, ActivityIndicator } from 'react-native'
+import React from 'react'
 import { Redirect, Tabs } from 'expo-router'
 import { useAuthStore } from '../../presentation/auth/store/useAuthStore'
 import { useThemeColor } from '../../presentation/theme/hooks/use-theme-color'
@@ -8,28 +7,23 @@ import { Ionicons } from '@expo/vector-icons'
 
 const CheckAuthenticationLayout = () => {
 
-    const { status, checkStatus } = useAuthStore()
-
+    const { status } = useAuthStore();
     const backgroundColor = useThemeColor({}, 'background');
     const primaryColor = useThemeColor({}, 'primary');
 
-    useEffect(() => {
-        checkStatus();
-    }, [])
-
+    //Comprobar si el usuario esta autenticado
     if (status === 'checking') {
         return (
-            <SafeAreaView className="flex-1 justify-center items-center">
-                <ActivityIndicator />
-            </SafeAreaView>
-        );
+            <View className="flex-1 justify-center items-center" style={{ backgroundColor }}>
+                <ActivityIndicator size="large" color={primaryColor} />
+            </View>
+        )
     }
 
     if (status === 'unauthenticated') {
-        // TODO: Guardar la ruta del usuario desde la que accede para redirigirle después de loguearse
-        return <Redirect href="/auth/login" />;
+        return <Redirect href="/auth/login" />
     }
-
+    
     return (
         <Tabs screenOptions={{
             headerShadowVisible: false,
@@ -45,7 +39,7 @@ const CheckAuthenticationLayout = () => {
         }}>
             <Tabs.Screen name="mesas/index" options={{
                 title: "Mesas",
-                tabBarIcon: ({ color }) => <Ionicons name="restaurant-outline" size={24} color={color} />
+                tabBarIcon: ({ color }) => <Ionicons name="restaurant-outline" size={24} color={color} />,
             }} />
             <Tabs.Screen name="(stack)" options={{
                 title: "Pedido",

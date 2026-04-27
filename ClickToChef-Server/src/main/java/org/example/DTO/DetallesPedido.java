@@ -6,15 +6,17 @@ public class DetallesPedido {
     private int id;
     private int pedidoId;
     private int productoId;
+    private String nombreProducto;
     private int cantidad;
     private String notasEspeciales;
     private EstadoDetallePedido estado;
     private Timestamp horaPedido;
 
-    public DetallesPedido(int id, int pedidoId, int productoId, int cantidad, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
+    public DetallesPedido(int id, int pedidoId, int productoId, String nombreProducto, int cantidad, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
         this.id = id;
         this.pedidoId = pedidoId;
         this.productoId = productoId;
+        this.nombreProducto = nombreProducto;
         this.cantidad = cantidad;
         this.notasEspeciales = notasEspeciales;
         this.estado = estado;
@@ -52,6 +54,14 @@ public class DetallesPedido {
 
     public void setProductoId(int productoId) {
         this.productoId = productoId;
+    }
+
+    public String getNombreProducto() {
+        return nombreProducto;
+    }
+
+    public void setNombreProducto(String nombreProducto) {
+        this.nombreProducto = nombreProducto;
     }
 
     public int getCantidad() {
