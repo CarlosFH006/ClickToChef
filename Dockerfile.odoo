@@ -1,0 +1,8 @@
+FROM odoo:latest
+
+USER root
+COPY init-odoo.sh /init-odoo.sh
+RUN chmod +x /init-odoo.sh
+USER odoo
+
+ENTRYPOINT ["/init-odoo.sh"]
