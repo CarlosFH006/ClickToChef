@@ -8,7 +8,7 @@ import { useMenuStore } from '../../../../store/useMenuStore';
 import DetalleFList from '../../../../presentation/pedido/components/detalles/DetalleFList';
 import CerrarPedidoModal from '../../../../presentation/pedido/components/pedidos/CerrarPedidoModal';
 import { Colors } from '../../../../constants/theme';
-import { getPedidoStatusColor, getPedidoStatusLabel } from '../../../../presentation/pedido/utils/status-colors';
+import { getPedidoStatusColor, getPedidoStatusLabel } from '../../../../presentation/pedido/helpers/status-colors';
 import { cancelarPedidoAction } from '../../../../core/actions/cancelar-pedido-action';
 
 const PedidoDetalleScreen = () => {
@@ -23,7 +23,7 @@ const PedidoDetalleScreen = () => {
   const pedido = pedidos.find((p) => p.id === Number(id));
 
   const productos = categorias.flatMap(c => c.productos);
-  const getPrecio = (productoId: number) =>{
+  const getPrecio = (productoId: number) => {
     const precio = productos.find(p => p.id === productoId)?.precio ?? 0;
     return precio;
   }
@@ -32,7 +32,7 @@ const PedidoDetalleScreen = () => {
 
   useEffect(() => {
     if (pedido) {
-      navigation.setOptions({title: `Pedido #${pedido.id}`});
+      navigation.setOptions({ title: `Pedido #${pedido.id}` });
     }
   }, [navigation, pedido]);
 
@@ -56,7 +56,7 @@ const PedidoDetalleScreen = () => {
     (pedido.detalles?.length === 0 || pedido.detalles?.every(d => d.estado === 'PENDIENTE'));
 
   return (
-    <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-superficie" edges={[]}>
 
       {/* Subheader fijo */}
       <View className="flex-row justify-between items-center px-5 py-3 border-b border-borde">

@@ -33,7 +33,7 @@ const PedidosScreen = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-superficie" edges={[]}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="flex-row items-center justify-between px-5 pt-4 pb-3">

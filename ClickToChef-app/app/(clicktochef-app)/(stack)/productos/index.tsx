@@ -3,12 +3,12 @@ import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useMenuStore } from '../../../../store/useMenuStore'
 import CategoriaFList from '../../../../presentation/pedido/components/productos/CategoriaFList'
-import MenuBusquedaFList from '../../../../presentation/pedido/components/productos/MenuBusquedaFList'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { useOrderStore } from '../../../../store/useOrderStore'
 import { updateMesaStatusAction } from '../../../../core/actions/update-mesa-status-action'
 import { liberarReservaAction } from '../../../../core/actions/liberar-reserva-action'
 import { Colors } from '../../../../constants/theme'
+import MenuFList from '../../../../presentation/pedido/components/productos/MenuFList'
 
 const ProductosIndex = () => {
   const { categorias, isLoading } = useMenuStore();
@@ -68,7 +68,7 @@ const ProductosIndex = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-superficie" edges={[]}>
 
       {/* Cabecera estática */}
       <View className="px-5 pt-3 pb-1">
@@ -126,7 +126,7 @@ const ProductosIndex = () => {
         {busqueda === '' ? (
           <CategoriaFList categorias={filteredCategorias} />
         ) : (
-          <MenuBusquedaFList productos={resultadosBusqueda} busqueda={busqueda} />
+          <MenuFList productos={resultadosBusqueda} busqueda={busqueda} />
         )}
       </ScrollView>
 

@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, Pressable, Alert } from 'react-native';
 import { DetallePedido } from '../../../../type/pedidos-interface';
 import { Ionicons } from '@expo/vector-icons';
-import { getDetalleStatusColor, getDetalleStatusIcon, getDetalleStatusLabel } from '../../utils/status-colors';
-import { parseGsonDate } from '../../utils/parse-date';
+import { getDetalleStatusColor, getDetalleStatusIcon, getDetalleStatusLabel } from '../../helpers/status-colors';
+import { parseGsonDate } from '../../helpers/parse-date';
 import { updateEstadoDetalleAction } from '../../../../core/actions/update-estado-detalle-action';
 import { eliminarDetalleAction } from '../../../../core/actions/eliminar-detalle-action';
 
@@ -14,7 +14,7 @@ interface Props {
 
 const DetalleCard = ({ detalle, pedidoAbierto = false }: Props) => {
   const statusColor = getDetalleStatusColor(detalle.estado);
-  
+
   //Convertir la hora del pedido a un formato legible
   const date = parseGsonDate(detalle.horaPedido);
   const timeStr = date

@@ -32,10 +32,10 @@ const MesasScreen = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-superficie" edges={[]}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header compacto */}
-        <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
+        <View className="flex-row items-center justify-between px-5 pt-2 pb-3">
           <View>
             <Text className="font-titulo text-xl text-principal">Bienvenido, {user?.username}</Text>
             <Text className="font-cuerpo text-xs text-secundario">Estado actual de las mesas</Text>

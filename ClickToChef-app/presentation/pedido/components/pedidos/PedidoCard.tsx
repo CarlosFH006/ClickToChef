@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Pedidos } from '../../../../type/pedidos-interface';
 import { Ionicons } from '@expo/vector-icons';
-import { getPedidoStatusColor, getPedidoStatusIcon, getPedidoStatusLabel } from '../../utils/status-colors';
-import { parseGsonDate } from '../../utils/parse-date';
+import { getPedidoStatusColor, getPedidoStatusIcon, getPedidoStatusLabel } from '../../helpers/status-colors';
+import { parseGsonDate } from '../../helpers/parse-date';
 import { Colors } from '../../../../constants/theme';
 
 interface Props {

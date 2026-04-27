@@ -74,6 +74,8 @@ class SocketClient {
       console.log('[Socket] Conexión cerrada. Reconectando en 3s...');
       this.buffer = '';
       this.client = null;
+      //Al perder la conexión, redirigir al inicio, limpiar el pedido e intentar conectar nuevamente
+      useOrderStore.getState().clearOrder();
       router.replace('/(clicktochef-app)/mesas');
       Alert.alert('Conexión perdida', 'Se ha perdido la conexión con el servidor. Reconectando...');
       setTimeout(() => this.connect(), 3000);
@@ -122,9 +124,7 @@ class SocketClient {
         }
         break;
 
-      //Actualizar menu en tiempo real
       case 'MENU_RESPONSE':
-      case 'MENU_UPDATED':
         if (data.payload) {
           useMenuStore.getState().setMenu(data.payload);
         }
@@ -264,6 +264,7 @@ class SocketClient {
         }
         break;
 
+      //Controlar la respuesta de la eliminación del detalle
       case 'ELIMINAR_DETALLE_RESPONSE':
         if (data.payload) {
           const { success, id } = data.payload;

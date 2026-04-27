@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Estado del WebSocket en el header
+    // Actualiza el badge de estado del WebSocket en el header
     WebSocketService.onStatusChange((status) => {
         const el = document.getElementById('ws-status');
         const labels = {
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         el.textContent = s.text;
         el.className = `ml-auto text-xs px-2 py-1 rounded-full ${s.cls}`;
 
-        // Al conectar, solicitar todos los datos al servidor
+        // Al conectar, solicitar todos los datos necesarios para los paneles
         if (status === 'connected') {
             Api.getMesas();
             Api.getMenu();
@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Mesas ---
+    // Renderiza la tabla con número, capacidad y estado de cada mesa
     Api.on('MESAS_RESPONSE', (mesas) => {
         const tbody = document.getElementById('tabla-mesas');
         if (!mesas.length) {
@@ -40,9 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     });
 
-    // --- Categorías y Productos (mismo MENU_RESPONSE) ---
+    // --- Categorías y Productos ---
+    // Ambos vienen del mismo MENU_RESPONSE y se renderizan a la vez
     Api.on('MENU_RESPONSE', (categorias) => {
-        // Categorías
+
+        // Tabla de categorías: id, nombre y número de productos
         const tbodyCat = document.getElementById('tabla-categorias');
         tbodyCat.innerHTML = categorias.map(cat => `
             <tr class="hover:bg-fondo transition-colors">
@@ -52,17 +55,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </tr>
         `).join('') || '<tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Sin categorías</td></tr>';
 
-        // Botones de filtro por categoría
-        const todosBtnId = 'filtro-cat-todos';
+        // Botones de filtro por categoría para la sub-pestaña de productos
         const filtrosEl = document.getElementById('filtros-categoria');
         filtrosEl.innerHTML = `
-            <button id="${todosBtnId}" onclick="filtrarProductos(null)" class="filtro-cat-btn active">Todos</button>
+            <button id="filtro-cat-todos" onclick="filtrarProductos(null)" class="filtro-cat-btn active">Todos</button>
             ${categorias.map(cat => `
                 <button onclick="filtrarProductos(${cat.id})" class="filtro-cat-btn" id="filtro-cat-${cat.id}">${cat.nombre}</button>
             `).join('')}
         `;
 
-        // Productos (todos, se filtran al pulsar los botones)
+        // Almacena todos los productos con su categoría para poder filtrarlos sin re-fetch
         const todosLosProductos = categorias.flatMap(cat =>
             cat.productos.map(p => ({ ...p, categoria: cat.nombre, categoriaId: cat.id }))
         );
@@ -71,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Ingredientes ---
+    // Muestra id, nombre, stock actual, stock reservado, unidad y tipo
     Api.on('INGREDIENTES_RESPONSE', (ingredientes) => {
         const tbody = document.getElementById('tabla-ingredientes');
         if (!ingredientes.length) {
@@ -90,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Tickets ---
+    // Muestra id, pedido, total, método de pago, fecha y referencia de Odoo
     Api.on('TICKETS_RESPONSE', (tickets) => {
         const tbody = document.getElementById('tabla-tickets');
         if (!tickets.length) {
@@ -109,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Usuarios ---
+    // Muestra id, username y rol (sin contraseña)
     Api.on('USUARIOS_RESPONSE', (usuarios) => {
         const tbody = document.getElementById('tabla-usuarios');
         if (!usuarios.length) {
@@ -125,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Pedidos ---
+    // Cada fila es clickable y expande una sub-tabla con los detalles del pedido
     Api.on('PEDIDOS_ADMIN_RESPONSE', (pedidos) => {
         const tbody = document.getElementById('tabla-pedidos');
         if (!pedidos.length) {
@@ -164,11 +170,27 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     });
 
-    // Reaccionar a broadcasts en tiempo real
-    Api.on('MESA_UPDATED',    () => Api.getMesas());
-    Api.on('STOCK_UPDATED',   (noDisponibles) => { _actualizarStockProductos(noDisponibles); Api.getIngredientes(); });
-    Api.on('PEDIDOS_UPDATED', () => { Api.getPedidosAdmin(); Api.getIngredientes(); });
-    Api.on('TICKET_CREADO',   () => Api.getTickets());
+    // El panel reacciona a los broadcasts del servidor sin que el usuario haga nada
+
+    // Mesa cambió de estado → refrescar tabla de mesas
+    Api.on('MESA_UPDATED', () => Api.getMesas());
+
+    // Stock cambió → actualizar badges de disponibilidad y refrescar ingredientes
+    Api.on('STOCK_UPDATED', (noDisponibles) => {
+        _actualizarStockProductos(noDisponibles);
+        Api.getIngredientes();
+    });
+
+    // Pedido creado o actualizado → refrescar pedidos e ingredientes
+    Api.on('PEDIDOS_UPDATED', () => {
+        Api.getPedidosAdmin();
+        Api.getIngredientes();
+    });
+
+    // Ticket creado al cerrar una mesa → refrescar tabla de tickets
+    Api.on('TICKET_CREADO', () => Api.getTickets());
+
+    // Detalle eliminado → quitar la fila del DOM y refrescar pedidos e ingredientes
     Api.on('DETALLE_DELETED', ({ id }) => {
         document.querySelectorAll(`[data-detalle-id="${id}"]`).forEach(tr => tr.remove());
         Api.getPedidosAdmin();
@@ -178,8 +200,27 @@ document.addEventListener('DOMContentLoaded', () => {
     WebSocketService.connect();
 });
 
+// --- Navegación entre paneles principales ---
+
+// Muestra el panel seleccionado y oculta el resto
+function mostrarPanel(nombre) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.panel-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + nombre).classList.remove('hidden');
+    document.getElementById('btn-' + nombre).classList.add('active');
+}
+
+// Muestra la sub-pestaña seleccionada dentro del panel de Productos
+function mostrarSubPanel(nombre) {
+    document.querySelectorAll('[id^="subpanel-"]').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('subpanel-' + nombre).classList.remove('hidden');
+    document.getElementById('subtab-' + nombre).classList.add('active');
+}
+
 // --- Helpers de renderizado ---
 
+// Genera un badge de color según el tipo (success, error, warning, primary)
 function _badge(texto, tipo) {
     const clases = {
         success: 'bg-green-100 text-green-700',
@@ -219,44 +260,6 @@ function _badgeMetodoPago(metodo) {
     return _badge(texto, tipo);
 }
 
-function _formatFecha(fecha) {
-    if (!fecha) return '—';
-    return new Date(fecha).toLocaleString('es-ES', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-    });
-}
-
-function filtrarProductos(categoriaId) {
-    const productos = window._productosAdmin ?? [];
-    const filtrados = categoriaId === null ? productos : productos.filter(p => p.categoriaId === categoriaId);
-
-    document.querySelectorAll('.filtro-cat-btn').forEach(b => b.classList.remove('active'));
-    const btnId = categoriaId === null ? 'filtro-cat-todos' : `filtro-cat-${categoriaId}`;
-    document.getElementById(btnId)?.classList.add('active');
-
-    _renderProductos(filtrados);
-}
-
-function _actualizarStockProductos(noDisponibles) {
-    if (!window._productosAdmin) return;
-    window._productosAdmin = window._productosAdmin.map(p => ({
-        ...p,
-        disponible: !noDisponibles.includes(p.id)
-    }));
-    // Re-renderiza manteniendo el filtro activo
-    const btnActivo = document.querySelector('.filtro-cat-btn.active');
-    const catId = btnActivo?.id === 'filtro-cat-todos'
-        ? null
-        : parseInt(btnActivo?.id?.replace('filtro-cat-', ''));
-    filtrarProductos(catId ?? null);
-}
-
-function toggleDetalles(pedidoId) {
-    const fila = document.getElementById(`detalles-${pedidoId}`);
-    fila?.classList.toggle('hidden');
-}
-
 function _badgeEstadoPedido(estado) {
     const mapa = {
         ABIERTA:   ['Abierta',   'success'],
@@ -278,6 +281,45 @@ function _badgeEstadoDetalle(estado) {
     return _badge(texto, tipo);
 }
 
+// Formatea una fecha ISO a formato local español
+function _formatFecha(fecha) {
+    if (!fecha) return '—';
+    return new Date(fecha).toLocaleString('es-ES', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
+
+// --- Lógica de productos ---
+
+// Filtra la tabla de productos por categoría y actualiza el botón activo
+function filtrarProductos(categoriaId) {
+    const productos = window._productosAdmin ?? [];
+    const filtrados = categoriaId === null ? productos : productos.filter(p => p.categoriaId === categoriaId);
+
+    document.querySelectorAll('.filtro-cat-btn').forEach(b => b.classList.remove('active'));
+    const btnId = categoriaId === null ? 'filtro-cat-todos' : `filtro-cat-${categoriaId}`;
+    document.getElementById(btnId)?.classList.add('active');
+
+    _renderProductos(filtrados);
+}
+
+// Actualiza la disponibilidad de los productos en memoria y re-renderiza
+// sin hacer una nueva petición al servidor
+function _actualizarStockProductos(noDisponibles) {
+    if (!window._productosAdmin) return;
+    window._productosAdmin = window._productosAdmin.map(p => ({
+        ...p,
+        disponible: !noDisponibles.includes(p.id)
+    }));
+    const btnActivo = document.querySelector('.filtro-cat-btn.active');
+    const catId = btnActivo?.id === 'filtro-cat-todos'
+        ? null
+        : parseInt(btnActivo?.id?.replace('filtro-cat-', ''));
+    filtrarProductos(catId ?? null);
+}
+
+// Renderiza la tabla de productos con los datos recibidos
 function _renderProductos(productos) {
     const tbody = document.getElementById('tabla-productos');
     tbody.innerHTML = productos.map(p => `
@@ -289,4 +331,12 @@ function _renderProductos(productos) {
             <td class="px-4 py-3">${p.disponible ? _badge('Disponible', 'success') : _badge('No disponible', 'error')}</td>
         </tr>
     `).join('') || '<tr><td colspan="5" class="px-4 py-8 text-center text-secundario text-sm">Sin productos</td></tr>';
+}
+
+// --- Lógica de pedidos ---
+
+// Expande o colapsa la sub-tabla de detalles de un pedido al hacer click en su fila
+function toggleDetalles(pedidoId) {
+    const fila = document.getElementById(`detalles-${pedidoId}`);
+    fila?.classList.toggle('hidden');
 }

@@ -46,40 +46,6 @@ public class GeneradorJSON {
         return gson.toJson(broadcastMsg);
     }
 
-    //Respuesta de actualización de catalogo
-    public static String generarMenuUpdated(ArrayList<CategoriaPlato> lista) {
-        Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
-
-        for (CategoriaPlato cp : lista) {
-            if (!categoriasMap.containsKey(cp.getCategoriaId())) {
-                JsonObject catJson = new JsonObject();
-                catJson.addProperty("id", cp.getCategoriaId());
-                catJson.addProperty("nombre", cp.getCategoriaNombre());
-                catJson.add("productos", new JsonArray());
-                categoriasMap.put(cp.getCategoriaId(), catJson);
-            }
-
-            JsonObject prodJson = new JsonObject();
-            prodJson.addProperty("id", cp.getProductoId());
-            prodJson.addProperty("nombre", cp.getProductoNombre());
-            prodJson.addProperty("precio", cp.getPrecio());
-            prodJson.addProperty("disponible", cp.isDisponible());
-
-            categoriasMap.get(cp.getCategoriaId()).getAsJsonArray("productos").add(prodJson);
-        }
-
-        JsonArray payload = new JsonArray();
-        for (JsonObject cat : categoriasMap.values()) {
-            payload.add(cat);
-        }
-
-        JsonObject respuesta = new JsonObject();
-        respuesta.addProperty("type", "MENU_UPDATED");
-        respuesta.add("payload", payload);
-
-        return gson.toJson(respuesta);
-    }
-
     //Genera actualización de pedidos
     public static String generarPedidosUpdated(Pedidos pedido) {
         JsonObject respuesta = new JsonObject();

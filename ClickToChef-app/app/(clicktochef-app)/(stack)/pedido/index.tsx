@@ -14,10 +14,11 @@ const PedidoIndex = () => {
   const { insertarDetalles } = useInsertarDetalles();
   //Detectar si recibe un id de pedido para saber si se esta añadiendo a un pedido o se esta creando uno nuevo
   const { pedidoId } = useLocalSearchParams();
+  //True si existe y tiene valor, si no existe es false
   const esAdicion = !!pedidoId;
 
   return (
-    <SafeAreaView className="flex-1 bg-superficie" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-superficie" edges={[]}>
 
       {/* Header fijo */}
       <View className="px-5 pt-4 pb-4 border-b border-borde">

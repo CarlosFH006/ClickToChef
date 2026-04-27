@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, FlatList } from 'react-native';
 import { Categoria } from '../../../../type/menu-inetrface';
-import MenuCard from './MenuCard';
+import MenuFList from './MenuFList';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
@@ -25,9 +25,7 @@ const CategoriaFList = ({ categorias }: Props) => {
             </Text>
           </View>
 
-          {categoria.productos.map((producto) => (
-            <MenuCard key={producto.id} producto={producto} />
-          ))}
+          <MenuFList productos={categoria.productos} />
         </View>
       )}
     />
