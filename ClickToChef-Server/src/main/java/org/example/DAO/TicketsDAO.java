@@ -54,6 +54,19 @@ public class TicketsDAO {
         return tickets;
     }
 
+    public static boolean actualizarReferenciaOdoo(int pedidoId, String referencia) {
+        String sql = "UPDATE tickets SET referencia_factura_odoo = ? WHERE pedido_id = ?";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setString(1, referencia);
+            statement.setInt(2, pedidoId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar referencia Odoo del ticket", e);
+        }
+    }
+
     private static String convertirMetodoPagoADB(MetodoPago metodoPago) {
         return metodoPago.name().toLowerCase();
     }

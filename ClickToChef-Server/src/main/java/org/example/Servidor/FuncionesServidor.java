@@ -3,6 +3,7 @@ package org.example.Servidor;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.example.DAO.*;
+import org.example.Odoo.FuncionesOdoo;
 import org.example.DTO.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -323,6 +324,10 @@ public class FuncionesServidor {
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
             WebSocketServidor.broadcastGlobal(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
             broadcastPedido(pedidoId);
+
+            String refOdoo = FuncionesOdoo.crearTicketVenta(pedidoId);
+            FuncionesOdoo.descontarStockOdoo(pedidoId);
+            TicketsDAO.actualizarReferenciaOdoo(pedidoId, refOdoo);
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cerrado, ticket registrado, mesa " + mesaId + " liberada");
             return GeneradorJSON.generarCerrarMesaResponse(ticketCreado && pedidoCerrado, pedidoId, totalImporte);

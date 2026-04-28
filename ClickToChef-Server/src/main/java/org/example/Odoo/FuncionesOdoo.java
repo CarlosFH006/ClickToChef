@@ -2,15 +2,21 @@ package org.example.Odoo;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.example.DAO.DetallesPedidoDAO;
 import org.example.DAO.IngredientesDAO;
 import org.example.DAO.ProductosDAO;
+import org.example.DAO.RecetasDAO;
+import org.example.DAO.TicketsDAO;
+import org.example.DTO.DetallesPedido;
 import org.example.DTO.Ingredientes;
 import org.example.DTO.Productos;
+import org.example.DTO.Recetas;
 import org.example.Servidor.ObtenerProperties;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FuncionesOdoo {
@@ -174,6 +180,112 @@ public class FuncionesOdoo {
             }
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar stock en Odoo para producto ID: " + odooProductId, e);
+        }
+    }
+
+    public static String crearTicketVenta(int pedidoId) {
+        System.out.println("[FuncionesOdoo] Creando ticket de venta en Odoo para pedido " + pedidoId);
+        try {
+            int uid = autenticar();
+            XmlRpcClient models = crearClienteModelos();
+
+            ArrayList<DetallesPedido> detalles = DetallesPedidoDAO.obtenerPorPedido(pedidoId);
+            if (detalles.isEmpty()) return "SIN_DETALLES";
+
+            ArrayList<Productos> productos = ProductosDAO.obtenerTodos();
+            Map<Integer, Productos> productosMap = new HashMap<>();
+            for (Productos p : productos) productosMap.put(p.getId(), p);
+
+            Map<String, Object> companyKwargs = new HashMap<>();
+            companyKwargs.put("fields", new Object[]{"partner_id"});
+            companyKwargs.put("limit", 1);
+            Object[] companies = (Object[]) models.execute("execute_kw", new Object[]{
+                    db(), uid, password(), "res.company", "search_read",
+                    new Object[]{new Object[]{}}, companyKwargs
+            });
+            int partnerId = (Integer) ((Object[]) ((Map<?, ?>) companies[0]).get("partner_id"))[0];
+
+            List<Object> invoiceLines = new ArrayList<>();
+            for (DetallesPedido detalle : detalles) {
+                Productos prod = productosMap.get(detalle.getProductoId());
+                if (prod == null) continue;
+                int templateId = buscarProductoOdooPorNombre(models, uid, prod.getNombre());
+                if (templateId == 0) continue;
+                int varianteId = obtenerProductoVarianteId(models, uid, templateId);
+                Map<String, Object> lineVals = new HashMap<>();
+                lineVals.put("product_id", varianteId);
+                lineVals.put("quantity", (double) detalle.getCantidad());
+                lineVals.put("price_unit", prod.getPrecio());
+                lineVals.put("name", prod.getNombre());
+                invoiceLines.add(new Object[]{0, 0, lineVals});
+            }
+            if (invoiceLines.isEmpty()) return "SIN_PRODUCTOS_ODOO";
+
+            Map<String, Object> invoiceVals = new HashMap<>();
+            invoiceVals.put("move_type", "out_invoice");
+            invoiceVals.put("partner_id", partnerId);
+            invoiceVals.put("invoice_line_ids", invoiceLines.toArray());
+
+            int invoiceId = (Integer) models.execute("execute_kw", new Object[]{
+                    db(), uid, password(), "account.move", "create",
+                    new Object[]{invoiceVals}, new HashMap<>()
+            });
+
+            models.execute("execute_kw", new Object[]{
+                    db(), uid, password(), "account.move", "action_post",
+                    new Object[]{new Object[]{invoiceId}}, new HashMap<>()
+            });
+
+            Map<String, Object> nameKwargs = new HashMap<>();
+            nameKwargs.put("fields", new Object[]{"name"});
+            Object[] invoiceData = (Object[]) models.execute("execute_kw", new Object[]{
+                    db(), uid, password(), "account.move", "read",
+                    new Object[]{new Object[]{invoiceId}}, nameKwargs
+            });
+            String reference = (String) ((Map<?, ?>) invoiceData[0]).get("name");
+
+            System.out.println("[FuncionesOdoo] Factura creada: " + reference + " para pedido " + pedidoId);
+            return reference;
+        } catch (Exception e) {
+            System.err.println("[FuncionesOdoo] Error al crear ticket de venta: " + e.getMessage());
+            return "ERROR_ODOO";
+        }
+    }
+
+    public static void descontarStockOdoo(int pedidoId) {
+        System.out.println("[FuncionesOdoo] Descontando stock en Odoo para pedido " + pedidoId);
+        try {
+            int uid = autenticar();
+            XmlRpcClient models = crearClienteModelos();
+            int locationId = obtenerLocationStock(models, uid);
+
+            ArrayList<DetallesPedido> detalles = DetallesPedidoDAO.obtenerPorPedido(pedidoId);
+            ArrayList<Recetas> todasRecetas = RecetasDAO.obtenerTodas();
+            ArrayList<Ingredientes> ingredientes = IngredientesDAO.obtenerTodos();
+
+            Map<Integer, Ingredientes> ingredientesMap = new HashMap<>();
+            for (Ingredientes ing : ingredientes) ingredientesMap.put(ing.getId(), ing);
+
+            Map<Integer, Double> consumo = new HashMap<>();
+            for (DetallesPedido detalle : detalles) {
+                for (Recetas receta : todasRecetas) {
+                    if (receta.getProductoId() == detalle.getProductoId()) {
+                        double cantidad = receta.getCantidadNecesaria() * detalle.getCantidad();
+                        consumo.merge(receta.getIngredienteId(), cantidad, Double::sum);
+                    }
+                }
+            }
+
+            for (Map.Entry<Integer, Double> entry : consumo.entrySet()) {
+                Ingredientes ing = ingredientesMap.get(entry.getKey());
+                if (ing == null || ing.getOdooProductId() == 0) continue;
+                int varianteId = obtenerProductoVarianteId(models, uid, ing.getOdooProductId());
+                double nuevoStock = Math.max(0, ing.getStockActual() - entry.getValue());
+                actualizarStockOdoo(models, uid, varianteId, nuevoStock, locationId);
+                System.out.println("[FuncionesOdoo] Stock actualizado: " + ing.getNombre() + " -> " + nuevoStock);
+            }
+        } catch (Exception e) {
+            System.err.println("[FuncionesOdoo] Error al descontar stock: " + e.getMessage());
         }
     }
 
