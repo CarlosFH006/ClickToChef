@@ -14,6 +14,7 @@ CREATE TABLE productos (
     descripcion TEXT,
     precio DECIMAL(10, 2) NOT NULL,
     categoria_id INT,
+    odoo_id INT,
     FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL
 );
 
@@ -88,15 +89,15 @@ INSERT INTO categorias (nombre) VALUES
 ('Entrantes'), ('Hamburguesas'), ('Bebidas'), ('Postres'), ('Vinos');
 
 -- PRODUCTOS
-INSERT INTO productos (id, nombre, descripcion, precio, categoria_id) VALUES 
-(1, 'Nachos Click', 'Nachos con queso y guacamole', 8.50, 1),
-(2, 'Alitas BBQ', '6 alitas con salsa barbacoa', 7.00, 1),
-(3, 'Burger Tech', 'Ternera 200g y cheddar', 12.50, 2),
-(4, 'Veggie Byte', 'Hamburguesa de garbanzos', 11.00, 2),
-(5, 'Coca Cola 33cl', 'Refresco original', 2.50, 3),
-(6, 'Cerveza Artesana', 'IPA local 500ml', 4.50, 3),
-(7, 'Tarta de Queso', 'Casera con arándanos', 5.50, 4),
-(8, 'Vino Tinto Rioja', 'Copa crianza', 3.80, 5);
+INSERT INTO productos (id, nombre, descripcion, precio, categoria_id, odoo_id) VALUES
+(1, 'Nachos Click', 'Nachos con queso y guacamole', 8.50, 1, 401),
+(2, 'Alitas BBQ', '6 alitas con salsa barbacoa', 7.00, 1, 402),
+(3, 'Burger Tech', 'Ternera 200g y cheddar', 12.50, 2, 403),
+(4, 'Veggie Byte', 'Hamburguesa de garbanzos', 11.00, 2, 404),
+(5, 'Coca Cola 33cl', 'Refresco original', 2.50, 3, 405),
+(6, 'Cerveza Artesana', 'IPA local 500ml', 4.50, 3, 406),
+(7, 'Tarta de Queso', 'Casera con arándanos', 5.50, 4, 407),
+(8, 'Vino Tinto Rioja', 'Copa crianza', 3.80, 5, 408);
 
 -- MESAS
 INSERT INTO mesas (numero, capacidad, estado) VALUES 

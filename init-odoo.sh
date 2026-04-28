@@ -20,16 +20,28 @@ except Exception as e:
 
 if [ "$DB_EXISTS" != "yes" ]; then
     echo "[Init] Creando base de datos e instalando modulos..."
-    odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale --without-demo=all --stop-after-init
+    odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale,l10n_es --without-demo=all --stop-after-init
 
-    echo "[Init] Configurando usuario admin..."
+    echo "[Init] Configurando usuario admin y localizacion española..."
     odoo shell -c /etc/odoo/odoo.conf -d "$DB_NAME" --no-http << EOF
+# Activar idioma español
+env['res.lang']._activate_lang('es_ES')
+
+# Configurar compañía: país España, moneda Euro y zona horaria
+company = env.company
+company.country_id = env.ref('base.es')
+company.currency_id = env.ref('base.EUR')
+company.resource_calendar_id.tz = 'Europe/Madrid'
+
+# Configurar usuario admin
 u = env['res.users'].search([('login', '=', 'admin')], limit=1)
 if u:
-    u.write({'login': '$ADMIN_EMAIL', 'email': '$ADMIN_EMAIL'})
+    u.write({'login': '$ADMIN_EMAIL', 'email': '$ADMIN_EMAIL', 'lang': 'es_ES', 'tz': 'Europe/Madrid'})
     u._change_password('$ADMIN_PASSWORD')
-    env.cr.commit()
     print('[Init] Usuario configurado: $ADMIN_EMAIL')
+
+env.cr.commit()
+print('[Init] Localizacion española configurada: idioma es_ES, pais España, moneda EUR')
 EOF
 else
     echo "[Init] La base de datos ya existe, omitiendo inicializacion."

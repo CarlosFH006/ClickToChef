@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.DAO.ConexionDB;
+import org.example.Odoo.FuncionesOdoo;
 import org.example.Servidor.ObtenerProperties;
 import org.example.Servidor.Servidor;
 import org.example.Servidor.WebSocketServidor;
@@ -11,7 +12,7 @@ public class Main {
         TimeZone.setDefault(TimeZone.getTimeZone("Europe/Madrid"));
         int puerto = Integer.parseInt(ObtenerProperties.obtenerParametro("webserver.port"));
 
-        //CargaInicial.cargaInicialDatos();
+        FuncionesOdoo.sincronizarOdoo();
 
         Thread servidorThread = new Thread(() -> Servidor.server());
         servidorThread.start();
