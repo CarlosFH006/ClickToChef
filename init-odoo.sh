@@ -20,7 +20,7 @@ except Exception as e:
 
 if [ "$DB_EXISTS" != "yes" ]; then
     echo "[Init] Creando base de datos e instalando modulos..."
-    odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale,l10n_es --without-demo=all --stop-after-init
+    odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale,account,l10n_es --without-demo=all --stop-after-init
 
     echo "[Init] Configurando usuario admin y localizacion española..."
     odoo shell -c /etc/odoo/odoo.conf -d "$DB_NAME" --no-http << EOF

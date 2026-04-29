@@ -162,5 +162,5 @@ INSERT INTO detalles_pedido
 (2, 6, 3, 'pendiente');
 
 -- TICKET (sin cambios necesarios)
-INSERT INTO tickets (pedido_id, total_importe, referencia_factura_odoo, metodo_pago) VALUES 
-(1, 30.00, 'INV-2026-001', 'tarjeta');
+--INSERT INTO tickets (pedido_id, total_importe, referencia_factura_odoo, metodo_pago) VALUES 
+--(1, 30.00, 'INV-2026-001', 'tarjeta');
