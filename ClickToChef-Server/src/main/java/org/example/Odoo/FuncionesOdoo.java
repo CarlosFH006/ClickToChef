@@ -280,9 +280,8 @@ public class FuncionesOdoo {
                 Ingredientes ing = ingredientesMap.get(entry.getKey());
                 if (ing == null || ing.getOdooProductId() == 0) continue;
                 int varianteId = obtenerProductoVarianteId(models, uid, ing.getOdooProductId());
-                double nuevoStock = Math.max(0, ing.getStockActual() - entry.getValue());
-                actualizarStockOdoo(models, uid, varianteId, nuevoStock, locationId);
-                System.out.println("[FuncionesOdoo] Stock actualizado: " + ing.getNombre() + " -> " + nuevoStock);
+                actualizarStockOdoo(models, uid, varianteId, ing.getStockActual(), locationId);
+                System.out.println("[FuncionesOdoo] Stock actualizado: " + ing.getNombre() + " -> " + ing.getStockActual());
             }
         } catch (Exception e) {
             System.err.println("[FuncionesOdoo] Error al descontar stock: " + e.getMessage());

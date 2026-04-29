@@ -320,6 +320,11 @@ public class FuncionesServidor {
 
             boolean pedidoCerrado = PedidosDAO.cerrarPedido(pedidoId);
 
+            for (DetallesPedido d : pedido.getDetalles()) {
+                ProductosDAO.finalizarReserva(d.getProductoId(), d.getCantidad());
+            }
+            broadcastNoDisponibles();
+
             MesasDAO.actualizarEstadoMesa(mesaId, EstadoMesa.LIBRE);
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
             WebSocketServidor.broadcastGlobal(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
@@ -361,7 +366,7 @@ public class FuncionesServidor {
 
             // Restaurar stock de cada detalle del pedido
             for (DetallesPedido d : pedido.getDetalles()) {
-                ProductosDAO.restaurarStock(d.getProductoId(), d.getCantidad());
+                ProductosDAO.liberarReserva(d.getProductoId(), d.getCantidad());
             }
 
             boolean cancelado = PedidosDAO.cancelarPedido(pedidoId);
@@ -402,7 +407,7 @@ public class FuncionesServidor {
                 return GeneradorJSON.generarEliminarDetalleResponse(false, id);
             }
 
-            ProductosDAO.restaurarStock(detalle.getProductoId(), detalle.getCantidad());
+            ProductosDAO.liberarReserva(detalle.getProductoId(), detalle.getCantidad());
             boolean eliminado = DetallesPedidoDAO.eliminarDetalle(id);
 
             if (eliminado) {

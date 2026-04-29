@@ -115,20 +115,20 @@ INSERT INTO usuarios (username, password_hash, nombre_completo, rol) VALUES
 ('carlos_chef', 'cocina1', 'Carlos Martínez', 'cocinero');
 
 -- INGREDIENTES (ACTUALIZADO)
-INSERT INTO ingredientes 
-(id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id) 
-VALUES 
-(1, 'Carne Ternera', 10.50, 0, 'kg', 'materia_prima', 101),
-(2, 'Queso Cheddar', 5.00, 0, 'kg', 'materia_prima', 102),
-(3, 'Pan Burger', 50.00, 0, 'unidades', 'materia_prima', 104),
-(4, 'Patatas', 30.00, 0, 'kg', 'materia_prima', 105),
-(5, 'Lata Coca Cola 33cl', 100.00, 0, 'unidades', 'producto_terminado', 201),
-(6, 'Barril Cerveza IPA', 50.00, 0, 'litros', 'materia_prima', 202),
-(7, 'Botella Vino Rioja', 20.00, 0, 'unidades', 'materia_prima', 203),
-(8, 'Nachos Bolsa', 20.00, 0, 'unidades', 'producto_terminado', 301),
-(9, 'Alitas Congeladas', 100.00, 0, 'unidades', 'materia_prima', 302),
-(10, 'Tarta de Queso Entera', 5.00, 0, 'unidades', 'materia_prima', 303),
-(11, 'Hamburguesa Vegana', 15.00, 0, 'unidades', 'materia_prima', 304);
+INSERT INTO ingredientes
+(id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id)
+VALUES
+(1,  'Carne Ternera',        10.50, 0.40, 'kg',       'materia_prima',     101),
+(2,  'Queso Cheddar',         5.00, 0.10, 'kg',       'materia_prima',     102),
+(3,  'Pan Burger',           50.00, 2.00, 'unidades', 'materia_prima',     104),
+(4,  'Patatas',              30.00, 0.00, 'kg',       'materia_prima',     105),
+(5,  'Lata Coca Cola 33cl', 100.00, 2.00, 'unidades', 'producto_terminado',201),
+(6,  'Barril Cerveza IPA',   50.00, 1.50, 'litros',   'materia_prima',     202),
+(7,  'Botella Vino Rioja',   20.00, 0.00, 'unidades', 'materia_prima',     203),
+(8,  'Nachos Bolsa',         20.00, 1.00, 'unidades', 'producto_terminado',301),
+(9,  'Alitas Congeladas',   100.00, 0.00, 'unidades', 'materia_prima',     302),
+(10, 'Tarta de Queso Entera', 5.00, 0.00, 'unidades', 'materia_prima',     303),
+(11, 'Hamburguesa Vegana',   15.00, 0.00, 'unidades', 'materia_prima',     304);
 
 -- RECETAS
 INSERT INTO recetas (producto_id, ingrediente_id, cantidad_necesaria) VALUES 
