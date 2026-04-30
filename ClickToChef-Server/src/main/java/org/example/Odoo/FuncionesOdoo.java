@@ -6,7 +6,6 @@ import org.example.DAO.DetallesPedidoDAO;
 import org.example.DAO.IngredientesDAO;
 import org.example.DAO.ProductosDAO;
 import org.example.DAO.RecetasDAO;
-import org.example.DAO.TicketsDAO;
 import org.example.DTO.DetallesPedido;
 import org.example.DTO.Ingredientes;
 import org.example.DTO.Productos;
@@ -19,13 +18,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Clase que centraliza toda la comunicación con Odoo vía XML-RPC.
+ *
+ * Odoo expone dos endpoints XML-RPC:
+ *   - /xmlrpc/2/common  → autenticación (no requiere uid)
+ *   - /xmlrpc/2/object  → operaciones sobre modelos (requiere uid obtenido al autenticar)
+ *
+ * El patrón general de una llamada es:
+ *   models.execute("execute_kw", { db, uid, password, modelo, método, args, kwargs })
+ */
 public class FuncionesOdoo {
 
+    // Lee los parámetros de conexión desde config.properties
     private static String urlOdoo() { return ObtenerProperties.obtenerParametro("odoo.url"); }
     private static String db()      { return ObtenerProperties.obtenerParametro("odoo.db"); }
     private static String username(){ return ObtenerProperties.obtenerParametro("odoo.user"); }
     private static String password(){ return ObtenerProperties.obtenerParametro("odoo.password"); }
 
+    /**
+     * Autentica contra Odoo y devuelve el UID del usuario.
+     * El UID es necesario para todas las llamadas posteriores a /xmlrpc/2/object.
+     * Si las credenciales son incorrectas o Odoo no está disponible lanza RuntimeException.
+     */
     private static int autenticar() {
         try {
             XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
@@ -41,6 +56,10 @@ public class FuncionesOdoo {
         }
     }
 
+    /**
+     * Crea y devuelve el cliente XML-RPC apuntando al endpoint de modelos (/xmlrpc/2/object).
+     * Este cliente se reutiliza para todas las operaciones CRUD sobre modelos de Odoo.
+     */
     private static XmlRpcClient crearClienteModelos() {
         try {
             XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
@@ -54,6 +73,12 @@ public class FuncionesOdoo {
         }
     }
 
+    /**
+     * Obtiene el ID de la ubicación de stock principal del almacén (lot_stock_id).
+     * En Odoo, el stock se gestiona por ubicación. "lot_stock_id" es la ubicación
+     * interna donde se almacena el inventario real del primer almacén configurado.
+     * Este ID se usa en todas las operaciones sobre stock.quant.
+     */
     private static int obtenerLocationStock(XmlRpcClient models, int uid) {
         try {
             Map<String, Object> kwargs = new HashMap<>();
@@ -65,6 +90,7 @@ public class FuncionesOdoo {
                     kwargs
             });
             if (resultado.length == 0) throw new RuntimeException("No se encontró ningún almacén en Odoo");
+            // lot_stock_id es un Many2one → Odoo lo devuelve como [id, nombre]
             Object[] lotStock = (Object[]) ((Map<?, ?>) resultado[0]).get("lot_stock_id");
             return (Integer) lotStock[0];
         } catch (Exception e) {
@@ -72,6 +98,11 @@ public class FuncionesOdoo {
         }
     }
 
+    /**
+     * Busca un product.template en Odoo por nombre exacto.
+     * Devuelve el ID del template si existe, o 0 si no se encuentra.
+     * Se usa para evitar duplicados antes de crear un producto nuevo.
+     */
     private static int buscarProductoOdooPorNombre(XmlRpcClient models, int uid, String nombre) {
         try {
             Map<String, Object> kwargs = new HashMap<>();
@@ -89,6 +120,11 @@ public class FuncionesOdoo {
         }
     }
 
+    /**
+     * Comprueba si un product.template con ese ID sigue existiendo en Odoo.
+     * Se usa antes de reutilizar un odoo_id guardado en la BD local,
+     * por si el producto fue eliminado manualmente en Odoo.
+     */
     private static boolean existeProductoEnOdoo(XmlRpcClient models, int uid, int odooId) {
         try {
             Map<String, Object> kwargs = new HashMap<>();
@@ -105,8 +141,14 @@ public class FuncionesOdoo {
         }
     }
 
-    // Crea en product.template y devuelve su ID de template.
-    // Para ingredientes usa is_storable=true para habilitar stock.quant.
+    /**
+     * Crea un nuevo product.template en Odoo y devuelve su ID.
+     *
+     * tipo "consu" + is_storable=true → producto almacenable (tiene stock.quant, aparece en inventario)
+     * tipo "service"                  → servicio sin stock (usado para los platos del menú)
+     *
+     * precio > 0 establece el precio de venta (list_price).
+     */
     private static int crearProductoOdoo(XmlRpcClient models, int uid, String nombre, String tipo, double precio) {
         try {
             Map<String, Object> vals = new HashMap<>();
@@ -125,7 +167,14 @@ public class FuncionesOdoo {
         }
     }
 
-    // Obtiene el product.product ID (variante) a partir del product.template ID.
+    /**
+     * Obtiene el ID de la variante (product.product) a partir del ID del template (product.template).
+     *
+     * En Odoo, product.template es la ficha maestra del producto.
+     * product.product es la variante concreta (talla, color, etc.).
+     * Para productos sin variantes hay exactamente una variante por template.
+     * Las facturas y los movimientos de stock usan product.product, no product.template.
+     */
     private static int obtenerProductoVarianteId(XmlRpcClient models, int uid, int templateId) {
         try {
             Map<String, Object> kwargs = new HashMap<>();
@@ -135,6 +184,7 @@ public class FuncionesOdoo {
                     new Object[]{new Object[]{templateId}},
                     kwargs
             });
+            // product_variant_ids es una lista de IDs de variantes; tomamos la primera
             Object[] variantIds = (Object[]) ((Map<?, ?>) resultado[0]).get("product_variant_ids");
             return (Integer) variantIds[0];
         } catch (Exception e) {
@@ -142,6 +192,14 @@ public class FuncionesOdoo {
         }
     }
 
+    /**
+     * Actualiza (o crea) el registro de stock en Odoo para un producto en una ubicación concreta.
+     *
+     * En Odoo el stock físico se gestiona a través de stock.quant: un registro por
+     * combinación (product.product, ubicación). Si ya existe el quant solo se escribe
+     * la nueva cantidad; si no existe se crea uno nuevo.
+     * Solo actualiza si la diferencia con el valor actual supera 0.001 (evita escrituras innecesarias).
+     */
     private static void actualizarStockOdoo(XmlRpcClient models, int uid, int odooProductId, double stock, int locationId) {
         try {
             Map<String, Object> kwargs = new HashMap<>();
@@ -183,6 +241,51 @@ public class FuncionesOdoo {
         }
     }
 
+    /**
+     * Busca el partner "Cliente Final" en Odoo. Si no existe lo crea.
+     * Se reutiliza en todas las facturas como cliente genérico de mostrador.
+     */
+    private static int obtenerPartnerClienteFinal(XmlRpcClient models, int uid) {
+        try {
+            Map<String, Object> kwargs = new HashMap<>();
+            kwargs.put("fields", new Object[]{"id"});
+            kwargs.put("limit", 1);
+            Object[] resultado = (Object[]) models.execute("execute_kw", new Object[]{
+                    db(), uid, password(), "res.partner", "search_read",
+                    new Object[]{new Object[]{new Object[]{"name", "=", "Cliente Final"}}},
+                    kwargs
+            });
+            if (resultado.length > 0) {
+                return (Integer) ((Map<?, ?>) resultado[0]).get("id");
+            }
+            Map<String, Object> vals = new HashMap<>();
+            vals.put("name", "Cliente Final");
+            vals.put("customer_rank", 1);
+            return (Integer) models.execute("execute_kw", new Object[]{
+                    db(), uid, password(), "res.partner", "create",
+                    new Object[]{vals}, new HashMap<>()
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("Error al obtener/crear partner Cliente Final", e);
+        }
+    }
+
+    /**
+     * Crea una factura de venta (account.move tipo out_invoice) en Odoo con los productos del pedido.
+     *
+     * Flujo:
+     *  1. Obtiene los detalles del pedido desde la BD local.
+     *  2. Para cada producto busca su variante en Odoo por nombre.
+     *  3. Construye las líneas de factura con cantidad y precio.
+     *  4. Crea el account.move y lo confirma con action_post().
+     *  5. Devuelve el número de factura (ej: INV/2026/00001) para guardarlo en el ticket.
+     *
+     * Los comandos ORM [(0, 0, vals)] le indican a Odoo que cree registros nuevos
+     * enlazados al one2many invoice_line_ids.
+     *
+     * Si Odoo no está disponible o falla devuelve "ERROR_ODOO" sin lanzar excepción,
+     * para no bloquear el cierre de mesa.
+     */
     public static String crearTicketVenta(int pedidoId) {
         System.out.println("[FuncionesOdoo] Creando ticket de venta en Odoo para pedido " + pedidoId);
         try {
@@ -196,15 +299,9 @@ public class FuncionesOdoo {
             Map<Integer, Productos> productosMap = new HashMap<>();
             for (Productos p : productos) productosMap.put(p.getId(), p);
 
-            Map<String, Object> companyKwargs = new HashMap<>();
-            companyKwargs.put("fields", new Object[]{"partner_id"});
-            companyKwargs.put("limit", 1);
-            Object[] companies = (Object[]) models.execute("execute_kw", new Object[]{
-                    db(), uid, password(), "res.company", "search_read",
-                    new Object[]{new Object[]{}}, companyKwargs
-            });
-            int partnerId = (Integer) ((Object[]) ((Map<?, ?>) companies[0]).get("partner_id"))[0];
+            int partnerId = obtenerPartnerClienteFinal(models, uid);
 
+            // Construye las líneas de factura para cada detalle del pedido
             List<Object> invoiceLines = new ArrayList<>();
             for (DetallesPedido detalle : detalles) {
                 Productos prod = productosMap.get(detalle.getProductoId());
@@ -217,10 +314,12 @@ public class FuncionesOdoo {
                 lineVals.put("quantity", (double) detalle.getCantidad());
                 lineVals.put("price_unit", prod.getPrecio());
                 lineVals.put("name", prod.getNombre());
+                // Comando ORM (0, 0, vals) → crear nueva línea enlazada al invoice
                 invoiceLines.add(new Object[]{0, 0, lineVals});
             }
             if (invoiceLines.isEmpty()) return "SIN_PRODUCTOS_ODOO";
 
+            // Crea el account.move (factura borrador)
             Map<String, Object> invoiceVals = new HashMap<>();
             invoiceVals.put("move_type", "out_invoice");
             invoiceVals.put("partner_id", partnerId);
@@ -231,11 +330,13 @@ public class FuncionesOdoo {
                     new Object[]{invoiceVals}, new HashMap<>()
             });
 
+            // Confirma la factura (pasa de borrador a publicada)
             models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "account.move", "action_post",
                     new Object[]{new Object[]{invoiceId}}, new HashMap<>()
             });
 
+            // Lee el número de factura generado por Odoo
             Map<String, Object> nameKwargs = new HashMap<>();
             nameKwargs.put("fields", new Object[]{"name"});
             Object[] invoiceData = (Object[]) models.execute("execute_kw", new Object[]{
@@ -252,6 +353,19 @@ public class FuncionesOdoo {
         }
     }
 
+    /**
+     * Actualiza el stock de ingredientes en Odoo después de cerrar una mesa.
+     *
+     * Flujo:
+     *  1. Obtiene los detalles del pedido y todas las recetas.
+     *  2. Calcula el consumo total de cada ingrediente:
+     *       consumo[ingrediente] += cantidad_necesaria_por_unidad × cantidad_pedida
+     *  3. Para cada ingrediente consumido, envía su stock_actual actualizado a Odoo.
+     *
+     * Se llama DESPUÉS de que finalizarReserva ya ha decrementado stock_actual en la BD local,
+     * por lo que ing.getStockActual() ya refleja el valor correcto post-venta.
+     * No se resta stock_reservado porque ese campo ya fue ajustado por finalizarReserva.
+     */
     public static void descontarStockOdoo(int pedidoId) {
         System.out.println("[FuncionesOdoo] Descontando stock en Odoo para pedido " + pedidoId);
         try {
@@ -266,6 +380,7 @@ public class FuncionesOdoo {
             Map<Integer, Ingredientes> ingredientesMap = new HashMap<>();
             for (Ingredientes ing : ingredientes) ingredientesMap.put(ing.getId(), ing);
 
+            // Acumula el consumo total por ingrediente recorriendo detalles × recetas
             Map<Integer, Double> consumo = new HashMap<>();
             for (DetallesPedido detalle : detalles) {
                 for (Recetas receta : todasRecetas) {
@@ -276,6 +391,7 @@ public class FuncionesOdoo {
                 }
             }
 
+            // Sincroniza el stock de cada ingrediente afectado con su valor actual en la BD
             for (Map.Entry<Integer, Double> entry : consumo.entrySet()) {
                 Ingredientes ing = ingredientesMap.get(entry.getKey());
                 if (ing == null || ing.getOdooProductId() == 0) continue;
@@ -288,6 +404,18 @@ public class FuncionesOdoo {
         }
     }
 
+    /**
+     * Sincronización inicial del catálogo completo con Odoo.
+     * Se ejecuta al arrancar el servidor para asegurar que Odoo tiene todos los productos.
+     *
+     * Para ingredientes:
+     *   - Si no tiene odoo_product_id o el ID no existe en Odoo → busca por nombre o lo crea.
+     *   - Actualiza el stock disponible (stock_actual - stock_reservado).
+     *
+     * Para productos del menú:
+     *   - Los crea como "service" (sin stock) con su precio de venta.
+     *   - Solo sincroniza el catálogo, no el stock (los platos no tienen inventario propio).
+     */
     public static void sincronizarOdoo() {
         System.out.println("[FuncionesOdoo] Iniciando sincronización con Odoo...");
         try {
@@ -297,7 +425,7 @@ public class FuncionesOdoo {
             XmlRpcClient models = crearClienteModelos();
             int locationId = obtenerLocationStock(models, uid);
 
-            // Sincronizar Ingredientes
+            // Sincronizar ingredientes (productos almacenables con stock)
             ArrayList<Ingredientes> ingredientes = IngredientesDAO.obtenerTodos();
             System.out.println("[FuncionesOdoo] Sincronizando " + ingredientes.size() + " ingredientes...");
             for (Ingredientes ing : ingredientes) {
@@ -313,11 +441,10 @@ public class FuncionesOdoo {
                     IngredientesDAO.actualizarOdooProductId(ing.getId(), templateId);
                 }
                 int varianteId = obtenerProductoVarianteId(models, uid, templateId);
-                double stockDisponible = Math.max(0, ing.getStockActual() - ing.getStockReservado());
-                actualizarStockOdoo(models, uid, varianteId, stockDisponible, locationId);
+                actualizarStockOdoo(models, uid, varianteId, ing.getStockActual(), locationId);
             }
 
-            // Sincronizar Productos del menú (tipo servicio, sin stock)
+            // Sincronizar productos del menú (servicios sin stock)
             ArrayList<Productos> productos = ProductosDAO.obtenerTodos();
             System.out.println("[FuncionesOdoo] Sincronizando " + productos.size() + " productos...");
             for (Productos prod : productos) {

@@ -27,11 +27,17 @@ if [ "$DB_EXISTS" != "yes" ]; then
 # Activar idioma español
 env['res.lang']._activate_lang('es_ES')
 
-# Configurar compañía: país España, moneda Euro y zona horaria
+# Configurar compañía: nombre, país España, moneda Euro y zona horaria
+import base64, os
 company = env.company
+company.name = 'ClickToChef'
 company.country_id = env.ref('base.es')
 company.currency_id = env.ref('base.EUR')
 company.resource_calendar_id.tz = 'Europe/Madrid'
+if os.path.exists('/logo.png'):
+    with open('/logo.png', 'rb') as f:
+        company.logo = base64.b64encode(f.read()).decode()
+    print('[Init] Logo de empresa configurado')
 
 # Configurar usuario admin
 u = env['res.users'].search([('login', '=', 'admin')], limit=1)
