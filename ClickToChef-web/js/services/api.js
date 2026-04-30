@@ -101,6 +101,10 @@ const Api = (() => {
                 _dispatch('TICKETS_RESPONSE', msg.payload ?? []);
                 break;
 
+            case 'CREAR_USUARIO_RESPONSE':
+                _dispatch('CREAR_USUARIO_RESPONSE', msg.payload);
+                break;
+
             case 'SERVER_ERROR':
                 console.error('[Api] Error del servidor:', msg.payload);
                 _dispatch('SERVER_ERROR', msg.payload);
@@ -186,6 +190,11 @@ const Api = (() => {
         sendMessage('GET_PEDIDOS_ADMIN', null);
     }
 
+    //Envio de mensaje para crear un nuevo usuario
+    function crearUsuario(username, password, nombreCompleto, rol) {
+        sendMessage('CREAR_USUARIO', { username, password, nombreCompleto, rol });
+    }
+
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario };
 })();

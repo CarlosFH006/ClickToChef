@@ -156,6 +156,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ticket creado al cerrar una mesa → refrescar tabla de tickets
     Api.on('TICKET_CREADO', () => Api.getTickets());
 
+    Api.on('CREAR_USUARIO_RESPONSE', ({ success }) => {
+        const msg = document.getElementById('crear-usuario-msg');
+        if (success) {
+            document.getElementById('nuevo-username').value = '';
+            document.getElementById('nuevo-password').value = '';
+            document.getElementById('nuevo-nombre').value = '';
+            document.getElementById('nuevo-rol').value = 'CAMARERO';
+            Api.getUsuarios();
+            setTimeout(() => cerrarModalUsuario(), 800);
+        } else {
+            msg.textContent = 'Error: el usuario ya existe o los datos son inválidos';
+            msg.className = 'text-sm text-error';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        }
+    });
+
     // Detalle eliminado → quitar la fila del DOM y refrescar pedidos e ingredientes
     Api.on('DETALLE_DELETED', ({ id }) => {
         document.querySelectorAll(`[data-detalle-id="${id}"]`).forEach(tr => tr.remove());
@@ -286,6 +303,35 @@ function _actualizarStockProductos(noDisponibles) {
 }
 
 // Genera los botones de filtro por estado de pedido
+function abrirModalUsuario() {
+    const modal = document.getElementById('modal-usuario');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalUsuario() {
+    const modal = document.getElementById('modal-usuario');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.getElementById('crear-usuario-msg').classList.add('hidden');
+}
+
+function submitCrearUsuario() {
+    const username     = document.getElementById('nuevo-username').value.trim();
+    const password     = document.getElementById('nuevo-password').value.trim();
+    const nombreCompleto = document.getElementById('nuevo-nombre').value.trim();
+    const rol          = document.getElementById('nuevo-rol').value;
+    if (!username || !password || !nombreCompleto) {
+        const msg = document.getElementById('crear-usuario-msg');
+        msg.textContent = 'Rellena todos los campos';
+        msg.className = 'ml-3 text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+    Api.crearUsuario(username, password, nombreCompleto, rol);
+}
+
 function _renderFiltrosEstado(pedidos) {
     const filtrosEl = document.getElementById('filtros-estado-pedido');
     if (!filtrosEl) return;

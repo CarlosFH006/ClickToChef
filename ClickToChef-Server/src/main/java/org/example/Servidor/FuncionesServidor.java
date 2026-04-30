@@ -423,6 +423,29 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarCrearUsuario(JsonObject payload) {
+        if (payload == null || !payload.has("username") || !payload.has("password")
+                || !payload.has("nombreCompleto") || !payload.has("rol")) {
+            return GeneradorJSON.generarError("Payload de CREAR_USUARIO incompleto");
+        }
+        try {
+            RolUsuario rol = RolUsuario.valueOf(payload.get("rol").getAsString().toUpperCase());
+            Usuarios usuario = new Usuarios(
+                    0,
+                    payload.get("username").getAsString(),
+                    payload.get("password").getAsString(),
+                    payload.get("nombreCompleto").getAsString(),
+                    rol
+            );
+            boolean success = UsuariosDAO.insertarUsuario(usuario);
+            System.out.println("[FuncionesServidor] Usuario '" + usuario.getUsername() + "' " + (success ? "creado" : "no creado"));
+            return GeneradorJSON.generarCrearUsuarioResponse(success);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear usuario: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al crear el usuario: " + e.getMessage());
+        }
+    }
+
     //Funciones de broadcast
     private static void broadcastNoDisponibles() {
         ArrayList<Integer> noDisponibles = ProductosDAO.obtenerNoDisponibles();

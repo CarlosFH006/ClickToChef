@@ -285,6 +285,16 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    //Genera la respuesta de crear usuario
+    public static String generarCrearUsuarioResponse(boolean success) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CREAR_USUARIO_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
     //Genera el error del servidor
     public static String generarError(String mensaje) {
         JsonObject error = new JsonObject();
