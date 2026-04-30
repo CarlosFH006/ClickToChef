@@ -194,6 +194,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Detalle actualizado → cambia el badge de estado en la fila ya renderizada
+    // y actualiza el estado en el array en memoria para mantener coherencia
+    Api.on('DETALLE_UPDATED', ({ id, estado }) => {
+        // Actualizar en memoria
+        if (window._pedidosAdmin) {
+            window._pedidosAdmin = window._pedidosAdmin.map(p => ({
+                ...p,
+                detalles: (p.detalles ?? []).map(d => d.id === id ? { ...d, estado } : d)
+            }));
+        }
+        // Actualizar solo la celda de estado en el DOM sin re-renderizar la tabla
+        const fila = document.querySelector(`[data-detalle-id="${id}"]`);
+        if (fila) {
+            const celdaEstado = fila.children[2];
+            if (celdaEstado) celdaEstado.innerHTML = _badgeEstadoDetalle(estado);
+        }
+    });
+
     // Detalle eliminado → quitar la fila del DOM y refrescar pedidos e ingredientes
     Api.on('DETALLE_DELETED', ({ id }) => {
         document.querySelectorAll(`[data-detalle-id="${id}"]`).forEach(tr => tr.remove());
