@@ -7,20 +7,31 @@ public class Productos {
     private String descripcion;
     private double precio;
     private int categoriaId;
+    private int odooId;
 
-    public Productos(int id, String nombre, String descripcion, double precio, int categoriaId) {
+    public Productos(int id, String nombre, String descripcion, double precio, int categoriaId, int odooId) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
         this.categoriaId = categoriaId;
+        this.odooId = odooId;
     }
 
-    public Productos(String nombre, String descripcion, double precio, int categoriaId) {
+    public Productos(int id, String nombre, String descripcion, double precio, int categoriaId) {
+        this(id, nombre, descripcion, precio, categoriaId, 0);
+    }
+
+    public Productos(String nombre, String descripcion, double precio, int categoriaId, int odooId) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
         this.categoriaId = categoriaId;
+        this.odooId = odooId;
+    }
+
+    public Productos(String nombre, String descripcion, double precio, int categoriaId) {
+        this(nombre, descripcion, precio, categoriaId, 0);
     }
 
     public int getId() {
@@ -63,6 +74,14 @@ public class Productos {
         this.categoriaId = categoriaId;
     }
 
+    public int getOdooId() {
+        return odooId;
+    }
+
+    public void setOdooId(int odooId) {
+        this.odooId = odooId;
+    }
+
     @Override
     public String toString() {
         return "Productos{" +
@@ -71,6 +90,7 @@ public class Productos {
                 ", descripcion='" + descripcion + '\'' +
                 ", precio=" + precio +
                 ", categoriaId=" + categoriaId +
+                ", odooId=" + odooId +
                 '}';
     }
 }

@@ -14,6 +14,7 @@ CREATE TABLE productos (
     descripcion TEXT,
     precio DECIMAL(10, 2) NOT NULL,
     categoria_id INT,
+    odoo_id INT,
     FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL
 );
 
@@ -88,15 +89,15 @@ INSERT INTO categorias (nombre) VALUES
 ('Entrantes'), ('Hamburguesas'), ('Bebidas'), ('Postres'), ('Vinos');
 
 -- PRODUCTOS
-INSERT INTO productos (id, nombre, descripcion, precio, categoria_id) VALUES 
-(1, 'Nachos Click', 'Nachos con queso y guacamole', 8.50, 1),
-(2, 'Alitas BBQ', '6 alitas con salsa barbacoa', 7.00, 1),
-(3, 'Burger Tech', 'Ternera 200g y cheddar', 12.50, 2),
-(4, 'Veggie Byte', 'Hamburguesa de garbanzos', 11.00, 2),
-(5, 'Coca Cola 33cl', 'Refresco original', 2.50, 3),
-(6, 'Cerveza Artesana', 'IPA local 500ml', 4.50, 3),
-(7, 'Tarta de Queso', 'Casera con arándanos', 5.50, 4),
-(8, 'Vino Tinto Rioja', 'Copa crianza', 3.80, 5);
+INSERT INTO productos (id, nombre, descripcion, precio, categoria_id, odoo_id) VALUES
+(1, 'Nachos Click', 'Nachos con queso y guacamole', 8.50, 1, 401),
+(2, 'Alitas BBQ', '6 alitas con salsa barbacoa', 7.00, 1, 402),
+(3, 'Burger Tech', 'Ternera 200g y cheddar', 12.50, 2, 403),
+(4, 'Veggie Byte', 'Hamburguesa de garbanzos', 11.00, 2, 404),
+(5, 'Coca Cola 33cl', 'Refresco original', 2.50, 3, 405),
+(6, 'Cerveza Artesana', 'IPA local 500ml', 4.50, 3, 406),
+(7, 'Tarta de Queso', 'Casera con arándanos', 5.50, 4, 407),
+(8, 'Vino Tinto Rioja', 'Copa crianza', 3.80, 5, 408);
 
 -- MESAS
 INSERT INTO mesas (numero, capacidad, estado) VALUES 
@@ -114,20 +115,20 @@ INSERT INTO usuarios (username, password_hash, nombre_completo, rol) VALUES
 ('carlos_chef', 'cocina1', 'Carlos Martínez', 'cocinero');
 
 -- INGREDIENTES (ACTUALIZADO)
-INSERT INTO ingredientes 
-(id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id) 
-VALUES 
-(1, 'Carne Ternera', 10.50, 0, 'kg', 'materia_prima', 101),
-(2, 'Queso Cheddar', 5.00, 0, 'kg', 'materia_prima', 102),
-(3, 'Pan Burger', 50.00, 0, 'unidades', 'materia_prima', 104),
-(4, 'Patatas', 30.00, 0, 'kg', 'materia_prima', 105),
-(5, 'Lata Coca Cola 33cl', 100.00, 0, 'unidades', 'producto_terminado', 201),
-(6, 'Barril Cerveza IPA', 50.00, 0, 'litros', 'materia_prima', 202),
-(7, 'Botella Vino Rioja', 20.00, 0, 'unidades', 'materia_prima', 203),
-(8, 'Nachos Bolsa', 20.00, 0, 'unidades', 'producto_terminado', 301),
-(9, 'Alitas Congeladas', 100.00, 0, 'unidades', 'materia_prima', 302),
-(10, 'Tarta de Queso Entera', 5.00, 0, 'unidades', 'materia_prima', 303),
-(11, 'Hamburguesa Vegana', 15.00, 0, 'unidades', 'materia_prima', 304);
+INSERT INTO ingredientes
+(id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id)
+VALUES
+(1,  'Carne Ternera',        10.50, 0.40, 'kg',       'materia_prima',     101),
+(2,  'Queso Cheddar',         5.00, 0.10, 'kg',       'materia_prima',     102),
+(3,  'Pan Burger',           50.00, 2.00, 'unidades', 'materia_prima',     104),
+(4,  'Patatas',              30.00, 0.00, 'kg',       'materia_prima',     105),
+(5,  'Lata Coca Cola 33cl', 100.00, 2.00, 'unidades', 'producto_terminado',201),
+(6,  'Barril Cerveza IPA',   50.00, 1.50, 'litros',   'materia_prima',     202),
+(7,  'Botella Vino Rioja',   20.00, 0.00, 'unidades', 'materia_prima',     203),
+(8,  'Nachos Bolsa',         20.00, 1.00, 'unidades', 'producto_terminado',301),
+(9,  'Alitas Congeladas',   100.00, 0.00, 'unidades', 'materia_prima',     302),
+(10, 'Tarta de Queso Entera', 5.00, 0.00, 'unidades', 'materia_prima',     303),
+(11, 'Hamburguesa Vegana',   15.00, 0.00, 'unidades', 'materia_prima',     304);
 
 -- RECETAS
 INSERT INTO recetas (producto_id, ingrediente_id, cantidad_necesaria) VALUES 
@@ -161,5 +162,5 @@ INSERT INTO detalles_pedido
 (2, 6, 3, 'pendiente');
 
 -- TICKET (sin cambios necesarios)
-INSERT INTO tickets (pedido_id, total_importe, referencia_factura_odoo, metodo_pago) VALUES 
-(1, 30.00, 'INV-2026-001', 'tarjeta');
+--INSERT INTO tickets (pedido_id, total_importe, referencia_factura_odoo, metodo_pago) VALUES 
+--(1, 30.00, 'INV-2026-001', 'tarjeta');

@@ -1,0 +1,10 @@
+FROM odoo:latest
+
+USER root
+COPY init-odoo.sh /init-odoo.sh
+RUN chmod +x /init-odoo.sh
+# Copia el logo si existe (falla silenciosamente si no hay archivo)
+COPY logo.png /logo.png
+USER odoo
+
+ENTRYPOINT ["/init-odoo.sh"]
