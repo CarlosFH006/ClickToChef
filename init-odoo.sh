@@ -4,31 +4,20 @@ set -e
 DB_NAME="clicktochefDB"
 ADMIN_EMAIL="clicktochef@clicktochef.com"
 ADMIN_PASSWORD="clicktochef"
+FLAG_FILE="/var/lib/odoo/.initialized"
 
-echo "[Init] Comprobando si la base de datos existe..."
-DB_EXISTS=$(python3 -c "
-import psycopg2, sys
-try:
-    conn = psycopg2.connect(host='db_odoo', dbname='postgres', user='odoo', password='odoo')
-    cur = conn.cursor()
-    cur.execute(\"SELECT 1 FROM pg_database WHERE datname='$DB_NAME'\")
-    print('yes' if cur.fetchone() else 'no')
-    conn.close()
-except Exception as e:
-    print('no')
-" 2>/dev/null)
-
-if [ "$DB_EXISTS" != "yes" ]; then
-    echo "[Init] Creando base de datos e instalando modulos..."
+if [ ! -f "$FLAG_FILE" ]; then
+    echo "[Init] Primera ejecucion: creando base de datos e instalando modulos..."
     odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale,account,l10n_es --without-demo=all --stop-after-init
 
     echo "[Init] Configurando usuario admin y localizacion española..."
     odoo shell -c /etc/odoo/odoo.conf -d "$DB_NAME" --no-http << EOF
+import base64, os
+
 # Activar idioma español
 env['res.lang']._activate_lang('es_ES')
 
 # Configurar compañía: nombre, país España, moneda Euro y zona horaria
-import base64, os
 company = env.company
 company.name = 'ClickToChef'
 company.country_id = env.ref('base.es')
@@ -49,8 +38,11 @@ if u:
 env.cr.commit()
 print('[Init] Localizacion española configurada: idioma es_ES, pais España, moneda EUR')
 EOF
+
+    touch "$FLAG_FILE"
+    echo "[Init] Inicializacion completada."
 else
-    echo "[Init] La base de datos ya existe, omitiendo inicializacion."
+    echo "[Init] Sistema ya inicializado, arrancando directamente..."
 fi
 
 echo "[Init] Iniciando Odoo..."

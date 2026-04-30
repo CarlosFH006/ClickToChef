@@ -18,9 +18,10 @@ const ProductosIndex = () => {
   const { mesaId, pedidoId } = useLocalSearchParams();
   const navigation = useNavigation();
 
+  const busquedaTrim = busqueda.trim();
   const todosLosProductos = categorias.flatMap(c => c.productos);
   const resultadosBusqueda = todosLosProductos.filter(p =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    p.nombre.toLowerCase().includes(busquedaTrim.toLowerCase())
   );
 
   //Al salir de la pantalla de productos, se libera la mesa y se limpia el pedido
@@ -95,7 +96,7 @@ const ProductosIndex = () => {
       </View>
 
       {/* Categorías estáticas — ocultas al buscar */}
-      {busqueda === '' && (
+      {busquedaTrim === '' && (
         <View className="py-2 mb-2">
           <FlatList
             horizontal
@@ -123,7 +124,7 @@ const ProductosIndex = () => {
 
       {/* Lista scrollable */}
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {busqueda === '' ? (
+        {busquedaTrim === '' ? (
           <CategoriaFList categorias={filteredCategorias} />
         ) : (
           <MenuFList productos={resultadosBusqueda} busqueda={busqueda} />

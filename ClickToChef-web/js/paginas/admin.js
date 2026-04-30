@@ -130,44 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Pedidos ---
-    // Cada fila es clickable y expande una sub-tabla con los detalles del pedido
     Api.on('PEDIDOS_ADMIN_RESPONSE', (pedidos) => {
-        const tbody = document.getElementById('tabla-pedidos');
-        if (!pedidos.length) {
-            tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-secundario text-sm">Sin pedidos abiertos</td></tr>';
-            return;
-        }
-        tbody.innerHTML = pedidos.map(p => `
-            <tr class="hover:bg-fondo transition-colors cursor-pointer" onclick="toggleDetalles(${p.id})">
-                <td class="px-4 py-3 text-principal font-medium">#${p.id}</td>
-                <td class="px-4 py-3 text-secundario">Mesa ${p.mesaId}</td>
-                <td class="px-4 py-3 text-secundario">Usuario ${p.usuarioId}</td>
-                <td class="px-4 py-3">${_badgeEstadoPedido(p.estado)}</td>
-                <td class="px-4 py-3 text-secundario">${_formatFecha(p.fechaCreacion)}</td>
-            </tr>
-            <tr id="detalles-${p.id}" class="hidden bg-fondo">
-                <td colspan="5" class="px-8 py-3">
-                    <table class="w-full text-xs">
-                        <thead><tr class="text-secundario uppercase tracking-wide">
-                            <th class="text-left py-1 pr-4">Producto</th>
-                            <th class="text-left py-1 pr-4">Cantidad</th>
-                            <th class="text-left py-1 pr-4">Estado</th>
-                            <th class="text-left py-1">Notas</th>
-                        </tr></thead>
-                        <tbody>
-                            ${(p.detalles ?? []).map(d => `
-                                <tr data-detalle-id="${d.id}">
-                                    <td class="py-1 pr-4 text-principal">${d.nombreProducto}</td>
-                                    <td class="py-1 pr-4 text-secundario">${d.cantidad}</td>
-                                    <td class="py-1 pr-4">${_badgeEstadoDetalle(d.estado)}</td>
-                                    <td class="py-1 text-secundario italic">${d.notasEspeciales || '—'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        `).join('');
+        window._pedidosAdmin = pedidos;
+        _renderFiltrosEstado(pedidos);
+        _renderPedidos(pedidos);
     });
 
     // El panel reacciona a los broadcasts del servidor sin que el usuario haga nada
@@ -317,6 +283,66 @@ function _actualizarStockProductos(noDisponibles) {
         ? null
         : parseInt(btnActivo?.id?.replace('filtro-cat-', ''));
     filtrarProductos(catId ?? null);
+}
+
+// Genera los botones de filtro por estado de pedido
+function _renderFiltrosEstado(pedidos) {
+    const filtrosEl = document.getElementById('filtros-estado-pedido');
+    if (!filtrosEl) return;
+    const estados = ['TODOS', ...new Set(pedidos.map(p => p.estado?.toUpperCase()).filter(Boolean))];
+    filtrosEl.innerHTML = estados.map((e, i) => `
+        <button onclick="filtrarPedidos('${e}')" id="filtro-pedido-${e}"
+            class="filtro-cat-btn ${i === 0 ? 'active' : ''}">
+            ${e === 'TODOS' ? 'Todos' : e.charAt(0) + e.slice(1).toLowerCase()}
+        </button>
+    `).join('');
+}
+
+function filtrarPedidos(estado) {
+    document.querySelectorAll('#filtros-estado-pedido .filtro-cat-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`filtro-pedido-${estado}`)?.classList.add('active');
+    const todos = window._pedidosAdmin ?? [];
+    const filtrados = estado === 'TODOS' ? todos : todos.filter(p => p.estado?.toUpperCase() === estado);
+    _renderPedidos(filtrados);
+}
+
+function _renderPedidos(pedidos) {
+    const tbody = document.getElementById('tabla-pedidos');
+    if (!pedidos.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-secundario text-sm">Sin pedidos</td></tr>';
+        return;
+    }
+    tbody.innerHTML = pedidos.map(p => `
+        <tr class="hover:bg-fondo transition-colors cursor-pointer" onclick="toggleDetalles(${p.id})">
+            <td class="px-4 py-3 text-principal font-medium">#${p.id}</td>
+            <td class="px-4 py-3 text-secundario">Mesa ${p.mesaId}</td>
+            <td class="px-4 py-3 text-secundario">Usuario ${p.usuarioId}</td>
+            <td class="px-4 py-3">${_badgeEstadoPedido(p.estado)}</td>
+            <td class="px-4 py-3 text-secundario">${_formatFecha(p.fechaCreacion)}</td>
+        </tr>
+        <tr id="detalles-${p.id}" class="hidden bg-fondo">
+            <td colspan="5" class="px-8 py-3">
+                <table class="w-full text-xs">
+                    <thead><tr class="text-secundario uppercase tracking-wide">
+                        <th class="text-left py-1 pr-4">Producto</th>
+                        <th class="text-left py-1 pr-4">Cantidad</th>
+                        <th class="text-left py-1 pr-4">Estado</th>
+                        <th class="text-left py-1">Notas</th>
+                    </tr></thead>
+                    <tbody>
+                        ${(p.detalles ?? []).map(d => `
+                            <tr data-detalle-id="${d.id}">
+                                <td class="py-1 pr-4 text-principal">${d.nombreProducto}</td>
+                                <td class="py-1 pr-4 text-secundario">${d.cantidad}</td>
+                                <td class="py-1 pr-4">${_badgeEstadoDetalle(d.estado)}</td>
+                                <td class="py-1 text-secundario italic">${d.notasEspeciales || '—'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    `).join('');
 }
 
 // Renderiza la tabla de productos con los datos recibidos

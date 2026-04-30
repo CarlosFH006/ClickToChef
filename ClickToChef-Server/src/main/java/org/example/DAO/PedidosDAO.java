@@ -40,7 +40,7 @@ public class PedidosDAO {
     }
 
     public static ArrayList<Pedidos> obtenerTodos() {
-        String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE estado = 'abierta'";
+        String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos ORDER BY fecha_creacion DESC";
         ArrayList<Pedidos> pedidos = new ArrayList<>();
 
         try {
