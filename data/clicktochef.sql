@@ -28,7 +28,7 @@ CREATE TABLE mesas (
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     nombre_completo VARCHAR(100) NOT NULL,
     rol ENUM('camarero', 'cocinero', 'admin') NOT NULL
 );
@@ -108,7 +108,7 @@ INSERT INTO mesas (numero, capacidad, estado) VALUES
 (5, 2, 'libre');
 
 -- USUARIOS
-INSERT INTO usuarios (username, password_hash, nombre_completo, rol) VALUES 
+INSERT INTO usuarios (username, password, nombre_completo, rol) VALUES 
 ('admin', 'admin123', 'Super Administrador', 'admin'),
 ('pepe_sala', 'camarero1', 'Pepe García', 'camarero'),
 ('ana_sala', 'camarero2', 'Ana López', 'camarero'),

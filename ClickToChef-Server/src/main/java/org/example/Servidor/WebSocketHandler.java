@@ -81,6 +81,9 @@ public class WebSocketHandler {
                 case "CREAR_USUARIO":
                     respuesta = FuncionesServidor.procesarCrearUsuario(payload);
                     break;
+                case "CAMBIAR_PASSWORD":
+                    respuesta = FuncionesServidor.procesarCambiarPassword(payload);
+                    break;
                 default:
                     System.out.println("[WebSocket] Tipo desconocido: " + tipo);
                     respuesta = GeneradorJSON.generarError("Acción no reconocida en el servidor");

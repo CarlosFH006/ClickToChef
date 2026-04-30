@@ -101,6 +101,10 @@ const Api = (() => {
                 _dispatch('TICKETS_RESPONSE', msg.payload ?? []);
                 break;
 
+            case 'CAMBIAR_PASSWORD_RESPONSE':
+                _dispatch('CAMBIAR_PASSWORD_RESPONSE', msg.payload);
+                break;
+
             case 'CREAR_USUARIO_RESPONSE':
                 _dispatch('CREAR_USUARIO_RESPONSE', msg.payload);
                 break;
@@ -195,6 +199,11 @@ const Api = (() => {
         sendMessage('CREAR_USUARIO', { username, password, nombreCompleto, rol });
     }
 
+    //Envio de mensaje para cambiar la contraseña de un usuario
+    function cambiarPassword(id, password) {
+        sendMessage('CAMBIAR_PASSWORD', { id, password });
+    }
+
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword };
 })();

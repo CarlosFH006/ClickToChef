@@ -423,6 +423,22 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarCambiarPassword(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("password")) {
+            return GeneradorJSON.generarError("Payload de CAMBIAR_PASSWORD incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            String password = payload.get("password").getAsString();
+            boolean success = UsuariosDAO.cambiarPassword(id, password);
+            System.out.println("[FuncionesServidor] Contraseña del usuario " + id + (success ? " cambiada" : " no cambiada"));
+            return GeneradorJSON.generarCambiarPasswordResponse(success);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al cambiar contraseña: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al cambiar la contraseña: " + e.getMessage());
+        }
+    }
+
     public static String procesarCrearUsuario(JsonObject payload) {
         if (payload == null || !payload.has("username") || !payload.has("password")
                 || !payload.has("nombreCompleto") || !payload.has("rol")) {

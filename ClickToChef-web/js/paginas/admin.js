@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Api.on('USUARIOS_RESPONSE', (usuarios) => {
         const tbody = document.getElementById('tabla-usuarios');
         if (!usuarios.length) {
-            tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Sin usuarios</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-secundario text-sm">Sin usuarios</td></tr>';
             return;
         }
         tbody.innerHTML = usuarios.map(u => `
@@ -125,8 +125,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-4 py-3 text-principal font-medium">${u.id}</td>
                 <td class="px-4 py-3 text-principal">${u.username}</td>
                 <td class="px-4 py-3">${_badgeRol(u.rol)}</td>
+                <td class="px-4 py-3 text-right">
+                    <button onclick="abrirModalPassword(${u.id}, '${u.username}')"
+                        class="text-xs text-primary border border-primary/30 px-3 py-1 rounded-lg hover:bg-primary/10 transition-colors">
+                        Cambiar contraseña
+                    </button>
+                </td>
             </tr>
         `).join('');
+    });
+
+    Api.on('CAMBIAR_PASSWORD_RESPONSE', ({ success }) => {
+        const msg = document.getElementById('cambiar-password-msg');
+        if (success) {
+            msg.textContent = '✓ Contraseña cambiada correctamente';
+            msg.className = 'text-sm text-green-600';
+            msg.classList.remove('hidden');
+            setTimeout(() => cerrarModalPassword(), 1500);
+        } else {
+            msg.textContent = 'Error al cambiar la contraseña';
+            msg.className = 'text-sm text-error';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        }
     });
 
     // --- Pedidos ---
@@ -303,6 +324,38 @@ function _actualizarStockProductos(noDisponibles) {
 }
 
 // Genera los botones de filtro por estado de pedido
+let _passwordUserId = null;
+
+function abrirModalPassword(id, username) {
+    _passwordUserId = id;
+    document.getElementById('modal-password-nombre').textContent = `Usuario: ${username}`;
+    document.getElementById('nueva-password').value = '';
+    document.getElementById('cambiar-password-msg').classList.add('hidden');
+    const modal = document.getElementById('modal-password');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalPassword() {
+    _passwordUserId = null;
+    const modal = document.getElementById('modal-password');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function submitCambiarPassword() {
+    const password = document.getElementById('nueva-password').value.trim();
+    if (!password) {
+        const msg = document.getElementById('cambiar-password-msg');
+        msg.textContent = 'Introduce la nueva contraseña';
+        msg.className = 'text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+    Api.cambiarPassword(_passwordUserId, password);
+}
+
 function abrirModalUsuario() {
     const modal = document.getElementById('modal-usuario');
     modal.classList.remove('hidden');
