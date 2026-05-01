@@ -43,11 +43,17 @@ public class FuncionesServidor {
         EstadoMesa nuevoEstado = EstadoMesa.valueOf(estadoStr.toUpperCase());
 
         System.out.println("[FuncionesServidor] Actualizando mesa " + id + " a " + nuevoEstado);
-        boolean exito = nuevoEstado == EstadoMesa.RESERVADA
-                //Si se reserva la mesa, se ejecuta el método reservarMesa, para que la app reciba la respuesta de la reserva
-                ? MesasDAO.reservarMesa(id)
-                //Si no se reserva la mesa, se ejecuta el método actualizarEstadoMesa
-                : MesasDAO.actualizarEstadoMesa(id, nuevoEstado);
+        boolean exito;
+        if (nuevoEstado == EstadoMesa.RESERVADA) {
+            exito = MesasDAO.reservarMesa(id);
+        } else if (nuevoEstado == EstadoMesa.RETIRADA) {
+            exito = MesasDAO.retirarMesa(id);
+        } else if (nuevoEstado == EstadoMesa.LIBRE) {
+            // activarMesa solo actualiza si estaba RETIRADA; si no, usa el método genérico
+            exito = MesasDAO.activarMesa(id) || MesasDAO.actualizarEstadoMesa(id, nuevoEstado);
+        } else {
+            exito = MesasDAO.actualizarEstadoMesa(id, nuevoEstado);
+        }
 
         if (exito) {
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(id, estadoStr.toUpperCase()));

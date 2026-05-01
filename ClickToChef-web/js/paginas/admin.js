@@ -27,18 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Mesas ---
     // Renderiza la tabla con número, capacidad y estado de cada mesa
     Api.on('MESAS_RESPONSE', (mesas) => {
-        const tbody = document.getElementById('tabla-mesas');
-        if (!mesas.length) {
-            tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Sin mesas</td></tr>';
-            return;
-        }
-        tbody.innerHTML = mesas.map(m => `
-            <tr class="hover:bg-fondo transition-colors">
-                <td class="px-4 py-3 text-principal font-medium">${m.numero}</td>
-                <td class="px-4 py-3 text-secundario">${m.capacidad} personas</td>
-                <td class="px-4 py-3">${_badgeEstadoMesa(m.estado)}</td>
-            </tr>
-        `).join('');
+        window._mesasAdmin = mesas;
+        _renderMesas(mesas);
     });
 
     // --- Categorías y Productos ---
@@ -189,7 +179,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // El panel reacciona a los broadcasts del servidor sin que el usuario haga nada
 
     // Mesa cambió de estado → refrescar tabla de mesas
-    Api.on('MESA_UPDATED', () => Api.getMesas());
+    Api.on('MESA_UPDATED', ({ id, estado }) => {
+        if (window._mesasAdmin) {
+            window._mesasAdmin = window._mesasAdmin.map(m => m.id === id ? { ...m, estado } : m);
+            _renderMesas(window._mesasAdmin);
+        } else {
+            Api.getMesas();
+        }
+    });
 
     // Stock cambió → actualizar badges de disponibilidad y refrescar ingredientes
     Api.on('STOCK_UPDATED', (noDisponibles) => {
@@ -287,6 +284,7 @@ function _badgeEstadoMesa(estado) {
         LIBRE:     ['Libre',     'success'],
         OCUPADA:   ['Ocupada',   'error'],
         RESERVADA: ['Reservada', 'warning'],
+        RETIRADA:  ['Retirada',  'primary'],
     };
     const [texto, tipo] = mapa[estado] || [estado, 'primary'];
     return _badge(texto, tipo);
@@ -457,6 +455,40 @@ function submitCrearUsuario() {
         return;
     }
     Api.crearUsuario(username, password, nombreCompleto, rol);
+}
+
+function _renderMesas(mesas) {
+    const tbody = document.getElementById('tabla-mesas');
+    if (!mesas.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-secundario text-sm">Sin mesas</td></tr>';
+        return;
+    }
+    tbody.innerHTML = mesas.map(m => {
+        let boton = '';
+        if (m.estado === 'LIBRE') {
+            boton = `<button onclick="toggleRetirarMesa(${m.id}, 'RETIRADA')"
+                class="text-xs text-secundario border border-borde px-3 py-1 rounded-lg hover:bg-fondo transition-colors">
+                Retirar
+            </button>`;
+        } else if (m.estado === 'RETIRADA') {
+            boton = `<button onclick="toggleRetirarMesa(${m.id}, 'LIBRE')"
+                class="text-xs text-green-600 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition-colors">
+                Activar
+            </button>`;
+        }
+        return `
+            <tr class="hover:bg-fondo transition-colors">
+                <td class="px-4 py-3 text-principal font-medium">${m.numero}</td>
+                <td class="px-4 py-3 text-secundario">${m.capacidad} personas</td>
+                <td class="px-4 py-3">${_badgeEstadoMesa(m.estado)}</td>
+                <td class="px-4 py-3 text-right">${boton}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function toggleRetirarMesa(id, nuevoEstado) {
+    Api.sendMessage('UPDATE_MESA_STATUS', { id, estado: nuevoEstado });
 }
 
 function _renderFiltrosEstado(pedidos) {

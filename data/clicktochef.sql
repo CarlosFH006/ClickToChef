@@ -22,7 +22,7 @@ CREATE TABLE mesas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     numero INT NOT NULL UNIQUE,
     capacidad INT DEFAULT 4,
-    estado ENUM('libre', 'ocupada', 'reservada') DEFAULT 'libre'
+    estado ENUM('libre', 'ocupada', 'reservada', 'retirada') DEFAULT 'libre'
 );
 
 CREATE TABLE usuarios (

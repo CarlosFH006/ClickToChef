@@ -17,10 +17,11 @@ const MesasScreen = () => {
   }, []);
 
   //Contar mesas por estado
+  const mesasVisibles = mesas.filter(m => m.estado !== 'RETIRADA');
   const estados = {
-    libres: mesas.filter(m => m.estado === 'LIBRE').length,
-    reservadas: mesas.filter(m => m.estado === 'RESERVADA').length,
-    ocupadas: mesas.filter(m => m.estado === 'OCUPADA').length,
+    libres: mesasVisibles.filter(m => m.estado === 'LIBRE').length,
+    reservadas: mesasVisibles.filter(m => m.estado === 'RESERVADA').length,
+    ocupadas: mesasVisibles.filter(m => m.estado === 'OCUPADA').length,
   };
 
   if(isLoading && mesas.length === 0){
@@ -60,7 +61,7 @@ const MesasScreen = () => {
         </View>
 
         
-        <MesaFList mesas={mesas} />
+        <MesaFList mesas={mesasVisibles} />
         
       </ScrollView>
     </SafeAreaView>

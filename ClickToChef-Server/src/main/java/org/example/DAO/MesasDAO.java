@@ -64,6 +64,30 @@ public class MesasDAO {
         }
     }
 
+    public static boolean retirarMesa(int id) {
+        String sql = "UPDATE mesas SET estado = 'retirada' WHERE id = ? AND estado = 'libre'";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al retirar la mesa", e);
+        }
+    }
+
+    public static boolean activarMesa(int id) {
+        String sql = "UPDATE mesas SET estado = 'libre' WHERE id = ? AND estado = 'retirada'";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al activar la mesa", e);
+        }
+    }
+
     public static synchronized boolean reservarMesa(int id) {
         String sql = "UPDATE mesas SET estado = 'reservada' WHERE id = ? AND estado = 'libre'";
 
