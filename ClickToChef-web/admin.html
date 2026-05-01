@@ -152,7 +152,14 @@
                 </div>
 
                 <!-- Sub-panel Categorías -->
-                <div id="subpanel-categorias" class="bg-superficie rounded-2xl border border-borde overflow-hidden">
+                <div id="subpanel-categorias">
+                <div class="flex justify-end mb-3">
+                    <button onclick="abrirModalCategoria()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Nueva categoría
+                    </button>
+                </div>
+                <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
                     <table class="w-full text-sm">
                         <thead class="bg-fondo border-b border-borde">
                             <tr>
@@ -165,6 +172,7 @@
                             <tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
                         </tbody>
                     </table>
+                </div>
                 </div>
 
                 <!-- Sub-panel Productos -->
@@ -231,6 +239,30 @@
             document.getElementById('subtab-' + nombre).classList.add('active');
         }
     </script>
+    <!-- Modal Nueva Categoría -->
+    <div id="modal-categoria" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-sm mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 class="font-bold text-principal text-base">Nueva categoría</h3>
+                <button onclick="cerrarModalCategoria()" class="text-secundario hover:text-principal transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Nombre</label>
+                    <input id="nueva-categoria-nombre" type="text" placeholder="Ej: Postres"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <span id="crear-categoria-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3">
+                <button onclick="cerrarModalCategoria()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
+                <button onclick="submitCrearCategoria()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Crear</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Cambiar Contraseña -->
     <div id="modal-password" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-sm mx-4 overflow-hidden">

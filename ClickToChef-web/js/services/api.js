@@ -101,6 +101,10 @@ const Api = (() => {
                 _dispatch('TICKETS_RESPONSE', msg.payload ?? []);
                 break;
 
+            case 'CREAR_CATEGORIA_RESPONSE':
+                _dispatch('CREAR_CATEGORIA_RESPONSE', msg.payload);
+                break;
+
             case 'CAMBIAR_PASSWORD_RESPONSE':
                 _dispatch('CAMBIAR_PASSWORD_RESPONSE', msg.payload);
                 break;
@@ -194,6 +198,11 @@ const Api = (() => {
         sendMessage('GET_PEDIDOS_ADMIN', null);
     }
 
+    //Envio de mensaje para crear una nueva categoría
+    function crearCategoria(nombre) {
+        sendMessage('CREAR_CATEGORIA', { nombre });
+    }
+
     //Envio de mensaje para crear un nuevo usuario
     function crearUsuario(username, password, nombreCompleto, rol) {
         sendMessage('CREAR_USUARIO', { username, password, nombreCompleto, rol });
@@ -205,5 +214,5 @@ const Api = (() => {
     }
 
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword, crearCategoria };
 })();

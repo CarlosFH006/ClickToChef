@@ -7,18 +7,20 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class CategoriasDAO {
 
-    public static boolean insertarCategoria(Categorias categoria) {
+    public static int insertarCategoria(Categorias categoria) {
         String sql = "INSERT INTO categorias (nombre) VALUES (?)";
-
         try {
             Connection conexion = ConexionDB.getConexion();
-            PreparedStatement statement = conexion.prepareStatement(sql);
+            PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, categoria.getNombre());
-            return statement.executeUpdate() > 0;
+            if (statement.executeUpdate() == 0) return -1;
+            ResultSet keys = statement.getGeneratedKeys();
+            return keys.next() ? keys.getInt(1) : -1;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar la categoria", e);
         }

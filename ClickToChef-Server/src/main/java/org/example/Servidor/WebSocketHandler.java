@@ -78,6 +78,9 @@ public class WebSocketHandler {
                 case "CERRAR_MESA":
                     respuesta = FuncionesServidor.procesarCerrarMesa(payload);
                     break;
+                case "CREAR_CATEGORIA":
+                    respuesta = FuncionesServidor.procesarCrearCategoria(payload);
+                    break;
                 case "CREAR_USUARIO":
                     respuesta = FuncionesServidor.procesarCrearUsuario(payload);
                     break;

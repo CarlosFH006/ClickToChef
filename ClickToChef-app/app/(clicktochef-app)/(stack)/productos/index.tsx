@@ -19,7 +19,8 @@ const ProductosIndex = () => {
   const navigation = useNavigation();
 
   const busquedaTrim = busqueda.trim();
-  const todosLosProductos = categorias.flatMap(c => c.productos);
+  const categoriasConProductos = categorias.filter(c => c.productos.length > 0);
+  const todosLosProductos = categoriasConProductos.flatMap(c => c.productos);
   const resultadosBusqueda = todosLosProductos.filter(p =>
     p.nombre.toLowerCase().includes(busquedaTrim.toLowerCase())
   );
@@ -49,14 +50,14 @@ const ProductosIndex = () => {
   }, [navigation, mesaId]);
 
   useEffect(() => {
-    if (categorias.length > 0 && selectedCategoryId === null) {
-      setSelectedCategoryId(categorias[0].id);
+    if (categoriasConProductos.length > 0 && selectedCategoryId === null) {
+      setSelectedCategoryId(categoriasConProductos[0].id);
     }
-  }, [categorias]);
+  }, [categoriasConProductos.length]);
 
   const filteredCategorias = selectedCategoryId === null
-    ? categorias
-    : categorias.filter(cat => cat.id === selectedCategoryId);
+    ? categoriasConProductos
+    : categoriasConProductos.filter(cat => cat.id === selectedCategoryId);
 
   const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
 
@@ -101,7 +102,7 @@ const ProductosIndex = () => {
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
-            data={categorias}
+            data={categoriasConProductos}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={{ paddingHorizontal: 20 }}
             renderItem={({ item }) => (

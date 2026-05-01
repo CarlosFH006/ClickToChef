@@ -10,6 +10,7 @@ interface MenuState {
   setMenu: (categorias: Categoria[]) => void;
   setLoading: (loading: boolean) => void;
   setProductoDisponible: (productoId: number, disponible: boolean) => void;
+  addCategoria: (id: number, nombre: string) => void;
 }
 
 export const useMenuStore = create<MenuState>((set) => ({
@@ -18,6 +19,10 @@ export const useMenuStore = create<MenuState>((set) => ({
 
   setMenu: (categorias) => set({ categorias, isLoading: false }),
   setLoading: (loading) => set({ isLoading: loading }),
+
+  addCategoria: (id, nombre) => set((state) => ({
+    categorias: [...state.categorias, { id, nombre, productos: [] }]
+  })),
 
   // Cambiar disponibilidad de un producto
   setProductoDisponible: (productoId, disponible) => set((state) => ({

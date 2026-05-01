@@ -174,6 +174,9 @@ public class ClienteHilo extends Thread {
                 case "CANCELAR_PEDIDO":
                     respuesta = FuncionesServidor.procesarCancelarPedido(payload);
                     break;
+                case "CREAR_CATEGORIA":
+                    respuesta = FuncionesServidor.procesarCrearCategoria(payload);
+                    break;
                 case "CREAR_USUARIO":
                     respuesta = FuncionesServidor.procesarCrearUsuario(payload);
                     break;

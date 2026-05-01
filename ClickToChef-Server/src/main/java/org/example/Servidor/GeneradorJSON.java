@@ -285,6 +285,29 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    //Broadcast cuando se crea una nueva categoría
+    public static String generarNuevaCategoria(int id, String nombre) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "NEW_CATEGORIA");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("nombre", nombre);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta de crear categoría
+    public static String generarCrearCategoriaResponse(boolean success, int id, String nombre) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CREAR_CATEGORIA_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        payload.addProperty("id", id);
+        payload.addProperty("nombre", nombre);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
     //Genera la respuesta de cambiar contraseña
     public static String generarCambiarPasswordResponse(boolean success) {
         JsonObject respuesta = new JsonObject();

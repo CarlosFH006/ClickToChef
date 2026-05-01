@@ -257,6 +257,14 @@ class SocketClient {
         }
         break;
 
+      case 'NEW_CATEGORIA':
+        if (data.payload) {
+          const { id, nombre } = data.payload;
+          console.log(`[Socket] Nueva categoría: ${nombre} (ID: ${id})`);
+          useMenuStore.getState().addCategoria(id, nombre);
+        }
+        break;
+
       case 'DETALLE_DELETED':
         if (data.payload) {
           console.log('[Socket] Detalle eliminado:', data.payload.id);

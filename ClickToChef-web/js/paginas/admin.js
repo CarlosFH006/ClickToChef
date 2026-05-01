@@ -135,6 +135,35 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     });
 
+    Api.on('CREAR_CATEGORIA_RESPONSE', ({ success, id, nombre }) => {
+        const msg = document.getElementById('crear-categoria-msg');
+        if (success) {
+            document.getElementById('nueva-categoria-nombre').value = '';
+            // Añadir fila directamente sin recargar el menú completo
+            const tbody = document.getElementById('tabla-categorias');
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-fondo transition-colors';
+            tr.innerHTML = `
+                <td class="px-4 py-3 text-principal font-medium">${id}</td>
+                <td class="px-4 py-3 text-principal">${nombre}</td>
+                <td class="px-4 py-3 text-secundario">0 productos</td>
+            `;
+            // Quitar el mensaje de "Sin categorías" si existía
+            const vacio = tbody.querySelector('td[colspan]');
+            if (vacio) tbody.innerHTML = '';
+            tbody.appendChild(tr);
+            msg.textContent = '✓ Categoría creada correctamente';
+            msg.className = 'text-sm text-green-600';
+            msg.classList.remove('hidden');
+            setTimeout(() => cerrarModalCategoria(), 1500);
+        } else {
+            msg.textContent = 'Error: la categoría ya existe o el nombre es inválido';
+            msg.className = 'text-sm text-error';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        }
+    });
+
     Api.on('CAMBIAR_PASSWORD_RESPONSE', ({ success }) => {
         const msg = document.getElementById('cambiar-password-msg');
         if (success) {
@@ -342,6 +371,33 @@ function _actualizarStockProductos(noDisponibles) {
 }
 
 // Genera los botones de filtro por estado de pedido
+function abrirModalCategoria() {
+    document.getElementById('nueva-categoria-nombre').value = '';
+    document.getElementById('crear-categoria-msg').classList.add('hidden');
+    const modal = document.getElementById('modal-categoria');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalCategoria() {
+    const modal = document.getElementById('modal-categoria');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function submitCrearCategoria() {
+    const nombre = document.getElementById('nueva-categoria-nombre').value.trim();
+    if (!nombre) {
+        const msg = document.getElementById('crear-categoria-msg');
+        msg.textContent = 'Introduce el nombre de la categoría';
+        msg.className = 'text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+    Api.crearCategoria(nombre);
+}
+
 let _passwordUserId = null;
 
 function abrirModalPassword(id, username) {

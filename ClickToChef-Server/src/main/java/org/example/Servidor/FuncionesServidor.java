@@ -423,6 +423,24 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarCrearCategoria(JsonObject payload) {
+        if (payload == null || !payload.has("nombre")) {
+            return GeneradorJSON.generarError("Payload de CREAR_CATEGORIA incompleto");
+        }
+        try {
+            String nombre = payload.get("nombre").getAsString().trim();
+            if (nombre.isEmpty()) return GeneradorJSON.generarError("El nombre de la categoría no puede estar vacío");
+            int id = CategoriasDAO.insertarCategoria(new org.example.DTO.Categorias(nombre));
+            if (id == -1) return GeneradorJSON.generarCrearCategoriaResponse(false, -1, nombre);
+            Servidor.broadcast(GeneradorJSON.generarNuevaCategoria(id, nombre));
+            System.out.println("[FuncionesServidor] Categoría '" + nombre + "' creada con ID: " + id);
+            return GeneradorJSON.generarCrearCategoriaResponse(true, id, nombre);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear categoría: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al crear la categoría: " + e.getMessage());
+        }
+    }
+
     public static String procesarCambiarPassword(JsonObject payload) {
         if (payload == null || !payload.has("id") || !payload.has("password")) {
             return GeneradorJSON.generarError("Payload de CAMBIAR_PASSWORD incompleto");
