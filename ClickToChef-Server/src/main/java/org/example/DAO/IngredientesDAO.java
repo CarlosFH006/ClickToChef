@@ -29,19 +29,20 @@ public class IngredientesDAO {
         };
     }
 
-    public static boolean insertarIngrediente(Ingredientes ingrediente) {
+    public static int insertarIngrediente(Ingredientes ingrediente) {
         String sql = "INSERT INTO ingredientes (nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id) VALUES (?, ?, ?, ?, ?, ?)";
-
         try {
             Connection conexion = ConexionDB.getConexion();
-            PreparedStatement statement = conexion.prepareStatement(sql);
+            PreparedStatement statement = conexion.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, ingrediente.getNombre());
             statement.setDouble(2, ingrediente.getStockActual());
             statement.setDouble(3, ingrediente.getStockReservado());
             statement.setString(4, ingrediente.getMetodoMedida().name().toLowerCase());
             statement.setString(5, ingrediente.getTipoIngrediente().name().toLowerCase());
             statement.setInt(6, ingrediente.getOdooProductId());
-            return statement.executeUpdate() > 0;
+            if (statement.executeUpdate() == 0) return -1;
+            ResultSet keys = statement.getGeneratedKeys();
+            return keys.next() ? keys.getInt(1) : -1;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el ingrediente", e);
         }

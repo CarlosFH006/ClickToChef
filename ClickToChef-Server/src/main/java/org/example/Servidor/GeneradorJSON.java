@@ -353,6 +353,17 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    //Genera la respuesta de crear ingrediente
+    public static String generarCrearIngredienteResponse(boolean success, String mensaje) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CREAR_INGREDIENTE_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        if (mensaje != null) payload.addProperty("mensaje", mensaje);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
     //Genera la respuesta de crear usuario
     public static String generarCrearUsuarioResponse(boolean success) {
         JsonObject respuesta = new JsonObject();

@@ -113,6 +113,10 @@ const Api = (() => {
                 _dispatch('MESA_CAPACIDAD_UPDATED', msg.payload);
                 break;
 
+            case 'CREAR_INGREDIENTE_RESPONSE':
+                _dispatch('CREAR_INGREDIENTE_RESPONSE', msg.payload);
+                break;
+
             case 'CREAR_CATEGORIA_RESPONSE':
                 _dispatch('CREAR_CATEGORIA_RESPONSE', msg.payload);
                 break;
@@ -210,6 +214,11 @@ const Api = (() => {
         sendMessage('GET_PEDIDOS_ADMIN', null);
     }
 
+    //Envio de mensaje para crear un nuevo ingrediente
+    function crearIngrediente(nombre, stockActual, unidadMedida, tipo) {
+        sendMessage('CREAR_INGREDIENTE', { nombre, stockActual, unidadMedida, tipo });
+    }
+
     //Envio de mensaje para crear una nueva categoría
     function crearCategoria(nombre) {
         sendMessage('CREAR_CATEGORIA', { nombre });
@@ -226,5 +235,5 @@ const Api = (() => {
     }
 
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword, crearCategoria };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente };
 })();

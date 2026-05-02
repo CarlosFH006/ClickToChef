@@ -286,6 +286,30 @@ public class FuncionesOdoo {
      * Si Odoo no está disponible o falla devuelve "ERROR_ODOO" sin lanzar excepción,
      * para no bloquear el cierre de mesa.
      */
+    /**
+     * Registra un ingrediente en Odoo (busca por nombre o lo crea) y devuelve el template ID.
+     * Actualiza el stock en Odoo con el valor proporcionado.
+     * Devuelve -1 si Odoo no está disponible o falla.
+     */
+    public static int registrarIngredienteEnOdoo(int ingredienteId, String nombre, double stock) {
+        try {
+            int uid = autenticar();
+            XmlRpcClient models = crearClienteModelos();
+            int locationId = obtenerLocationStock(models, uid);
+            int templateId = buscarProductoOdooPorNombre(models, uid, nombre);
+            if (templateId == 0) {
+                templateId = crearProductoOdoo(models, uid, nombre, "consu", 0);
+                System.out.println("[FuncionesOdoo] Ingrediente '" + nombre + "' creado en Odoo con ID: " + templateId);
+            }
+            int varianteId = obtenerProductoVarianteId(models, uid, templateId);
+            actualizarStockOdoo(models, uid, varianteId, stock, locationId);
+            return templateId;
+        } catch (Exception e) {
+            System.err.println("[FuncionesOdoo] Error al registrar ingrediente en Odoo: " + e.getMessage());
+            return -1;
+        }
+    }
+
     public static String crearTicketVenta(int pedidoId) {
         System.out.println("[FuncionesOdoo] Creando ticket de venta en Odoo para pedido " + pedidoId);
         try {

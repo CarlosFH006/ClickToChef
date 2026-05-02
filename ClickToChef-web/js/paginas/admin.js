@@ -125,6 +125,21 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     });
 
+    Api.on('CREAR_INGREDIENTE_RESPONSE', ({ success, mensaje }) => {
+        const msg = document.getElementById('ing-msg');
+        if (success) {
+            msg.textContent = '✓ Ingrediente creado y sincronizado con Odoo';
+            msg.className = 'text-sm text-green-600';
+            msg.classList.remove('hidden');
+            setTimeout(() => cerrarModalIngrediente(), 1500);
+        } else {
+            msg.textContent = mensaje ?? 'Error al crear el ingrediente';
+            msg.className = 'text-sm text-error';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 4000);
+        }
+    });
+
     Api.on('CREAR_CATEGORIA_RESPONSE', ({ success, id, nombre }) => {
         const msg = document.getElementById('crear-categoria-msg');
         if (success) {
@@ -395,6 +410,37 @@ function _actualizarStockProductos(noDisponibles) {
 }
 
 // Genera los botones de filtro por estado de pedido
+function abrirModalIngrediente() {
+    ['ing-nombre', 'ing-stock'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('ing-unidad').value = 'unidades';
+    document.getElementById('ing-msg').classList.add('hidden');
+    const modal = document.getElementById('modal-ingrediente');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalIngrediente() {
+    const modal = document.getElementById('modal-ingrediente');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function submitIngrediente() {
+    const nombre = document.getElementById('ing-nombre').value.trim();
+    const stock  = parseFloat(document.getElementById('ing-stock').value);
+    const unidad = document.getElementById('ing-unidad').value;
+    const tipo   = 'materia_prima';
+    const msg     = document.getElementById('ing-msg');
+    if (!nombre || isNaN(stock) || stock < 0) {
+        msg.textContent = 'Rellena todos los campos correctamente';
+        msg.className = 'text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+    Api.crearIngrediente(nombre, stock, unidad, tipo);
+}
+
 function abrirModalCategoria() {
     document.getElementById('nueva-categoria-nombre').value = '';
     document.getElementById('crear-categoria-msg').classList.add('hidden');

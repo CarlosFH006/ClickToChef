@@ -509,6 +509,44 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarCrearIngrediente(JsonObject payload) {
+        if (payload == null || !payload.has("nombre") || !payload.has("stockActual")
+                || !payload.has("unidadMedida") || !payload.has("tipo")) {
+            return GeneradorJSON.generarCrearIngredienteResponse(false, "Payload incompleto");
+        }
+        try {
+            String nombre      = payload.get("nombre").getAsString().trim();
+            double stockActual = payload.get("stockActual").getAsDouble();
+            String unidadStr   = payload.get("unidadMedida").getAsString().toLowerCase();
+            String tipoStr     = payload.get("tipo").getAsString().toLowerCase();
+
+            org.example.DTO.MetodoMedida unidad = switch (unidadStr) {
+                case "kg"     -> org.example.DTO.MetodoMedida.KG;
+                case "litros" -> org.example.DTO.MetodoMedida.LITROS;
+                default       -> org.example.DTO.MetodoMedida.UNIDAD;
+            };
+            org.example.DTO.TipoIngrediente tipo = tipoStr.equals("producto_terminado")
+                    ? org.example.DTO.TipoIngrediente.PRODUCTO_TERMINADO
+                    : org.example.DTO.TipoIngrediente.MATERIA_PRIMA;
+
+            Ingredientes ing = new Ingredientes(0, nombre, stockActual, 0, unidad, tipo, 0);
+            int id = IngredientesDAO.insertarIngrediente(ing);
+            if (id == -1) return GeneradorJSON.generarCrearIngredienteResponse(false, "No se pudo insertar el ingrediente");
+
+            int odooId = FuncionesOdoo.registrarIngredienteEnOdoo(id, nombre, stockActual);
+            if (odooId != -1) IngredientesDAO.actualizarOdooProductId(id, odooId);
+
+            broadcastIngredientes(); // actualiza la tabla del admin directamente
+            broadcastNoDisponibles(); // notifica disponibilidad a la app
+
+            System.out.println("[FuncionesServidor] Ingrediente '" + nombre + "' creado con ID: " + id);
+            return GeneradorJSON.generarCrearIngredienteResponse(true, null);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear ingrediente: " + e.getMessage());
+            return GeneradorJSON.generarCrearIngredienteResponse(false, e.getMessage());
+        }
+    }
+
     public static String procesarCrearUsuario(JsonObject payload) {
         if (payload == null || !payload.has("username") || !payload.has("password")
                 || !payload.has("nombreCompleto") || !payload.has("rol")) {
