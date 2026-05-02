@@ -179,6 +179,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // El panel reacciona a los broadcasts del servidor sin que el usuario haga nada
 
     // Mesa cambió de estado → refrescar tabla de mesas
+    Api.on('CREAR_MESA_RESPONSE', ({ success, mensaje }) => {
+        if (!success) {
+            const msg = document.getElementById('nueva-mesa-msg');
+            msg.textContent = mensaje ?? 'Error: el número de mesa ya existe';
+            msg.className = 'text-sm text-error';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 4000);
+        }
+    });
+
+    Api.on('NEW_MESA', ({ id, numero, capacidad, estado }) => {
+        if (window._mesasAdmin) {
+            window._mesasAdmin = [...window._mesasAdmin, { id, numero, capacidad, estado }];
+            _renderMesas(window._mesasAdmin);
+        }
+        cerrarModalNuevaMesa();
+    });
+
     Api.on('MESA_CAPACIDAD_UPDATED', ({ id, capacidad }) => {
         if (window._mesasAdmin) {
             window._mesasAdmin = window._mesasAdmin.map(m => m.id === id ? { ...m, capacidad } : m);
@@ -501,6 +519,35 @@ function _renderMesas(mesas) {
             </tr>
         `;
     }).join('');
+}
+
+function abrirModalNuevaMesa() {
+    document.getElementById('nueva-mesa-numero').value = '';
+    document.getElementById('nueva-mesa-capacidad').value = '';
+    document.getElementById('nueva-mesa-msg').classList.add('hidden');
+    const modal = document.getElementById('modal-nueva-mesa');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalNuevaMesa() {
+    const modal = document.getElementById('modal-nueva-mesa');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function submitNuevaMesa() {
+    const numero = parseInt(document.getElementById('nueva-mesa-numero').value, 10);
+    const capacidad = parseInt(document.getElementById('nueva-mesa-capacidad').value, 10);
+    const msg = document.getElementById('nueva-mesa-msg');
+    if (isNaN(numero) || numero < 1 || isNaN(capacidad) || capacidad < 1 || capacidad > 99) {
+        msg.textContent = 'Introduce un número de mesa válido y una capacidad entre 1 y 99';
+        msg.className = 'text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+    Api.sendMessage('CREAR_MESA', { numero, capacidad });
 }
 
 let _capacidadMesaId = null;

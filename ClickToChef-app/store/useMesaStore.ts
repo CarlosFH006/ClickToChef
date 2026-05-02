@@ -11,6 +11,7 @@ interface MesaState {
   setLoading: (loading: boolean) => void;
   updateMesaStatus: (id: number, nuevoEstado: MesaEstado) => void;
   updateMesaCapacidad: (id: number, capacidad: number) => void;
+  addMesa: (mesa: Mesa) => void;
 }
 
 export const useMesaStore = create<MesaState>((set) => ({
@@ -31,5 +32,9 @@ export const useMesaStore = create<MesaState>((set) => ({
     mesas: state.mesas.map((m) =>
       m.id === id ? { ...m, capacidad } : m
     ),
+  })),
+
+  addMesa: (mesa) => set((state) => ({
+    mesas: [...state.mesas, mesa]
   })),
 }));

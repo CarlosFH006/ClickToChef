@@ -429,6 +429,28 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarCrearMesa(JsonObject payload) {
+        if (payload == null || !payload.has("numero") || !payload.has("capacidad")) {
+            return GeneradorJSON.generarError("Payload de CREAR_MESA incompleto");
+        }
+        try {
+            int numero = payload.get("numero").getAsInt();
+            int capacidad = payload.get("capacidad").getAsInt();
+            if (numero < 1 || capacidad < 1 || capacidad > 99) {
+                return GeneradorJSON.generarError("Número o capacidad inválidos");
+            }
+            Mesas mesa = new Mesas(numero, capacidad, EstadoMesa.LIBRE);
+            int id = MesasDAO.insertarMesa(mesa);
+            if (id == -1) return GeneradorJSON.generarCrearMesaResponse(false, "No se pudo crear la mesa (¿número duplicado?)");
+            Servidor.broadcast(GeneradorJSON.generarNuevaMesa(id, numero, capacidad));
+            System.out.println("[FuncionesServidor] Mesa " + numero + " creada con ID: " + id);
+            return GeneradorJSON.generarCrearMesaResponse(true, null);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear mesa: " + e.getMessage());
+            return GeneradorJSON.generarCrearMesaResponse(false, "El número de mesa ya existe");
+        }
+    }
+
     public static String procesarActualizarCapacidadMesa(JsonObject payload) {
         if (payload == null || !payload.has("id") || !payload.has("capacidad")) {
             return GeneradorJSON.generarError("Payload de ACTUALIZAR_CAPACIDAD_MESA incompleto");

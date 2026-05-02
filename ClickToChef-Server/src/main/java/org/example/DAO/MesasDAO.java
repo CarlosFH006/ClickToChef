@@ -7,20 +7,22 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class MesasDAO {
 
-    public static boolean insertarMesa(Mesas mesa) {
+    public static int insertarMesa(Mesas mesa) {
         String sql = "INSERT INTO mesas (numero, capacidad, estado) VALUES (?, ?, ?)";
-
         try {
             Connection conexion = ConexionDB.getConexion();
-            PreparedStatement statement = conexion.prepareStatement(sql);
+            PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setInt(1, mesa.getNumero());
             statement.setInt(2, mesa.getCapacidad());
             statement.setString(3, convertirEstadoMesaADB(mesa.getEstado()));
-            return statement.executeUpdate() > 0;
+            if (statement.executeUpdate() == 0) return -1;
+            ResultSet keys = statement.getGeneratedKeys();
+            return keys.next() ? keys.getInt(1) : -1;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar la mesa", e);
         }

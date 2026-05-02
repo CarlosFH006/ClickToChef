@@ -257,6 +257,14 @@ class SocketClient {
         }
         break;
 
+      case 'NEW_MESA':
+        if (data.payload) {
+          const { id, numero, capacidad, estado } = data.payload;
+          console.log(`[Socket] Nueva mesa: #${numero} (ID: ${id})`);
+          useMesaStore.getState().addMesa({ id, numero, capacidad, estado });
+        }
+        break;
+
       case 'MESA_CAPACIDAD_UPDATED':
         if (data.payload) {
           const { id, capacidad } = data.payload;

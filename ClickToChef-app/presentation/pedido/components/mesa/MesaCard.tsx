@@ -4,8 +4,8 @@ import { Mesa } from '../../../../type/mesa-interface';
 import { updateMesaStatusAction } from '../../../../core/actions/update-mesa-status-action';
 import { router } from 'expo-router';
 import { useOrderStore } from '../../../../store/useOrderStore';
-import { getMesaStatusColor, getMesaStatusLabel } from '../../helpers/status-colors';
 import { Ionicons } from '@expo/vector-icons';
+import { getMesaStatusColor, getMesaStatusLabel } from '../../helpers/status-colors';
 
 interface Props {
   mesa: Mesa;

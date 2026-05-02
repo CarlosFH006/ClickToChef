@@ -285,6 +285,30 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    //Respuesta directa al crear una mesa
+    public static String generarCrearMesaResponse(boolean success, String mensaje) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CREAR_MESA_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        if (mensaje != null) payload.addProperty("mensaje", mensaje);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast cuando se crea una nueva mesa
+    public static String generarNuevaMesa(int id, int numero, int capacidad) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "NEW_MESA");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("numero", numero);
+        payload.addProperty("capacidad", capacidad);
+        payload.addProperty("estado", "LIBRE");
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
     //Broadcast cuando cambia la capacidad de una mesa
     public static String generarMesaCapacidadUpdated(int id, int capacidad) {
         JsonObject respuesta = new JsonObject();
