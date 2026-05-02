@@ -429,6 +429,30 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarActualizarCapacidadMesa(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("capacidad")) {
+            return GeneradorJSON.generarError("Payload de ACTUALIZAR_CAPACIDAD_MESA incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            int capacidad = payload.get("capacidad").getAsInt();
+            if (capacidad < 1 || capacidad > 99) {
+                return GeneradorJSON.generarError("La capacidad debe estar entre 1 y 99");
+            }
+            boolean success = MesasDAO.actualizarCapacidadMesa(id, capacidad);
+            if (success) {
+                Servidor.broadcast(GeneradorJSON.generarMesaCapacidadUpdated(id, capacidad));
+                System.out.println("[FuncionesServidor] Capacidad mesa " + id + " → " + capacidad);
+            }
+            return success
+                    ? null
+                    : GeneradorJSON.generarError("No se pudo actualizar la capacidad de la mesa " + id);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al actualizar capacidad: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al actualizar la capacidad: " + e.getMessage());
+        }
+    }
+
     public static String procesarCrearCategoria(JsonObject payload) {
         if (payload == null || !payload.has("nombre")) {
             return GeneradorJSON.generarError("Payload de CREAR_CATEGORIA incompleto");

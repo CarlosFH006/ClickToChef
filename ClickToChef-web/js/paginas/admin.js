@@ -179,6 +179,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // El panel reacciona a los broadcasts del servidor sin que el usuario haga nada
 
     // Mesa cambió de estado → refrescar tabla de mesas
+    Api.on('MESA_CAPACIDAD_UPDATED', ({ id, capacidad }) => {
+        if (window._mesasAdmin) {
+            window._mesasAdmin = window._mesasAdmin.map(m => m.id === id ? { ...m, capacidad } : m);
+            _renderMesas(window._mesasAdmin);
+        }
+        cerrarModalCapacidad();
+    });
+
     Api.on('MESA_UPDATED', ({ id, estado }) => {
         if (window._mesasAdmin) {
             window._mesasAdmin = window._mesasAdmin.map(m => m.id === id ? { ...m, estado } : m);
@@ -479,12 +487,52 @@ function _renderMesas(mesas) {
         return `
             <tr class="hover:bg-fondo transition-colors">
                 <td class="px-4 py-3 text-principal font-medium">${m.numero}</td>
-                <td class="px-4 py-3 text-secundario">${m.capacidad} personas</td>
+                <td class="px-4 py-3 text-secundario">
+                    <span class="font-medium text-principal">${m.capacidad}</span>
+                    <span class="text-secundario"> personas</span>
+                    <button onclick="abrirModalCapacidad(${m.id}, ${m.capacidad})"
+                        class="ml-2 inline-flex items-center gap-1 text-xs text-secundario border border-borde px-2 py-0.5 rounded-md hover:border-primary hover:text-primary transition-colors">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-1.414a2 2 0 01.586-1.414z"/></svg>
+                        Editar
+                    </button>
+                </td>
                 <td class="px-4 py-3">${_badgeEstadoMesa(m.estado)}</td>
                 <td class="px-4 py-3 text-right">${boton}</td>
             </tr>
         `;
     }).join('');
+}
+
+let _capacidadMesaId = null;
+
+function abrirModalCapacidad(id, capacidadActual) {
+    _capacidadMesaId = id;
+    document.getElementById('modal-capacidad-titulo').textContent = `Mesa ID: ${id} — capacidad actual: ${capacidadActual} personas`;
+    document.getElementById('nueva-capacidad').value = capacidadActual;
+    document.getElementById('capacidad-msg').classList.add('hidden');
+    const modal = document.getElementById('modal-capacidad');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalCapacidad() {
+    _capacidadMesaId = null;
+    const modal = document.getElementById('modal-capacidad');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function submitCapacidad() {
+    const val = parseInt(document.getElementById('nueva-capacidad').value, 10);
+    const msg = document.getElementById('capacidad-msg');
+    if (isNaN(val) || val < 1 || val > 99) {
+        msg.textContent = 'Introduce un valor entre 1 y 99';
+        msg.className = 'text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+    Api.sendMessage('ACTUALIZAR_CAPACIDAD_MESA', { id: _capacidadMesaId, capacidad: val });
 }
 
 function toggleRetirarMesa(id, nuevoEstado) {

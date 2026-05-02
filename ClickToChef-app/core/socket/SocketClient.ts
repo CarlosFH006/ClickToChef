@@ -257,6 +257,14 @@ class SocketClient {
         }
         break;
 
+      case 'MESA_CAPACIDAD_UPDATED':
+        if (data.payload) {
+          const { id, capacidad } = data.payload;
+          console.log(`[Socket] Mesa ${id} capacidad → ${capacidad}`);
+          useMesaStore.getState().updateMesaCapacidad(id, capacidad);
+        }
+        break;
+
       case 'NEW_CATEGORIA':
         if (data.payload) {
           const { id, nombre } = data.payload;

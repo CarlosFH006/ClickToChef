@@ -285,6 +285,17 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    //Broadcast cuando cambia la capacidad de una mesa
+    public static String generarMesaCapacidadUpdated(int id, int capacidad) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "MESA_CAPACIDAD_UPDATED");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("capacidad", capacidad);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
     //Broadcast cuando se crea una nueva categoría
     public static String generarNuevaCategoria(int id, String nombre) {
         JsonObject respuesta = new JsonObject();

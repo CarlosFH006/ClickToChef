@@ -64,6 +64,19 @@ public class MesasDAO {
         }
     }
 
+    public static boolean actualizarCapacidadMesa(int id, int capacidad) {
+        String sql = "UPDATE mesas SET capacidad = ? WHERE id = ?";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, capacidad);
+            statement.setInt(2, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar la capacidad de la mesa", e);
+        }
+    }
+
     public static boolean retirarMesa(int id) {
         String sql = "UPDATE mesas SET estado = 'retirada' WHERE id = ? AND estado = 'libre'";
         try {

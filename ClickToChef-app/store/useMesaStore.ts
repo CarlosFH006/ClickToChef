@@ -10,6 +10,7 @@ interface MesaState {
   setMesas: (mesas: Mesa[]) => void;
   setLoading: (loading: boolean) => void;
   updateMesaStatus: (id: number, nuevoEstado: MesaEstado) => void;
+  updateMesaCapacidad: (id: number, capacidad: number) => void;
 }
 
 export const useMesaStore = create<MesaState>((set) => ({
@@ -20,10 +21,15 @@ export const useMesaStore = create<MesaState>((set) => ({
 
   setLoading: (loading) => set({ isLoading: loading }),
   
-  //Cambiar el estado de una mesa especifica
   updateMesaStatus: (id, nuevoEstado) => set((state) => ({
-    mesas: state.mesas.map((m) => 
+    mesas: state.mesas.map((m) =>
       m.id === id ? { ...m, estado: nuevoEstado } : m
+    ),
+  })),
+
+  updateMesaCapacidad: (id, capacidad) => set((state) => ({
+    mesas: state.mesas.map((m) =>
+      m.id === id ? { ...m, capacidad } : m
     ),
   })),
 }));

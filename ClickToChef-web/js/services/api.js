@@ -101,6 +101,10 @@ const Api = (() => {
                 _dispatch('TICKETS_RESPONSE', msg.payload ?? []);
                 break;
 
+            case 'MESA_CAPACIDAD_UPDATED':
+                _dispatch('MESA_CAPACIDAD_UPDATED', msg.payload);
+                break;
+
             case 'CREAR_CATEGORIA_RESPONSE':
                 _dispatch('CREAR_CATEGORIA_RESPONSE', msg.payload);
                 break;
