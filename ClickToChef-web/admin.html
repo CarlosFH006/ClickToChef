@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="js/tailwind-config.js"></script>
     <link rel="stylesheet" href="css/styles.css">
+    <script type="module" src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.js"></script>
 </head>
 <body class="bg-fondo min-h-screen">
 
@@ -17,7 +19,7 @@
         <h1 class="text-xl font-bold text-principal">Administración</h1>
         <span id="ws-status" class="ml-auto text-xs px-2 py-1 rounded-full bg-gray-100 text-secundario">Conectando...</span>
         <a href="index.html" onclick="localStorage.removeItem('usuario')" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 text-error text-sm font-semibold hover:bg-red-100 transition-colors duration-150 ml-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            <ion-icon name="log-out-outline" style="font-size:16px"></ion-icon>
             Salir
         </a>
     </header>
@@ -27,23 +29,23 @@
         <!-- Sidebar -->
         <aside class="w-56 bg-superficie border-r border-borde flex flex-col py-4 gap-1 shrink-0">
             <button onclick="mostrarPanel('mesas')"    class="panel-btn active" id="btn-mesas">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
+                <ion-icon name="restaurant-outline" style="font-size:16px"></ion-icon>
                 Mesas
             </button>
             <button onclick="mostrarPanel('tickets')"  class="panel-btn" id="btn-tickets">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <ion-icon name="receipt-outline" style="font-size:16px"></ion-icon>
                 Tickets
             </button>
             <button onclick="mostrarPanel('pedidos')"  class="panel-btn" id="btn-pedidos">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                <ion-icon name="bag-outline" style="font-size:16px"></ion-icon>
                 Pedidos
             </button>
             <button onclick="mostrarPanel('usuarios')" class="panel-btn" id="btn-usuarios">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <ion-icon name="people-outline" style="font-size:16px"></ion-icon>
                 Usuarios
             </button>
             <button onclick="mostrarPanel('productos')" class="panel-btn" id="btn-productos">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                <ion-icon name="grid-outline" style="font-size:16px"></ion-icon>
                 Productos
             </button>
         </aside>
@@ -56,7 +58,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-bold text-principal">Mesas</h2>
                     <button onclick="abrirModalNuevaMesa()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
                         Nueva mesa
                     </button>
                 </div>
@@ -126,7 +128,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-bold text-principal">Usuarios</h2>
                     <button onclick="abrirModalUsuario()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
                         Nuevo usuario
                     </button>
                 </div>
@@ -162,7 +164,7 @@
                 <div id="subpanel-categorias">
                 <div class="flex justify-end mb-3">
                     <button onclick="abrirModalCategoria()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
                         Nueva categoría
                     </button>
                 </div>
@@ -207,7 +209,7 @@
                 <div id="subpanel-ingredientes" class="hidden">
                 <div class="flex justify-end mb-3">
                     <button onclick="abrirModalIngrediente()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
                         Nuevo ingrediente
                     </button>
                 </div>
@@ -261,7 +263,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
                 <h3 class="font-bold text-principal text-base">Sumar stock</h3>
                 <button onclick="cerrarModalSumarStock()" class="text-secundario hover:text-principal transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
                 </button>
             </div>
             <div class="px-6 py-5 flex flex-col gap-4">
@@ -286,7 +288,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
                 <h3 class="font-bold text-principal text-base">Nuevo ingrediente</h3>
                 <button onclick="cerrarModalIngrediente()" class="text-secundario hover:text-principal transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
                 </button>
             </div>
             <div class="px-6 py-5 flex flex-col gap-4">
@@ -323,7 +325,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
                 <h3 class="font-bold text-principal text-base">Nueva mesa</h3>
                 <button onclick="cerrarModalNuevaMesa()" class="text-secundario hover:text-principal transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
                 </button>
             </div>
             <div class="px-6 py-5 flex flex-col gap-4">
@@ -353,7 +355,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
                 <h3 class="font-bold text-principal text-base">Capacidad de la mesa</h3>
                 <button onclick="cerrarModalCapacidad()" class="text-secundario hover:text-principal transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
                 </button>
             </div>
             <div class="px-6 py-5 flex flex-col gap-4">
@@ -378,7 +380,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
                 <h3 class="font-bold text-principal text-base">Nueva categoría</h3>
                 <button onclick="cerrarModalCategoria()" class="text-secundario hover:text-principal transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
                 </button>
             </div>
             <div class="px-6 py-5 flex flex-col gap-4">
@@ -402,7 +404,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
                 <h3 class="font-bold text-principal text-base">Cambiar contraseña</h3>
                 <button onclick="cerrarModalPassword()" class="text-secundario hover:text-principal transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
                 </button>
             </div>
             <div class="px-6 py-5 flex flex-col gap-4">
@@ -429,7 +431,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
                 <h3 class="font-bold text-principal text-base">Nuevo usuario</h3>
                 <button onclick="cerrarModalUsuario()" class="text-secundario hover:text-principal transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
                 </button>
             </div>
             <!-- Formulario -->

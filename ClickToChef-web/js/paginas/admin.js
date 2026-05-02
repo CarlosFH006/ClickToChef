@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-4 py-3 text-right">
                     <button onclick="abrirModalSumarStock(${i.id}, '${i.nombre}', ${i.stockActual}, '${i.metodoMedida}')"
                         class="inline-flex items-center gap-1 text-xs text-green-700 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition-colors">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <ion-icon name="add-outline" style="font-size:12px"></ion-icon>
                         Sumar
                     </button>
                 </td>
@@ -623,7 +623,7 @@ function _renderMesas(mesas) {
                     <span class="text-secundario"> personas</span>
                     <button onclick="abrirModalCapacidad(${m.id}, ${m.capacidad})"
                         class="ml-2 inline-flex items-center gap-1 text-xs text-secundario border border-borde px-2 py-0.5 rounded-md hover:border-primary hover:text-primary transition-colors">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-1.414a2 2 0 01.586-1.414z"/></svg>
+                        <ion-icon name="pencil-outline" style="font-size:12px"></ion-icon>
                         Editar
                     </button>
                 </td>
