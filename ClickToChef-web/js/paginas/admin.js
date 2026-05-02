@@ -1,5 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Verificar que el usuario es ADMIN
+    const _usuarioGuardado = localStorage.getItem('usuario');
+    if (!_usuarioGuardado) {
+        alert('Debes iniciar sesión para acceder a esta página.');
+        window.location.href = 'index.html';
+        return;
+    }
+    const _usuarioAdmin = JSON.parse(_usuarioGuardado);
+    if (_usuarioAdmin.rol !== 'ADMIN') {
+        alert('No tienes permisos para acceder al panel de administración.');
+        localStorage.removeItem('usuario');
+        window.location.href = 'index.html';
+        return;
+    }
+
     // Actualiza el badge de estado del WebSocket en el header
     WebSocketService.onStatusChange((status) => {
         const el = document.getElementById('ws-status');

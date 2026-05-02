@@ -28,12 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
         //Si el login es exitoso
         if (payload.success) {
             const user = payload.user;
-            //Redirigir al usuario a la página correspondiente según su rol
             if (user.rol === 'CAMARERO') {
                 alert('El camarero no puede acceder a esta página');
             } else if (user.rol === 'COCINERO') {
+                localStorage.setItem('usuario', JSON.stringify({ username: user.username, rol: user.rol }));
                 window.location.href = 'kanban.html';
             } else if (user.rol === 'ADMIN') {
+                localStorage.setItem('usuario', JSON.stringify({ username: user.username, rol: user.rol }));
                 window.location.href = 'admin.html';
             }
         } else {

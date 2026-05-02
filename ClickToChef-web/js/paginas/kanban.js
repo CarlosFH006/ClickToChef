@@ -16,6 +16,21 @@ let detallesActuales = [];
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Verificar que el usuario es COCINERO
+    const _usuarioGuardado = localStorage.getItem('usuario');
+    if (!_usuarioGuardado) {
+        alert('Debes iniciar sesión para acceder a esta página.');
+        window.location.href = 'index.html';
+        return;
+    }
+    const _usuarioKanban = JSON.parse(_usuarioGuardado);
+    if (_usuarioKanban.rol !== 'COCINERO') {
+        alert('No tienes permisos para acceder al panel de cocina.');
+        localStorage.removeItem('usuario');
+        window.location.href = 'index.html';
+        return;
+    }
+
     // Estado del WebSocket en el header
     WebSocketService.onStatusChange((status) => {
         const el = document.getElementById('ws-status');
