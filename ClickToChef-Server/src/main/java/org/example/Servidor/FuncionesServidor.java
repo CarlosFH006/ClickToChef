@@ -509,6 +509,33 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarSumarStock(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("cantidad")) {
+            return GeneradorJSON.generarError("Payload de SUMAR_STOCK incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            double cantidad = payload.get("cantidad").getAsDouble();
+            if (cantidad <= 0) return GeneradorJSON.generarError("La cantidad debe ser mayor que 0");
+
+            IngredientesDAO.sumarStock(id, cantidad);
+
+            Ingredientes ing = IngredientesDAO.obtenerPorId(id);
+            if (ing != null) {
+                FuncionesOdoo.sumarStockOdoo(ing.getOdooProductId(), ing.getStockActual());
+            }
+
+            broadcastIngredientes();
+            broadcastNoDisponibles();
+
+            System.out.println("[FuncionesServidor] Stock sumado al ingrediente " + id + ": +" + cantidad);
+            return null;
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al sumar stock: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al sumar stock: " + e.getMessage());
+        }
+    }
+
     public static String procesarCrearIngrediente(JsonObject payload) {
         if (payload == null || !payload.has("nombre") || !payload.has("stockActual")
                 || !payload.has("unidadMedida") || !payload.has("tipo")) {

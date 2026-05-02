@@ -291,6 +291,25 @@ public class FuncionesOdoo {
      * Actualiza el stock en Odoo con el valor proporcionado.
      * Devuelve -1 si Odoo no está disponible o falla.
      */
+    /**
+     * Actualiza el stock de un ingrediente en Odoo con su nuevo valor actual.
+     * Se llama después de sumar stock en la BD local.
+     * Si odooProductId es 0 o Odoo falla, termina silenciosamente.
+     */
+    public static void sumarStockOdoo(int odooProductId, double nuevoStockActual) {
+        if (odooProductId == 0) return;
+        try {
+            int uid = autenticar();
+            XmlRpcClient models = crearClienteModelos();
+            int locationId = obtenerLocationStock(models, uid);
+            int varianteId = obtenerProductoVarianteId(models, uid, odooProductId);
+            actualizarStockOdoo(models, uid, varianteId, nuevoStockActual, locationId);
+            System.out.println("[FuncionesOdoo] Stock actualizado en Odoo (template " + odooProductId + ") → " + nuevoStockActual);
+        } catch (Exception e) {
+            System.err.println("[FuncionesOdoo] Error al actualizar stock en Odoo: " + e.getMessage());
+        }
+    }
+
     public static int registrarIngredienteEnOdoo(int ingredienteId, String nombre, double stock) {
         try {
             int uid = autenticar();

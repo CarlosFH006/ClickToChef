@@ -75,6 +75,41 @@ public class IngredientesDAO {
         return ingredientes;
     }
 
+    public static boolean sumarStock(int id, double cantidad) {
+        String sql = "UPDATE ingredientes SET stock_actual = stock_actual + ? WHERE id = ?";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setDouble(1, cantidad);
+            statement.setInt(2, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al sumar stock al ingrediente", e);
+        }
+    }
+
+    public static Ingredientes obtenerPorId(int id) {
+        String sql = "SELECT id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id FROM ingredientes WHERE id = ?";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, id);
+            ResultSet rs = statement.executeQuery();
+            if (rs.next()) {
+                return new Ingredientes(
+                        rs.getInt("id"), rs.getString("nombre"),
+                        rs.getDouble("stock_actual"), rs.getDouble("stock_reservado"),
+                        parsearMetodoMedida(rs.getString("unidad_medida")),
+                        parsearTipoIngrediente(rs.getString("tipo")),
+                        rs.getInt("odoo_product_id")
+                );
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener el ingrediente " + id, e);
+        }
+        return null;
+    }
+
     public static boolean actualizarOdooProductId(int ingredienteId, int odooProductId) {
         String sql = "UPDATE ingredientes SET odoo_product_id = ? WHERE id = ?";
 

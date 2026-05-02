@@ -67,17 +67,24 @@ document.addEventListener('DOMContentLoaded', () => {
     Api.on('INGREDIENTES_RESPONSE', (ingredientes) => {
         const tbody = document.getElementById('tabla-ingredientes');
         if (!ingredientes.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-secundario text-sm">Sin ingredientes</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-secundario text-sm">Sin ingredientes</td></tr>';
             return;
         }
         tbody.innerHTML = ingredientes.map(i => `
             <tr class="hover:bg-fondo transition-colors">
                 <td class="px-4 py-3 text-principal font-medium">${i.id}</td>
                 <td class="px-4 py-3 text-principal">${i.nombre}</td>
-                <td class="px-4 py-3 text-principal">${i.stockActual}</td>
+                <td class="px-4 py-3 text-principal font-medium">${i.stockActual}</td>
                 <td class="px-4 py-3 text-secundario">${i.stockReservado}</td>
                 <td class="px-4 py-3 text-secundario">${i.metodoMedida ?? '—'}</td>
                 <td class="px-4 py-3 text-secundario">${i.tipoIngrediente ?? '—'}</td>
+                <td class="px-4 py-3 text-right">
+                    <button onclick="abrirModalSumarStock(${i.id}, '${i.nombre}', ${i.stockActual}, '${i.metodoMedida}')"
+                        class="inline-flex items-center gap-1 text-xs text-green-700 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition-colors">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Sumar
+                    </button>
+                </td>
             </tr>
         `).join('');
     });
@@ -410,6 +417,51 @@ function _actualizarStockProductos(noDisponibles) {
 }
 
 // Genera los botones de filtro por estado de pedido
+let _sumarStockId = null;
+
+function abrirModalSumarStock(id, nombre, stockActual, unidad) {
+    _sumarStockId = id;
+    const esUnidad = (unidad ?? '').toUpperCase() === 'UNIDAD';
+    document.getElementById('sumar-stock-titulo').textContent = `${nombre} — stock actual: ${stockActual} ${unidad ?? ''}`;
+    const input = document.getElementById('sumar-stock-cantidad');
+    input.value = '';
+    input.step = esUnidad ? '1' : '0.01';
+    input.placeholder = esUnidad ? 'Ej: 10' : 'Ej: 2.5';
+    document.getElementById('sumar-stock-msg').classList.add('hidden');
+    const modal = document.getElementById('modal-sumar-stock');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalSumarStock() {
+    _sumarStockId = null;
+    const modal = document.getElementById('modal-sumar-stock');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function submitSumarStock() {
+    const cantidad = parseFloat(document.getElementById('sumar-stock-cantidad').value);
+    const msg = document.getElementById('sumar-stock-msg');
+    const esUnidad = document.getElementById('sumar-stock-cantidad').step === '1';
+    if (isNaN(cantidad) || cantidad <= 0) {
+        msg.textContent = 'Introduce una cantidad mayor que 0';
+        msg.className = 'text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+    if (esUnidad && !Number.isInteger(cantidad)) {
+        msg.textContent = 'Este ingrediente se mide en unidades enteras';
+        msg.className = 'text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+    Api.sumarStock(_sumarStockId, cantidad);
+    cerrarModalSumarStock();
+}
+
 function abrirModalIngrediente() {
     ['ing-nombre', 'ing-stock'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('ing-unidad').value = 'unidades';

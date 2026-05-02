@@ -214,6 +214,11 @@ const Api = (() => {
         sendMessage('GET_PEDIDOS_ADMIN', null);
     }
 
+    //Envio de mensaje para sumar stock a un ingrediente
+    function sumarStock(id, cantidad) {
+        sendMessage('SUMAR_STOCK', { id, cantidad });
+    }
+
     //Envio de mensaje para crear un nuevo ingrediente
     function crearIngrediente(nombre, stockActual, unidadMedida, tipo) {
         sendMessage('CREAR_INGREDIENTE', { nombre, stockActual, unidadMedida, tipo });
@@ -235,5 +240,5 @@ const Api = (() => {
     }
 
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock };
 })();
