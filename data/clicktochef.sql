@@ -10,7 +10,7 @@ CREATE TABLE categorias (
 
 CREATE TABLE productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
     descripcion TEXT,
     precio DECIMAL(10, 2) NOT NULL,
     categoria_id INT,
@@ -57,7 +57,7 @@ CREATE TABLE detalles_pedido (
 
 CREATE TABLE ingredientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
     stock_actual DECIMAL(10, 2) NOT NULL,
     stock_reservado DECIMAL(10, 2) NOT NULL DEFAULT 0,
     unidad_medida ENUM('kg', 'litros', 'unidades') NOT NULL DEFAULT 'unidades',
