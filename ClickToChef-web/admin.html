@@ -29,7 +29,7 @@
         <!-- Sidebar -->
         <aside class="w-56 bg-superficie border-r border-borde flex flex-col py-4 gap-1 shrink-0">
             <button onclick="mostrarPanel('mesas')"    class="panel-btn active" id="btn-mesas">
-                <ion-icon name="restaurant-outline" style="font-size:16px"></ion-icon>
+                <ion-icon name="grid-outline" style="font-size:16px"></ion-icon>
                 Mesas
             </button>
             <button onclick="mostrarPanel('tickets')"  class="panel-btn" id="btn-tickets">
@@ -45,7 +45,7 @@
                 Usuarios
             </button>
             <button onclick="mostrarPanel('productos')" class="panel-btn" id="btn-productos">
-                <ion-icon name="grid-outline" style="font-size:16px"></ion-icon>
+                <ion-icon name="restaurant-outline" style="font-size:16px"></ion-icon>
                 Productos
             </button>
         </aside>
@@ -186,6 +186,12 @@
 
                 <!-- Sub-panel Productos -->
                 <div id="subpanel-productos-lista" class="hidden">
+                    <div class="flex justify-end mb-3">
+                        <button onclick="abrirModalNuevoProducto()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                            <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
+                            Nuevo producto
+                        </button>
+                    </div>
                     <div id="filtros-categoria" class="flex flex-wrap gap-2 mb-4"></div>
                     <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
                     <table class="w-full text-sm">
@@ -257,6 +263,83 @@
             document.getElementById('subtab-' + nombre).classList.add('active');
         }
     </script>
+    <!-- Modal Nuevo Producto -->
+    <div id="modal-nuevo-producto" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde shrink-0">
+                <h3 class="font-bold text-principal text-base">Nuevo producto</h3>
+                <button onclick="cerrarModalNuevoProducto()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4 overflow-y-auto">
+                <!-- Nombre -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Nombre</label>
+                    <input id="prod-nombre" type="text" placeholder="Ej: Burger Classic"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <!-- Precio -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Precio (€)</label>
+                    <input id="prod-precio" type="number" min="0.01" step="0.01" placeholder="Ej: 12.50"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <!-- Categoría autocomplete -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Categoría</label>
+                    <div class="relative">
+                        <input id="prod-cat-input" type="text" placeholder="Buscar categoría..." autocomplete="off"
+                            oninput="filtrarCategorias()" onfocus="filtrarCategorias()"
+                            class="w-full border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                        <div id="prod-cat-dropdown" class="hidden absolute z-10 w-full bg-superficie border border-borde rounded-xl mt-1 shadow-lg max-h-40 overflow-y-auto"></div>
+                        <input type="hidden" id="prod-cat-id">
+                    </div>
+                </div>
+                <!-- Toggle producto directo -->
+                <label class="flex items-center gap-3 cursor-pointer select-none">
+                    <div class="relative">
+                        <input type="checkbox" id="prod-directo" class="sr-only" onchange="toggleProductoDirecto()">
+                        <div id="toggle-bg" class="w-10 h-5 bg-borde rounded-full transition-colors"></div>
+                        <div id="toggle-dot" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></div>
+                    </div>
+                    <span class="text-sm font-medium text-principal">Producto directo <span class="text-secundario font-normal">(sin receta, stock propio)</span></span>
+                </label>
+                <!-- Sección stock (producto directo) -->
+                <div id="section-stock" class="hidden flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Stock inicial (unidades)</label>
+                    <input id="prod-stock" type="number" min="1" step="1" placeholder="Ej: 20"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <!-- Sección receta -->
+                <div id="section-receta" class="flex flex-col gap-3">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Receta</label>
+                    <div class="flex gap-2 items-start">
+                        <div class="flex-1 relative">
+                            <input id="receta-ing-input" type="text" placeholder="Buscar ingrediente..." autocomplete="off"
+                                oninput="filtrarIngredientesReceta()"
+                                class="w-full border border-borde rounded-xl px-3 py-2 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                            <div id="receta-ing-dropdown" class="hidden absolute z-10 w-full bg-superficie border border-borde rounded-xl mt-1 shadow-lg max-h-32 overflow-y-auto"></div>
+                            <input type="hidden" id="receta-ing-id">
+                        </div>
+                        <input id="receta-cantidad" type="number" min="0.01" step="0.01" placeholder="Cant."
+                            class="w-24 border border-borde rounded-xl px-3 py-2 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                        <button onclick="addIngredienteReceta()"
+                            class="px-3 py-2 bg-primary text-white text-sm rounded-xl hover:opacity-90 whitespace-nowrap">
+                            <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
+                        </button>
+                    </div>
+                    <div id="receta-lista" class="flex flex-col gap-1"></div>
+                </div>
+                <span id="prod-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3 shrink-0">
+                <button onclick="cerrarModalNuevoProducto()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
+                <button onclick="submitNuevoProducto()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Crear</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Sumar Stock -->
     <div id="modal-sumar-stock" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-xs mx-4 overflow-hidden">

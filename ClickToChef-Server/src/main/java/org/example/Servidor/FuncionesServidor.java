@@ -536,6 +536,62 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarCrearProductoMenu(JsonObject payload) {
+        if (payload == null || !payload.has("nombre") || !payload.has("precio") || !payload.has("categoriaId")) {
+            return GeneradorJSON.generarCrearProductoResponse(false, "Payload incompleto");
+        }
+        try {
+            String nombre       = payload.get("nombre").getAsString().trim();
+            double precio       = payload.get("precio").getAsDouble();
+            int categoriaId     = payload.get("categoriaId").getAsInt();
+            boolean esDirecto   = payload.has("esProductoDirecto") && payload.get("esProductoDirecto").getAsBoolean();
+
+            int ingredienteDirectoId = -1;
+
+            if (esDirecto) {
+                double stock = payload.has("stockInicial") ? payload.get("stockInicial").getAsDouble() : 0;
+                Ingredientes ing = new Ingredientes(0, nombre, stock, 0,
+                        org.example.DTO.MetodoMedida.UNIDAD,
+                        org.example.DTO.TipoIngrediente.PRODUCTO_TERMINADO, 0);
+                int ingId = IngredientesDAO.insertarIngrediente(ing);
+                if (ingId == -1) return GeneradorJSON.generarCrearProductoResponse(false, "Error al crear el ingrediente");
+                int odooIngId = FuncionesOdoo.registrarIngredienteEnOdoo(ingId, nombre, stock);
+                if (odooIngId != -1) IngredientesDAO.actualizarOdooProductId(ingId, odooIngId);
+                ingredienteDirectoId = ingId;
+            }
+
+            Productos prod = new Productos(0, nombre, "", precio, categoriaId, 0);
+            int productoId = ProductosDAO.insertarProducto(prod);
+            if (productoId == -1) return GeneradorJSON.generarCrearProductoResponse(false, "Error al insertar el producto");
+
+            if (esDirecto && ingredienteDirectoId != -1) {
+                RecetasDAO.insertarReceta(new Recetas(productoId, ingredienteDirectoId, 1.0));
+            } else if (!esDirecto && payload.has("receta")) {
+                com.google.gson.JsonArray receta = payload.getAsJsonArray("receta");
+                for (int i = 0; i < receta.size(); i++) {
+                    com.google.gson.JsonObject item = receta.get(i).getAsJsonObject();
+                    RecetasDAO.insertarReceta(new Recetas(
+                            productoId,
+                            item.get("ingredienteId").getAsInt(),
+                            item.get("cantidad").getAsDouble()
+                    ));
+                }
+            }
+
+            int odooId = FuncionesOdoo.registrarProductoEnOdoo(nombre, precio);
+            if (odooId != -1) ProductosDAO.actualizarOdooId(productoId, odooId);
+
+            Servidor.broadcast(GeneradorJSON.generarNuevoProducto(productoId, nombre, precio, categoriaId));
+            if (esDirecto) broadcastNoDisponibles();
+
+            System.out.println("[FuncionesServidor] Producto '" + nombre + "' creado con ID: " + productoId);
+            return GeneradorJSON.generarCrearProductoResponse(true, null);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear producto: " + e.getMessage());
+            return GeneradorJSON.generarCrearProductoResponse(false, e.getMessage());
+        }
+    }
+
     public static String procesarCrearIngrediente(JsonObject payload) {
         if (payload == null || !payload.has("nombre") || !payload.has("stockActual")
                 || !payload.has("unidadMedida") || !payload.has("tipo")) {

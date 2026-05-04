@@ -105,6 +105,14 @@ const Api = (() => {
                 _dispatch('CREAR_MESA_RESPONSE', msg.payload);
                 break;
 
+            case 'NEW_PRODUCTO':
+                _dispatch('NEW_PRODUCTO', msg.payload);
+                break;
+
+            case 'CREAR_PRODUCTO_MENU_RESPONSE':
+                _dispatch('CREAR_PRODUCTO_MENU_RESPONSE', msg.payload);
+                break;
+
             case 'NEW_MESA':
                 _dispatch('NEW_MESA', msg.payload);
                 break;
@@ -214,6 +222,11 @@ const Api = (() => {
         sendMessage('GET_PEDIDOS_ADMIN', null);
     }
 
+    //Envio de mensaje para crear un producto del menú
+    function crearProductoMenu(data) {
+        sendMessage('CREAR_PRODUCTO_MENU', data);
+    }
+
     //Envio de mensaje para sumar stock a un ingrediente
     function sumarStock(id, cantidad) {
         sendMessage('SUMAR_STOCK', { id, cantidad });
@@ -240,5 +253,5 @@ const Api = (() => {
     }
 
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock, crearProductoMenu };
 })();

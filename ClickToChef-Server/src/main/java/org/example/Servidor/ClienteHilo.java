@@ -180,6 +180,9 @@ public class ClienteHilo extends Thread {
                 case "ACTUALIZAR_CAPACIDAD_MESA":
                     respuesta = FuncionesServidor.procesarActualizarCapacidadMesa(payload);
                     break;
+                case "CREAR_PRODUCTO_MENU":
+                    respuesta = FuncionesServidor.procesarCrearProductoMenu(payload);
+                    break;
                 case "SUMAR_STOCK":
                     respuesta = FuncionesServidor.procesarSumarStock(payload);
                     break;

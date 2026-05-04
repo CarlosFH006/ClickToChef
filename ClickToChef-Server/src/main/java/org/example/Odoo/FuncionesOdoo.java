@@ -296,6 +296,27 @@ public class FuncionesOdoo {
      * Se llama después de sumar stock en la BD local.
      * Si odooProductId es 0 o Odoo falla, termina silenciosamente.
      */
+    /**
+     * Registra un producto del menú en Odoo como servicio (sin stock).
+     * Busca por nombre primero para evitar duplicados.
+     * Devuelve el template ID, o -1 si falla.
+     */
+    public static int registrarProductoEnOdoo(String nombre, double precio) {
+        try {
+            int uid = autenticar();
+            XmlRpcClient models = crearClienteModelos();
+            int templateId = buscarProductoOdooPorNombre(models, uid, nombre);
+            if (templateId == 0) {
+                templateId = crearProductoOdoo(models, uid, nombre, "service", precio);
+                System.out.println("[FuncionesOdoo] Producto '" + nombre + "' creado en Odoo con ID: " + templateId);
+            }
+            return templateId;
+        } catch (Exception e) {
+            System.err.println("[FuncionesOdoo] Error al registrar producto en Odoo: " + e.getMessage());
+            return -1;
+        }
+    }
+
     public static void sumarStockOdoo(int odooProductId, double nuevoStockActual) {
         if (odooProductId == 0) return;
         try {

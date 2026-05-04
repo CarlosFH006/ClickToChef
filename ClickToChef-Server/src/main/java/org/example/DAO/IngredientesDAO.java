@@ -12,6 +12,18 @@ import java.util.ArrayList;
 
 public class IngredientesDAO {
 
+    private static String convertirMetodoMedidaADB(MetodoMedida metodo) {
+        return switch (metodo) {
+            case KG     -> "kg";
+            case LITROS -> "litros";
+            case UNIDAD -> "unidades";
+        };
+    }
+
+    private static String convertirTipoIngredienteADB(TipoIngrediente tipo) {
+        return tipo.name().toLowerCase();
+    }
+
     private static MetodoMedida parsearMetodoMedida(String valor) {
         if (valor == null) return MetodoMedida.UNIDAD;
         return switch (valor.toLowerCase()) {
@@ -37,8 +49,8 @@ public class IngredientesDAO {
             statement.setString(1, ingrediente.getNombre());
             statement.setDouble(2, ingrediente.getStockActual());
             statement.setDouble(3, ingrediente.getStockReservado());
-            statement.setString(4, ingrediente.getMetodoMedida().name().toLowerCase());
-            statement.setString(5, ingrediente.getTipoIngrediente().name().toLowerCase());
+            statement.setString(4, convertirMetodoMedidaADB(ingrediente.getMetodoMedida()));
+            statement.setString(5, convertirTipoIngredienteADB(ingrediente.getTipoIngrediente()));
             statement.setInt(6, ingrediente.getOdooProductId());
             if (statement.executeUpdate() == 0) return -1;
             ResultSet keys = statement.getGeneratedKeys();

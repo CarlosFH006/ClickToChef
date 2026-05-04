@@ -69,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('')}
         `;
 
+        // Cache de categorías para el autocomplete del modal de producto
+        window._categoriasAdmin = categorias.map(c => ({ id: c.id, nombre: c.nombre }));
+
         // Almacena todos los productos con su categoría para poder filtrarlos sin re-fetch
         const todosLosProductos = categorias.flatMap(cat =>
             cat.productos.map(p => ({ ...p, categoria: cat.nombre, categoriaId: cat.id }))
@@ -80,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Ingredientes ---
     // Muestra id, nombre, stock actual, stock reservado, unidad y tipo
     Api.on('INGREDIENTES_RESPONSE', (ingredientes) => {
+        window._ingredientesAdmin = ingredientes; // cache para el modal de producto
         const tbody = document.getElementById('tabla-ingredientes');
         if (!ingredientes.length) {
             tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-secundario text-sm">Sin ingredientes</td></tr>';
@@ -145,6 +149,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>
         `).join('');
+    });
+
+    Api.on('CREAR_PRODUCTO_MENU_RESPONSE', ({ success, mensaje }) => {
+        const msg = document.getElementById('prod-msg');
+        if (success) {
+            msg.textContent = '✓ Producto creado correctamente';
+            msg.className = 'text-sm text-green-600';
+            msg.classList.remove('hidden');
+            setTimeout(() => cerrarModalNuevoProducto(), 1500);
+        } else {
+            msg.textContent = mensaje ?? 'Error al crear el producto';
+            msg.className = 'text-sm text-error';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 4000);
+        }
+    });
+
+    Api.on('NEW_PRODUCTO', ({ id, nombre, precio, categoriaId }) => {
+        // Actualizar tabla de productos en el panel admin
+        if (window._productosAdmin) {
+            const cat = (window._categoriasAdmin ?? []).find(c => c.id === categoriaId);
+            window._productosAdmin = [...window._productosAdmin, {
+                id, nombre, precio, disponible: true,
+                categoria: cat?.nombre ?? '—', categoriaId
+            }];
+            const btnActivo = document.querySelector('.filtro-cat-btn.active');
+            const catId = btnActivo?.id === 'filtro-cat-todos' ? null : parseInt(btnActivo?.id?.replace('filtro-cat-', ''));
+            filtrarProductos(catId ?? null);
+        }
     });
 
     Api.on('CREAR_INGREDIENTE_RESPONSE', ({ success, mensaje }) => {
@@ -475,6 +508,156 @@ function submitSumarStock() {
     }
     Api.sumarStock(_sumarStockId, cantidad);
     cerrarModalSumarStock();
+}
+
+// --- Modal Nuevo Producto ---
+let _recetaActual = [];
+
+function abrirModalNuevoProducto() {
+    _recetaActual = [];
+    ['prod-nombre', 'prod-precio', 'prod-cat-input', 'prod-stock', 'receta-ing-input', 'receta-cantidad'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('prod-cat-id').value = '';
+    document.getElementById('receta-ing-id').value = '';
+    document.getElementById('prod-directo').checked = false;
+    document.getElementById('toggle-bg').style.backgroundColor = '';
+    document.getElementById('toggle-dot').style.transform = '';
+    document.getElementById('section-stock').classList.add('hidden');
+    document.getElementById('section-receta').classList.remove('hidden');
+    document.getElementById('receta-lista').innerHTML = '';
+    document.getElementById('prod-msg').classList.add('hidden');
+    document.getElementById('prod-cat-dropdown').classList.add('hidden');
+    document.getElementById('receta-ing-dropdown').classList.add('hidden');
+    const modal = document.getElementById('modal-nuevo-producto');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalNuevoProducto() {
+    _recetaActual = [];
+    const modal = document.getElementById('modal-nuevo-producto');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function toggleProductoDirecto() {
+    const checked = document.getElementById('prod-directo').checked;
+    document.getElementById('toggle-bg').style.backgroundColor = checked ? '#3D64F4' : '';
+    document.getElementById('toggle-dot').style.transform = checked ? 'translateX(20px)' : '';
+    document.getElementById('section-stock').classList.toggle('hidden', !checked);
+    document.getElementById('section-receta').classList.toggle('hidden', checked);
+}
+
+function filtrarCategorias() {
+    const val = document.getElementById('prod-cat-input').value.toLowerCase();
+    const cats = (window._categoriasAdmin ?? []).filter(c => c.nombre.toLowerCase().includes(val));
+    const dd = document.getElementById('prod-cat-dropdown');
+    if (!cats.length) { dd.classList.add('hidden'); return; }
+    dd.innerHTML = cats.map(c => `
+        <div onclick="seleccionarCategoria(${c.id}, '${c.nombre}')"
+            class="px-4 py-2 text-sm text-principal hover:bg-fondo cursor-pointer">${c.nombre}</div>
+    `).join('');
+    dd.classList.remove('hidden');
+}
+
+function seleccionarCategoria(id, nombre) {
+    document.getElementById('prod-cat-input').value = nombre;
+    document.getElementById('prod-cat-id').value = id;
+    document.getElementById('prod-cat-dropdown').classList.add('hidden');
+}
+
+function filtrarIngredientesReceta() {
+    const val = document.getElementById('receta-ing-input').value.toLowerCase();
+    // Solo ingredientes que NO sean producto_terminado
+    const ings = (window._ingredientesAdmin ?? [])
+        .filter(i => i.tipoIngrediente?.toUpperCase() !== 'PRODUCTO_TERMINADO' && i.nombre.toLowerCase().includes(val));
+    const dd = document.getElementById('receta-ing-dropdown');
+    if (!ings.length) { dd.classList.add('hidden'); return; }
+    dd.innerHTML = ings.map(i => `
+        <div onclick="seleccionarIngredienteReceta(${i.id}, '${i.nombre}')"
+            class="px-4 py-2 text-sm text-principal hover:bg-fondo cursor-pointer">${i.nombre}</div>
+    `).join('');
+    dd.classList.remove('hidden');
+}
+
+function seleccionarIngredienteReceta(id, nombre) {
+    document.getElementById('receta-ing-input').value = nombre;
+    document.getElementById('receta-ing-id').value = id;
+    document.getElementById('receta-ing-dropdown').classList.add('hidden');
+}
+
+function addIngredienteReceta() {
+    const id       = parseInt(document.getElementById('receta-ing-id').value);
+    const nombre   = document.getElementById('receta-ing-input').value.trim();
+    const cantidad = parseFloat(document.getElementById('receta-cantidad').value);
+    if (!id || !nombre || isNaN(cantidad) || cantidad <= 0) return;
+    if (_recetaActual.find(r => r.ingredienteId === id)) return; // no duplicados
+    _recetaActual.push({ ingredienteId: id, nombre, cantidad });
+    document.getElementById('receta-ing-input').value = '';
+    document.getElementById('receta-ing-id').value = '';
+    document.getElementById('receta-cantidad').value = '';
+    _renderRecetaLista();
+}
+
+function _renderRecetaLista() {
+    document.getElementById('receta-lista').innerHTML = _recetaActual.map((r, i) => `
+        <div class="flex items-center justify-between px-3 py-1.5 bg-fondo rounded-lg text-sm">
+            <span class="text-principal">${r.nombre}</span>
+            <div class="flex items-center gap-2">
+                <span class="text-secundario">${r.cantidad}</span>
+                <button onclick="_removeIngredienteReceta(${i})" class="text-error hover:opacity-70">
+                    <ion-icon name="close-outline" style="font-size:14px"></ion-icon>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function _removeIngredienteReceta(index) {
+    _recetaActual.splice(index, 1);
+    _renderRecetaLista();
+}
+
+function submitNuevoProducto() {
+    const nombre    = document.getElementById('prod-nombre').value.trim();
+    const precio    = parseFloat(document.getElementById('prod-precio').value);
+    const catId     = parseInt(document.getElementById('prod-cat-id').value);
+    const esDirecto = document.getElementById('prod-directo').checked;
+    const msg       = document.getElementById('prod-msg');
+
+    if (!nombre || isNaN(precio) || precio <= 0 || !catId) {
+        msg.textContent = 'Rellena nombre, precio y categoría correctamente';
+        msg.className = 'text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+
+    const payload = { nombre, precio, categoriaId: catId, esProductoDirecto: esDirecto };
+
+    if (esDirecto) {
+        const stock = parseInt(document.getElementById('prod-stock').value);
+        if (isNaN(stock) || stock < 1) {
+            msg.textContent = 'Introduce el stock inicial';
+            msg.className = 'text-sm text-error';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+            return;
+        }
+        payload.stockInicial = stock;
+    } else {
+        if (_recetaActual.length === 0) {
+            msg.textContent = 'Añade al menos un ingrediente a la receta';
+            msg.className = 'text-sm text-error';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+            return;
+        }
+        payload.receta = _recetaActual.map(r => ({ ingredienteId: r.ingredienteId, cantidad: r.cantidad }));
+    }
+
+    Api.crearProductoMenu(payload);
 }
 
 function abrirModalIngrediente() {

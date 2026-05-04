@@ -10,18 +10,19 @@ import java.util.ArrayList;
 
 public class ProductosDAO {
 
-    public static boolean insertarProducto(Productos producto) {
+    public static int insertarProducto(Productos producto) {
         String sql = "INSERT INTO productos (nombre, descripcion, precio, categoria_id, odoo_id) VALUES (?, ?, ?, ?, ?)";
-
         try {
             Connection conexion = ConexionDB.getConexion();
-            PreparedStatement statement = conexion.prepareStatement(sql);
+            PreparedStatement statement = conexion.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, producto.getNombre());
             statement.setString(2, producto.getDescripcion());
             statement.setDouble(3, producto.getPrecio());
             statement.setInt(4, producto.getCategoriaId());
             statement.setInt(5, producto.getOdooId());
-            return statement.executeUpdate() > 0;
+            if (statement.executeUpdate() == 0) return -1;
+            ResultSet keys = statement.getGeneratedKeys();
+            return keys.next() ? keys.getInt(1) : -1;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el producto", e);
         }

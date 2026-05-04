@@ -273,6 +273,14 @@ class SocketClient {
         }
         break;
 
+      case 'NEW_PRODUCTO':
+        if (data.payload) {
+          const { id, nombre, precio, categoriaId, disponible } = data.payload;
+          console.log(`[Socket] Nuevo producto: ${nombre} (cat ${categoriaId})`);
+          useMenuStore.getState().addProducto(categoriaId, { id, nombre, precio, disponible });
+        }
+        break;
+
       case 'NEW_CATEGORIA':
         if (data.payload) {
           const { id, nombre } = data.payload;
