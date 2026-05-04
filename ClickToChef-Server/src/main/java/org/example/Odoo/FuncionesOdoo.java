@@ -99,18 +99,21 @@ public class FuncionesOdoo {
     }
 
     /**
-     * Busca un product.template en Odoo por nombre exacto.
+     * Busca un product.template en Odoo por nombre exacto y tipo.
+     * tipo puede ser "consu" (almacenable) o "service".
      * Devuelve el ID del template si existe, o 0 si no se encuentra.
-     * Se usa para evitar duplicados antes de crear un producto nuevo.
      */
-    private static int buscarProductoOdooPorNombre(XmlRpcClient models, int uid, String nombre) {
+    private static int buscarProductoOdooPorNombre(XmlRpcClient models, int uid, String nombre, String tipo) {
         try {
             Map<String, Object> kwargs = new HashMap<>();
             kwargs.put("fields", new Object[]{"id"});
             kwargs.put("limit", 1);
+            Object[] dominio = tipo != null
+                    ? new Object[]{new Object[]{"name", "=", nombre}, new Object[]{"type", "=", tipo}}
+                    : new Object[]{new Object[]{"name", "=", nombre}};
             Object[] resultado = (Object[]) models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "product.template", "search_read",
-                    new Object[]{new Object[]{new Object[]{"name", "=", nombre}}},
+                    new Object[]{dominio},
                     kwargs
             });
             if (resultado.length == 0) return 0;
@@ -305,7 +308,7 @@ public class FuncionesOdoo {
         try {
             int uid = autenticar();
             XmlRpcClient models = crearClienteModelos();
-            int templateId = buscarProductoOdooPorNombre(models, uid, nombre);
+            int templateId = buscarProductoOdooPorNombre(models, uid, nombre, "service");
             if (templateId == 0) {
                 templateId = crearProductoOdoo(models, uid, nombre, "service", precio);
                 System.out.println("[FuncionesOdoo] Producto '" + nombre + "' creado en Odoo con ID: " + templateId);
@@ -336,7 +339,7 @@ public class FuncionesOdoo {
             int uid = autenticar();
             XmlRpcClient models = crearClienteModelos();
             int locationId = obtenerLocationStock(models, uid);
-            int templateId = buscarProductoOdooPorNombre(models, uid, nombre);
+            int templateId = buscarProductoOdooPorNombre(models, uid, nombre, "consu");
             if (templateId == 0) {
                 templateId = crearProductoOdoo(models, uid, nombre, "consu", 0);
                 System.out.println("[FuncionesOdoo] Ingrediente '" + nombre + "' creado en Odoo con ID: " + templateId);
@@ -370,7 +373,7 @@ public class FuncionesOdoo {
             for (DetallesPedido detalle : detalles) {
                 Productos prod = productosMap.get(detalle.getProductoId());
                 if (prod == null) continue;
-                int templateId = buscarProductoOdooPorNombre(models, uid, prod.getNombre());
+                int templateId = buscarProductoOdooPorNombre(models, uid, prod.getNombre(), "service");
                 if (templateId == 0) continue;
                 int varianteId = obtenerProductoVarianteId(models, uid, templateId);
                 Map<String, Object> lineVals = new HashMap<>();
@@ -495,7 +498,7 @@ public class FuncionesOdoo {
             for (Ingredientes ing : ingredientes) {
                 int templateId = ing.getOdooProductId();
                 if (templateId == 0 || !existeProductoEnOdoo(models, uid, templateId)) {
-                    templateId = buscarProductoOdooPorNombre(models, uid, ing.getNombre());
+                    templateId = buscarProductoOdooPorNombre(models, uid, ing.getNombre(), "consu");
                     if (templateId == 0) {
                         templateId = crearProductoOdoo(models, uid, ing.getNombre(), "consu", 0);
                         System.out.println("[FuncionesOdoo] Ingrediente '" + ing.getNombre() + "' creado en Odoo con ID: " + templateId);
@@ -514,7 +517,7 @@ public class FuncionesOdoo {
             for (Productos prod : productos) {
                 int odooId = prod.getOdooId();
                 if (odooId == 0 || !existeProductoEnOdoo(models, uid, odooId)) {
-                    odooId = buscarProductoOdooPorNombre(models, uid, prod.getNombre());
+                    odooId = buscarProductoOdooPorNombre(models, uid, prod.getNombre(), "service");
                     if (odooId == 0) {
                         odooId = crearProductoOdoo(models, uid, prod.getNombre(), "service", prod.getPrecio());
                         System.out.println("[FuncionesOdoo] Producto '" + prod.getNombre() + "' creado en Odoo con ID: " + odooId);

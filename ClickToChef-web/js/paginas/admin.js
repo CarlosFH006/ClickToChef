@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (status === 'connected') {
             Api.getMesas();
             Api.getMenu();
+            Api.getCategoriasAdmin();
             Api.getTickets();
             Api.getIngredientes();
             Api.getUsuarios();
@@ -46,19 +47,22 @@ document.addEventListener('DOMContentLoaded', () => {
         _renderMesas(mesas);
     });
 
-    // --- Categorías y Productos ---
-    // Ambos vienen del mismo MENU_RESPONSE y se renderizan a la vez
-    Api.on('MENU_RESPONSE', (categorias) => {
-
-        // Tabla de categorías: id, nombre y número de productos
+    // Todas las categorías (incluye vacías) — tabla de categorías del admin
+    Api.on('CATEGORIAS_ADMIN_RESPONSE', (cats) => {
         const tbodyCat = document.getElementById('tabla-categorias');
-        tbodyCat.innerHTML = categorias.map(cat => `
+        tbodyCat.innerHTML = cats.map(cat => `
             <tr class="hover:bg-fondo transition-colors">
                 <td class="px-4 py-3 text-principal font-medium">${cat.id}</td>
                 <td class="px-4 py-3 text-principal">${cat.nombre}</td>
-                <td class="px-4 py-3 text-secundario">${cat.productos.length} productos</td>
+                <td class="px-4 py-3 text-secundario">—</td>
             </tr>
         `).join('') || '<tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Sin categorías</td></tr>';
+        window._categoriasAdmin = cats.map(c => ({ id: c.id, nombre: c.nombre }));
+    });
+
+    // --- Categorías y Productos ---
+    // MENU_RESPONSE gestiona los filtros y la tabla de productos (solo categorías con productos)
+    Api.on('MENU_RESPONSE', (categorias) => {
 
         // Botones de filtro por categoría para la sub-pestaña de productos
         const filtrosEl = document.getElementById('filtros-categoria');
@@ -199,19 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const msg = document.getElementById('crear-categoria-msg');
         if (success) {
             document.getElementById('nueva-categoria-nombre').value = '';
-            // Añadir fila directamente sin recargar el menú completo
-            const tbody = document.getElementById('tabla-categorias');
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-fondo transition-colors';
-            tr.innerHTML = `
-                <td class="px-4 py-3 text-principal font-medium">${id}</td>
-                <td class="px-4 py-3 text-principal">${nombre}</td>
-                <td class="px-4 py-3 text-secundario">0 productos</td>
-            `;
-            // Quitar el mensaje de "Sin categorías" si existía
-            const vacio = tbody.querySelector('td[colspan]');
-            if (vacio) tbody.innerHTML = '';
-            tbody.appendChild(tr);
+            Api.getCategoriasAdmin(); // refresca la tabla con todas las categorías
             msg.textContent = '✓ Categoría creada correctamente';
             msg.className = 'text-sm text-green-600';
             msg.classList.remove('hidden');

@@ -63,6 +63,9 @@ public class WebSocketHandler {
                 case "GET_DETALLES_PEDIDO":
                     respuesta = FuncionesServidor.procesarGetDetallesPedido();
                     break;
+                case "GET_CATEGORIAS_ADMIN":
+                    respuesta = FuncionesServidor.procesarGetCategoriasAdmin();
+                    break;
                 case "GET_PEDIDOS_ADMIN":
                     respuesta = FuncionesServidor.procesarGetPedidosAdmin();
                     break;

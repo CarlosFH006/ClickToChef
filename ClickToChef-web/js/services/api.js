@@ -125,6 +125,10 @@ const Api = (() => {
                 _dispatch('CREAR_INGREDIENTE_RESPONSE', msg.payload);
                 break;
 
+            case 'CATEGORIAS_ADMIN_RESPONSE':
+                _dispatch('CATEGORIAS_ADMIN_RESPONSE', msg.payload ?? []);
+                break;
+
             case 'CREAR_CATEGORIA_RESPONSE':
                 _dispatch('CREAR_CATEGORIA_RESPONSE', msg.payload);
                 break;
@@ -217,6 +221,11 @@ const Api = (() => {
         sendMessage('GET_USUARIOS', null);
     }
 
+    //Envio de mensaje para obtener todas las categorías (incluye vacías)
+    function getCategoriasAdmin() {
+        sendMessage('GET_CATEGORIAS_ADMIN', null);
+    }
+
     //Envio de mensaje para obtener los pedidos abiertos con sus detalles
     function getPedidosAdmin() {
         sendMessage('GET_PEDIDOS_ADMIN', null);
@@ -253,5 +262,5 @@ const Api = (() => {
     }
 
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock, crearProductoMenu };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, getCategoriasAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock, crearProductoMenu };
 })();

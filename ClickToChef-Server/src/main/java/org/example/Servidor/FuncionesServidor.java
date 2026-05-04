@@ -251,6 +251,16 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarGetCategoriasAdmin() {
+        try {
+            ArrayList<org.example.DTO.Categorias> lista = CategoriasDAO.obtenerTodas();
+            return GeneradorJSON.generarCategoriasAdminResponse(lista);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al obtener categorías admin: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al obtener categorías");
+        }
+    }
+
     public static String procesarGetPedidosAdmin() {
         try {
             ArrayList<Pedidos> lista = PedidosDAO.obtenerTodos();

@@ -194,6 +194,14 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    //Genera la respuesta con todas las categorías para el admin (incluye vacías)
+    public static String generarCategoriasAdminResponse(ArrayList lista) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CATEGORIAS_ADMIN_RESPONSE");
+        respuesta.add("payload", gson.toJsonTree(lista));
+        return gson.toJson(respuesta);
+    }
+
     //Genera la respuesta con los pedidos abiertos y sus detalles para el admin
     public static String generarPedidosAdminResponse(ArrayList<Pedidos> lista) {
         JsonObject respuesta = new JsonObject();
