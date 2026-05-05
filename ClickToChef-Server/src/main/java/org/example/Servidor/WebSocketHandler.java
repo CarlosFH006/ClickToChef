@@ -87,6 +87,9 @@ public class WebSocketHandler {
                 case "ACTUALIZAR_CAPACIDAD_MESA":
                     respuesta = FuncionesServidor.procesarActualizarCapacidadMesa(payload);
                     break;
+                case "GET_RECETA_PRODUCTO":
+                    respuesta = FuncionesServidor.procesarGetRecetaProducto(payload);
+                    break;
                 case "CREAR_PRODUCTO_MENU":
                     respuesta = FuncionesServidor.procesarCrearProductoMenu(payload);
                     break;

@@ -7,6 +7,8 @@ import org.example.Odoo.FuncionesOdoo;
 import org.example.DTO.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 //Funciones para ejecutar en las llamadas de ServerSocket y de WebSocket
 public class FuncionesServidor {
@@ -543,6 +545,19 @@ public class FuncionesServidor {
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al sumar stock: " + e.getMessage());
             return GeneradorJSON.generarError("Error al sumar stock: " + e.getMessage());
+        }
+    }
+
+    public static String procesarGetRecetaProducto(JsonObject payload) {
+        if (payload == null || !payload.has("productoId")) {
+            return GeneradorJSON.generarError("Payload de GET_RECETA_PRODUCTO incompleto");
+        }
+        try {
+            int productoId = payload.get("productoId").getAsInt();
+            List<Map<String, Object>> ingredientes = RecetasDAO.obtenerPorProductoConIngrediente(productoId);
+            return GeneradorJSON.generarRecetaProductoResponse(productoId, ingredientes);
+        } catch (Exception e) {
+            return GeneradorJSON.generarError("Error al obtener receta: " + e.getMessage());
         }
     }
 

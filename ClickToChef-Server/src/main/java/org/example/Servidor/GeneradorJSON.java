@@ -13,6 +13,7 @@ import org.example.DTO.Tickets;
 import org.example.DTO.Usuarios;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 //Clase con métodos estaticos para generar los Json de las respuestas
@@ -371,6 +372,17 @@ public class GeneradorJSON {
         payload.addProperty("precio", precio);
         payload.addProperty("categoriaId", categoriaId);
         payload.addProperty("disponible", true);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta con la receta de un producto
+    public static String generarRecetaProductoResponse(int productoId, List<?> ingredientes) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "RECETA_PRODUCTO_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("productoId", productoId);
+        payload.add("ingredientes", gson.toJsonTree(ingredientes));
         respuesta.add("payload", payload);
         return gson.toJson(respuesta);
     }

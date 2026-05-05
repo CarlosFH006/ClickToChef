@@ -155,6 +155,40 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     });
 
+    Api.on('RECETA_PRODUCTO_RESPONSE', ({ productoId, ingredientes }) => {
+        const body = document.getElementById('modal-receta-body');
+        if (!ingredientes.length) {
+            body.innerHTML = '<p class="text-sm text-secundario">Sin receta configurada.</p>';
+            return;
+        }
+        const esDirecto = ingredientes.length === 1 && ingredientes[0].tipo === 'producto_terminado';
+        if (esDirecto) {
+            body.innerHTML = `
+                <div class="flex items-center gap-2 text-sm">
+                    <ion-icon name="cube-outline" style="font-size:18px" class="text-primary"></ion-icon>
+                    <span class="text-principal">Producto directo — <strong>${ingredientes[0].nombre}</strong></span>
+                </div>`;
+        } else {
+            body.innerHTML = `
+                <table class="w-full text-sm">
+                    <thead><tr class="text-secundario uppercase text-xs tracking-wide border-b border-borde">
+                        <th class="text-left py-2 pr-4">Ingrediente</th>
+                        <th class="text-left py-2 pr-4">Cantidad</th>
+                        <th class="text-left py-2">Unidad</th>
+                    </tr></thead>
+                    <tbody>
+                        ${ingredientes.map(i => `
+                            <tr class="border-b border-borde last:border-0">
+                                <td class="py-2 pr-4 text-principal">${i.nombre}</td>
+                                <td class="py-2 pr-4 text-secundario">${i.cantidad}</td>
+                                <td class="py-2 text-secundario">${i.unidadMedida ?? '—'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+        }
+    });
+
     Api.on('CREAR_PRODUCTO_MENU_RESPONSE', ({ success, mensaje }) => {
         const msg = document.getElementById('prod-msg');
         if (success) {
@@ -504,6 +538,21 @@ function submitSumarStock() {
 
 // --- Modal Nuevo Producto ---
 let _recetaActual = [];
+
+function verRecetaProducto(id, nombre) {
+    document.getElementById('modal-receta-titulo').textContent = `Receta — ${nombre}`;
+    document.getElementById('modal-receta-body').innerHTML = '<p class="text-sm text-secundario">Cargando...</p>';
+    const modal = document.getElementById('modal-receta');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    Api.getRecetaProducto(id);
+}
+
+function cerrarModalReceta() {
+    const modal = document.getElementById('modal-receta');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
 
 function abrirModalNuevoProducto() {
     _recetaActual = [];
@@ -943,8 +992,15 @@ function _renderProductos(productos) {
             <td class="px-4 py-3 text-secundario">${p.categoria}</td>
             <td class="px-4 py-3 text-principal">${p.precio.toFixed(2)} €</td>
             <td class="px-4 py-3">${p.disponible ? _badge('Disponible', 'success') : _badge('No disponible', 'error')}</td>
+            <td class="px-4 py-3 text-right">
+                <button onclick="verRecetaProducto(${p.id}, '${p.nombre}')"
+                    class="inline-flex items-center gap-1 text-xs text-primary border border-primary/30 px-3 py-1 rounded-lg hover:bg-primary/10 transition-colors">
+                    <ion-icon name="list-outline" style="font-size:12px"></ion-icon>
+                    Receta
+                </button>
+            </td>
         </tr>
-    `).join('') || '<tr><td colspan="5" class="px-4 py-8 text-center text-secundario text-sm">Sin productos</td></tr>';
+    `).join('') || '<tr><td colspan="6" class="px-4 py-8 text-center text-secundario text-sm">Sin productos</td></tr>';
 }
 
 // --- Lógica de pedidos ---

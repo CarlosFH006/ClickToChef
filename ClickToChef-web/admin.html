@@ -202,10 +202,11 @@
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Categoría</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Precio</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Disponible</th>
+                                <th class="px-4 py-3"></th>
                             </tr>
                         </thead>
                         <tbody id="tabla-productos" class="divide-y divide-borde">
-                            <tr><td colspan="5" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                            <tr><td colspan="6" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
                         </tbody>
                     </table>
                     </div>
@@ -336,6 +337,24 @@
             <div class="px-6 py-4 border-t border-borde flex justify-end gap-3 shrink-0">
                 <button onclick="cerrarModalNuevoProducto()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
                 <button onclick="submitNuevoProducto()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Crear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ver Receta -->
+    <div id="modal-receta" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-md mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 id="modal-receta-titulo" class="font-bold text-principal text-base">Receta</h3>
+                <button onclick="cerrarModalReceta()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div id="modal-receta-body" class="px-6 py-5">
+                <p class="text-sm text-secundario">Cargando...</p>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end">
+                <button onclick="cerrarModalReceta()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cerrar</button>
             </div>
         </div>
     </div>

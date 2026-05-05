@@ -109,6 +109,10 @@ const Api = (() => {
                 _dispatch('NEW_PRODUCTO', msg.payload);
                 break;
 
+            case 'RECETA_PRODUCTO_RESPONSE':
+                _dispatch('RECETA_PRODUCTO_RESPONSE', msg.payload);
+                break;
+
             case 'CREAR_PRODUCTO_MENU_RESPONSE':
                 _dispatch('CREAR_PRODUCTO_MENU_RESPONSE', msg.payload);
                 break;
@@ -231,6 +235,11 @@ const Api = (() => {
         sendMessage('GET_PEDIDOS_ADMIN', null);
     }
 
+    //Envio de mensaje para obtener la receta de un producto
+    function getRecetaProducto(productoId) {
+        sendMessage('GET_RECETA_PRODUCTO', { productoId });
+    }
+
     //Envio de mensaje para crear un producto del menú
     function crearProductoMenu(data) {
         sendMessage('CREAR_PRODUCTO_MENU', data);
@@ -262,5 +271,5 @@ const Api = (() => {
     }
 
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, getCategoriasAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock, crearProductoMenu };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, getCategoriasAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock, crearProductoMenu, getRecetaProducto };
 })();
