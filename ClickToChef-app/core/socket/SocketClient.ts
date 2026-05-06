@@ -277,7 +277,16 @@ class SocketClient {
         if (data.payload) {
           const { id, nombre, precio, categoriaId, disponible } = data.payload;
           console.log(`[Socket] Nuevo producto: ${nombre} (cat ${categoriaId})`);
-          useMenuStore.getState().addProducto(categoriaId, { id, nombre, precio, disponible });
+          useMenuStore.getState().addProducto(categoriaId, { id, nombre, precio, disponible, activo: true });
+        }
+        break;
+
+      //Actualizar estado activo de un producto
+      case 'PRODUCTO_ACTIVO_UPDATED':
+        if (data.payload) {
+          const { id, activo } = data.payload;
+          console.log(`[Socket] Producto ${id} activo → ${activo}`);
+          useMenuStore.getState().setProductoActivo(id, activo);
         }
         break;
 

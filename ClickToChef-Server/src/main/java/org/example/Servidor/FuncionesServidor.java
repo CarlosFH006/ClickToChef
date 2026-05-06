@@ -149,7 +149,7 @@ public class FuncionesServidor {
         System.out.println("[FuncionesServidor] Creando pedido para mesa " + mesaId + " por usuario " + usuarioId);
 
         try {
-            Pedidos nuevoPedido = new Pedidos(mesaId, usuarioId, new java.sql.Timestamp(System.currentTimeMillis()), EstadoPedido.ABIERTA);
+            Pedidos nuevoPedido = new Pedidos(mesaId, usuarioId, new Timestamp(System.currentTimeMillis()), EstadoPedido.ABIERTA);
             int pedidoId = PedidosDAO.insertarPedido(nuevoPedido);
 
             //Si al crear el pedido devuelve un -1 como id muestra el fallo
@@ -167,7 +167,7 @@ public class FuncionesServidor {
                     item.get("cantidad").getAsInt(),
                     item.has("notas") ? item.get("notas").getAsString() : "",
                     EstadoDetallePedido.PENDIENTE,
-                    new java.sql.Timestamp(System.currentTimeMillis())
+                    new Timestamp(System.currentTimeMillis())
                 );
                 if (!DetallesPedidoDAO.insertarDetallePedido(detalle)) {
                     exitoDetalles = false;
@@ -205,7 +205,7 @@ public class FuncionesServidor {
                     item.get("cantidad").getAsInt(),
                     item.has("notas") ? item.get("notas").getAsString() : "",
                     EstadoDetallePedido.PENDIENTE,
-                    new java.sql.Timestamp(System.currentTimeMillis())
+                    new Timestamp(System.currentTimeMillis())
                 );
                 if (!DetallesPedidoDAO.insertarDetallePedido(detalle)) {
                     exitoDetalles = false;
@@ -255,7 +255,7 @@ public class FuncionesServidor {
 
     public static String procesarGetCategoriasAdmin() {
         try {
-            ArrayList<org.example.DTO.Categorias> lista = CategoriasDAO.obtenerTodas();
+            ArrayList<Categorias> lista = CategoriasDAO.obtenerTodas();
             return GeneradorJSON.generarCategoriasAdminResponse(lista);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al obtener categorías admin: " + e.getMessage());
@@ -487,6 +487,23 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarToggleProductoActivo(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("activo")) {
+            return GeneradorJSON.generarError("Payload de TOGGLE_PRODUCTO_ACTIVO incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            boolean activo = payload.get("activo").getAsBoolean();
+            boolean ok = ProductosDAO.toggleActivo(id, activo);
+            if (!ok) return GeneradorJSON.generarError("Producto no encontrado");
+            Servidor.broadcast(GeneradorJSON.generarProductoActivoUpdated(id, activo));
+            return null;
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al togglear producto: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al cambiar estado del producto");
+        }
+    }
+
     public static String procesarCrearCategoria(JsonObject payload) {
         if (payload == null || !payload.has("nombre")) {
             return GeneradorJSON.generarError("Payload de CREAR_CATEGORIA incompleto");
@@ -576,8 +593,8 @@ public class FuncionesServidor {
             if (esDirecto) {
                 double stock = payload.has("stockInicial") ? payload.get("stockInicial").getAsDouble() : 0;
                 Ingredientes ing = new Ingredientes(0, nombre, stock, 0,
-                        org.example.DTO.MetodoMedida.UNIDAD,
-                        org.example.DTO.TipoIngrediente.PRODUCTO_TERMINADO, 0);
+                        MetodoMedida.UNIDAD,
+                        TipoIngrediente.PRODUCTO_TERMINADO, 0);
                 int ingId = IngredientesDAO.insertarIngrediente(ing);
                 if (ingId == -1) return GeneradorJSON.generarCrearProductoResponse(false, "Error al crear el ingrediente");
                 int odooIngId = FuncionesOdoo.registrarIngredienteEnOdoo(ingId, nombre, stock);
@@ -592,9 +609,9 @@ public class FuncionesServidor {
             if (esDirecto && ingredienteDirectoId != -1) {
                 RecetasDAO.insertarReceta(new Recetas(productoId, ingredienteDirectoId, 1.0));
             } else if (!esDirecto && payload.has("receta")) {
-                com.google.gson.JsonArray receta = payload.getAsJsonArray("receta");
+                JsonArray receta = payload.getAsJsonArray("receta");
                 for (int i = 0; i < receta.size(); i++) {
-                    com.google.gson.JsonObject item = receta.get(i).getAsJsonObject();
+                    JsonObject item = receta.get(i).getAsJsonObject();
                     RecetasDAO.insertarReceta(new Recetas(
                             productoId,
                             item.get("ingredienteId").getAsInt(),
@@ -628,14 +645,14 @@ public class FuncionesServidor {
             String unidadStr   = payload.get("unidadMedida").getAsString().toLowerCase();
             String tipoStr     = payload.get("tipo").getAsString().toLowerCase();
 
-            org.example.DTO.MetodoMedida unidad = switch (unidadStr) {
-                case "kg"     -> org.example.DTO.MetodoMedida.KG;
-                case "litros" -> org.example.DTO.MetodoMedida.LITROS;
-                default       -> org.example.DTO.MetodoMedida.UNIDAD;
+            MetodoMedida unidad = switch (unidadStr) {
+                case "kg"     -> MetodoMedida.KG;
+                case "litros" -> MetodoMedida.LITROS;
+                default       -> MetodoMedida.UNIDAD;
             };
-            org.example.DTO.TipoIngrediente tipo = tipoStr.equals("producto_terminado")
-                    ? org.example.DTO.TipoIngrediente.PRODUCTO_TERMINADO
-                    : org.example.DTO.TipoIngrediente.MATERIA_PRIMA;
+            TipoIngrediente tipo = tipoStr.equals("producto_terminado")
+                    ? TipoIngrediente.PRODUCTO_TERMINADO
+                    : TipoIngrediente.MATERIA_PRIMA;
 
             Ingredientes ing = new Ingredientes(0, nombre, stockActual, 0, unidad, tipo, 0);
             int id = IngredientesDAO.insertarIngrediente(ing);

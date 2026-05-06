@@ -99,6 +99,9 @@ public class WebSocketHandler {
                 case "CREAR_INGREDIENTE":
                     respuesta = FuncionesServidor.procesarCrearIngrediente(payload);
                     break;
+                case "TOGGLE_PRODUCTO_ACTIVO":
+                    respuesta = FuncionesServidor.procesarToggleProductoActivo(payload);
+                    break;
                 case "CREAR_CATEGORIA":
                     respuesta = FuncionesServidor.procesarCrearCategoria(payload);
                     break;

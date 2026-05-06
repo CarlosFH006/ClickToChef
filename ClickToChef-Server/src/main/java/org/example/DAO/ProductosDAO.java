@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class ProductosDAO {
@@ -14,7 +15,7 @@ public class ProductosDAO {
         String sql = "INSERT INTO productos (nombre, descripcion, precio, categoria_id, odoo_id) VALUES (?, ?, ?, ?, ?)";
         try {
             Connection conexion = ConexionDB.getConexion();
-            PreparedStatement statement = conexion.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, producto.getNombre());
             statement.setString(2, producto.getDescripcion());
             statement.setDouble(3, producto.getPrecio());
@@ -174,6 +175,19 @@ public class ProductosDAO {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static boolean toggleActivo(int productoId, boolean activo) {
+        String sql = "UPDATE productos SET activo = ? WHERE id = ?";
+        try {
+            Connection conn = ConexionDB.getConexion();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setBoolean(1, activo);
+            ps.setInt(2, productoId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al cambiar estado activo del producto", e);
         }
     }
 

@@ -3,11 +3,12 @@ package org.example.Servidor;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.example.DTO.Categorias;
+import org.example.DTO.CategoriaPlato;
 import org.example.DTO.DetallesPedido;
 import org.example.DTO.EstadoDetallePedido;
 import org.example.DTO.Ingredientes;
 import org.example.DTO.Mesas;
-import org.example.DTO.CategoriaPlato;
 import org.example.DTO.Pedidos;
 import org.example.DTO.Tickets;
 import org.example.DTO.Usuarios;
@@ -87,6 +88,7 @@ public class GeneradorJSON {
             prodJson.addProperty("nombre", cp.getProductoNombre());
             prodJson.addProperty("precio", cp.getPrecio());
             prodJson.addProperty("disponible", cp.isDisponible());
+            prodJson.addProperty("activo", cp.isActivo());
 
             categoriasMap.get(cp.getCategoriaId()).getAsJsonArray("productos").add(prodJson);
         }
@@ -196,7 +198,7 @@ public class GeneradorJSON {
     }
 
     //Genera la respuesta con todas las categorías para el admin (incluye vacías)
-    public static String generarCategoriasAdminResponse(ArrayList lista) {
+    public static String generarCategoriasAdminResponse(ArrayList<Categorias> lista) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "CATEGORIAS_ADMIN_RESPONSE");
         respuesta.add("payload", gson.toJsonTree(lista));
@@ -414,6 +416,17 @@ public class GeneradorJSON {
         respuesta.addProperty("type", "CREAR_USUARIO_RESPONSE");
         JsonObject payload = new JsonObject();
         payload.addProperty("success", success);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast cuando cambia el estado activo de un producto
+    public static String generarProductoActivoUpdated(int id, boolean activo) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "PRODUCTO_ACTIVO_UPDATED");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("activo", activo);
         respuesta.add("payload", payload);
         return gson.toJson(respuesta);
     }

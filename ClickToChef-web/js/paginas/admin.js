@@ -205,13 +205,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     Api.on('NEW_PRODUCTO', ({ id, nombre, precio, categoriaId }) => {
-        // Actualizar tabla de productos en el panel admin
         if (window._productosAdmin) {
             const cat = (window._categoriasAdmin ?? []).find(c => c.id === categoriaId);
             window._productosAdmin = [...window._productosAdmin, {
-                id, nombre, precio, disponible: true,
+                id, nombre, precio, disponible: true, activo: true,
                 categoria: cat?.nombre ?? '—', categoriaId
             }];
+            filtrarProductos(null);
+        }
+    });
+
+    Api.on('PRODUCTO_ACTIVO_UPDATED', ({ id, activo }) => {
+        if (window._productosAdmin) {
+            window._productosAdmin = window._productosAdmin.map(p => p.id === id ? { ...p, activo } : p);
             filtrarProductos(null);
         }
     });
@@ -996,13 +1002,25 @@ function _renderPedidos(pedidos) {
 function _renderProductos(productos) {
     const tbody = document.getElementById('tabla-productos');
     tbody.innerHTML = productos.map(p => `
-        <tr class="hover:bg-fondo transition-colors">
+        <tr class="hover:bg-fondo transition-colors ${p.activo === false ? 'opacity-50' : ''}">
             <td class="px-4 py-3 text-principal font-medium">${p.id}</td>
             <td class="px-4 py-3 text-principal">${p.nombre}</td>
             <td class="px-4 py-3 text-secundario">${p.categoria}</td>
             <td class="px-4 py-3 text-principal">${p.precio.toFixed(2)} €</td>
             <td class="px-4 py-3">${p.disponible ? _badge('Disponible', 'success') : _badge('No disponible', 'error')}</td>
-            <td class="px-4 py-3 text-right">
+            <td class="px-4 py-3 text-right flex items-center justify-end gap-2">
+                ${p.activo !== false
+                    ? `<button onclick="Api.toggleProductoActivo(${p.id}, false)"
+                        class="inline-flex items-center gap-1 text-xs text-warning border border-yellow-200 px-3 py-1 rounded-lg hover:bg-yellow-50 transition-colors">
+                        <ion-icon name="eye-off-outline" style="font-size:12px"></ion-icon>
+                        Desactivar
+                       </button>`
+                    : `<button onclick="Api.toggleProductoActivo(${p.id}, true)"
+                        class="inline-flex items-center gap-1 text-xs text-green-700 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition-colors">
+                        <ion-icon name="eye-outline" style="font-size:12px"></ion-icon>
+                        Activar
+                       </button>`
+                }
                 <button onclick="verRecetaProducto(${p.id}, '${p.nombre}')"
                     class="inline-flex items-center gap-1 text-xs text-primary border border-primary/30 px-3 py-1 rounded-lg hover:bg-primary/10 transition-colors">
                     <ion-icon name="list-outline" style="font-size:12px"></ion-icon>

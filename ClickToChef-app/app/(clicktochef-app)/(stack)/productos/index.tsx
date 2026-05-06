@@ -19,7 +19,10 @@ const ProductosIndex = () => {
   const navigation = useNavigation();
 
   const busquedaTrim = busqueda.trim();
-  const categoriasConProductos = categorias.filter(c => c.productos.length > 0);
+  //Filtrar las categorías que tienen productos activos
+  const categoriasConProductos = categorias
+    .map(c => ({ ...c, productos: c.productos.filter(p => p.activo) }))
+    .filter(c => c.productos.length > 0);
   const todosLosProductos = categoriasConProductos.flatMap(c => c.productos);
   const resultadosBusqueda = todosLosProductos.filter(p =>
     p.nombre.toLowerCase().includes(busquedaTrim.toLowerCase())

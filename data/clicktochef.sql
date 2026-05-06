@@ -15,6 +15,7 @@ CREATE TABLE productos (
     precio DECIMAL(10, 2) NOT NULL,
     categoria_id INT,
     odoo_id INT,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL
 );
 
@@ -144,7 +145,7 @@ INSERT INTO recetas (producto_id, ingrediente_id, cantidad_necesaria) VALUES
 (7, 10, 0.125),
 (8, 7, 0.15);
 
--- PEDIDOS (sin cambios necesarios)
+-- PEDIDOS
 INSERT INTO pedidos (id, mesa_id, usuario_id, estado) VALUES 
 (1, 1, 2, 'abierta');
 
@@ -160,7 +161,3 @@ INSERT INTO detalles_pedido
 (pedido_id, producto_id, cantidad, estado) VALUES 
 (2, 1, 1, 'pendiente'),
 (2, 6, 3, 'pendiente');
-
--- TICKET (sin cambios necesarios)
---INSERT INTO tickets (pedido_id, total_importe, referencia_factura_odoo, metodo_pago) VALUES 
---(1, 30.00, 'INV-2026-001', 'tarjeta');

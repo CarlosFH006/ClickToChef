@@ -59,6 +59,7 @@ public class CategoriasDAO {
                     p.id AS producto_id,
                     p.nombre AS producto_nombre,
                     p.precio,
+                    p.activo,
                     CASE
                         WHEN EXISTS (
                             SELECT 1
@@ -86,7 +87,8 @@ public class CategoriasDAO {
                         resultSet.getInt("producto_id"),
                         resultSet.getString("producto_nombre"),
                         resultSet.getDouble("precio"),
-                        resultSet.getBoolean("disponible")
+                        resultSet.getBoolean("disponible"),
+                        resultSet.getBoolean("activo")
                 );
                 categoriasPlatos.add(categoriaPlato);
             }

@@ -137,6 +137,10 @@ const Api = (() => {
                 _dispatch('CREAR_CATEGORIA_RESPONSE', msg.payload);
                 break;
 
+            case 'PRODUCTO_ACTIVO_UPDATED':
+                _dispatch('PRODUCTO_ACTIVO_UPDATED', msg.payload);
+                break;
+
             case 'CAMBIAR_PASSWORD_RESPONSE':
                 _dispatch('CAMBIAR_PASSWORD_RESPONSE', msg.payload);
                 break;
@@ -270,6 +274,10 @@ const Api = (() => {
         sendMessage('CAMBIAR_PASSWORD', { id, password });
     }
 
+    function toggleProductoActivo(id, activo) {
+        sendMessage('TOGGLE_PRODUCTO_ACTIVO', { id, activo });
+    }
+
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, getCategoriasAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock, crearProductoMenu, getRecetaProducto };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, getCategoriasAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock, crearProductoMenu, getRecetaProducto, toggleProductoActivo };
 })();

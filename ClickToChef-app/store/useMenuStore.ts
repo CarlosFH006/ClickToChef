@@ -10,8 +10,9 @@ interface MenuState {
   setMenu: (categorias: Categoria[]) => void;
   setLoading: (loading: boolean) => void;
   setProductoDisponible: (productoId: number, disponible: boolean) => void;
+  setProductoActivo: (productoId: number, activo: boolean) => void;
   addCategoria: (id: number, nombre: string) => void;
-  addProducto: (categoriaId: number, producto: { id: number; nombre: string; precio: number; disponible: boolean }) => void;
+  addProducto: (categoriaId: number, producto: { id: number; nombre: string; precio: number; disponible: boolean; activo: boolean }) => void;
 }
 
 export const useMenuStore = create<MenuState>((set) => ({
@@ -40,6 +41,16 @@ export const useMenuStore = create<MenuState>((set) => ({
       productos: cat.productos.map(p =>
         //Si el producto es el que se busca, cambiar su disponibilidad
         p.id === productoId ? { ...p, disponible } : p
+      )
+    }))
+  })),
+
+  // Cambiar estado activo de un producto
+  setProductoActivo: (productoId, activo) => set((state) => ({
+    categorias: state.categorias.map(cat => ({
+      ...cat,
+      productos: cat.productos.map(p =>
+        p.id === productoId ? { ...p, activo } : p
       )
     }))
   })),
