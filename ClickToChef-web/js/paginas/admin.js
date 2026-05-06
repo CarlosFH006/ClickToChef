@@ -212,9 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 id, nombre, precio, disponible: true,
                 categoria: cat?.nombre ?? '—', categoriaId
             }];
-            const btnActivo = document.querySelector('.filtro-cat-btn.active');
-            const catId = btnActivo?.id === 'filtro-cat-todos' ? null : parseInt(btnActivo?.id?.replace('filtro-cat-', ''));
-            filtrarProductos(catId ?? null);
+            filtrarProductos(null);
         }
     });
 
@@ -233,17 +231,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    Api.on('CREAR_CATEGORIA_RESPONSE', ({ success, id, nombre }) => {
+    Api.on('CREAR_CATEGORIA_RESPONSE', ({ success, mensaje }) => {
         const msg = document.getElementById('crear-categoria-msg');
         if (success) {
             document.getElementById('nueva-categoria-nombre').value = '';
-            Api.getCategoriasAdmin(); // refresca la tabla con todas las categorías
+            Api.getCategoriasAdmin();
             msg.textContent = '✓ Categoría creada correctamente';
             msg.className = 'text-sm text-green-600';
             msg.classList.remove('hidden');
             setTimeout(() => cerrarModalCategoria(), 1500);
         } else {
-            msg.textContent = 'Error: la categoría ya existe o el nombre es inválido';
+            msg.textContent = mensaje ?? 'Error al crear la categoría';
             msg.className = 'text-sm text-error';
             msg.classList.remove('hidden');
             setTimeout(() => msg.classList.add('hidden'), 3000);
@@ -936,10 +934,22 @@ function _renderFiltrosEstado(pedidos) {
 }
 
 function filtrarPedidos(estado) {
-    document.querySelectorAll('#filtros-estado-pedido .filtro-cat-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`filtro-pedido-${estado}`)?.classList.add('active');
+    if (estado !== null) {
+        document.querySelectorAll('#filtros-estado-pedido .filtro-cat-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`filtro-pedido-${estado}`)?.classList.add('active');
+    }
+    const estadoActivo = document.querySelector('#filtros-estado-pedido .filtro-cat-btn.active')?.id?.replace('filtro-pedido-', '') ?? 'TODOS';
+    const fechaVal = document.getElementById('filtro-fecha-pedido')?.value;
+
     const todos = window._pedidosAdmin ?? [];
-    const filtrados = estado === 'TODOS' ? todos : todos.filter(p => p.estado?.toUpperCase() === estado);
+    const filtrados = todos.filter(p => {
+        const coincideEstado = estadoActivo === 'TODOS' || p.estado?.toUpperCase() === estadoActivo;
+        if (!fechaVal) return coincideEstado;
+        if (!p.fechaCreacion) return false;
+        const d = new Date(p.fechaCreacion);
+        const fechaPedido = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return coincideEstado && fechaPedido === fechaVal;
+    });
     _renderPedidos(filtrados);
 }
 

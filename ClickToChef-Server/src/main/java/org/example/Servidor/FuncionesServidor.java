@@ -495,13 +495,13 @@ public class FuncionesServidor {
             String nombre = payload.get("nombre").getAsString().trim();
             if (nombre.isEmpty()) return GeneradorJSON.generarError("El nombre de la categoría no puede estar vacío");
             int id = CategoriasDAO.insertarCategoria(new org.example.DTO.Categorias(nombre));
-            if (id == -1) return GeneradorJSON.generarCrearCategoriaResponse(false, -1, nombre);
+            if (id == -1) return GeneradorJSON.generarCrearCategoriaResponse(false, "No se pudo crear la categoría");
             Servidor.broadcast(GeneradorJSON.generarNuevaCategoria(id, nombre));
             System.out.println("[FuncionesServidor] Categoría '" + nombre + "' creada con ID: " + id);
-            return GeneradorJSON.generarCrearCategoriaResponse(true, id, nombre);
+            return GeneradorJSON.generarCrearCategoriaResponse(true, null);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al crear categoría: " + e.getMessage());
-            return GeneradorJSON.generarError("Error al crear la categoría: " + e.getMessage());
+            return GeneradorJSON.generarCrearCategoriaResponse(false, "La categoría ya existe o el nombre es inválido");
         }
     }
 

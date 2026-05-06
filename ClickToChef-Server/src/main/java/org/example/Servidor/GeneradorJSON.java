@@ -341,13 +341,12 @@ public class GeneradorJSON {
     }
 
     //Genera la respuesta de crear categoría
-    public static String generarCrearCategoriaResponse(boolean success, int id, String nombre) {
+    public static String generarCrearCategoriaResponse(boolean success, String mensaje) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "CREAR_CATEGORIA_RESPONSE");
         JsonObject payload = new JsonObject();
         payload.addProperty("success", success);
-        payload.addProperty("id", id);
-        payload.addProperty("nombre", nombre);
+        if (mensaje != null) payload.addProperty("mensaje", mensaje);
         respuesta.add("payload", payload);
         return gson.toJson(respuesta);
     }
