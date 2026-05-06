@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class DetallesPedidoDAO {
 
     public static boolean insertarDetallePedido(DetallesPedido detallePedido) {
-        String sql = "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, notas_especiales, estado, hora_pedido) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, precio_unitario, notas_especiales, estado, hora_pedido) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try {
             Connection conexion = ConexionDB.getConexion();
@@ -20,9 +20,10 @@ public class DetallesPedidoDAO {
             statement.setInt(1, detallePedido.getPedidoId());
             statement.setInt(2, detallePedido.getProductoId());
             statement.setInt(3, detallePedido.getCantidad());
-            statement.setString(4, detallePedido.getNotasEspeciales());
-            statement.setString(5, convertirEstadoDetalleADB(detallePedido.getEstado()));
-            statement.setTimestamp(6, detallePedido.getHoraPedido());
+            statement.setDouble(4, detallePedido.getPrecioUnitario());
+            statement.setString(5, detallePedido.getNotasEspeciales());
+            statement.setString(6, convertirEstadoDetalleADB(detallePedido.getEstado()));
+            statement.setTimestamp(7, detallePedido.getHoraPedido());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar el detalle del pedido", e);
@@ -31,7 +32,7 @@ public class DetallesPedidoDAO {
 
     public static ArrayList<DetallesPedido> obtenerTodos() {
         String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
-                     "dp.cantidad, dp.notas_especiales, dp.estado, dp.hora_pedido " +
+                     "dp.cantidad, dp.precio_unitario, dp.notas_especiales, dp.estado, dp.hora_pedido " +
                      "FROM detalles_pedido dp " +
                      "JOIN productos p ON dp.producto_id = p.id " +
                      "JOIN pedidos pe ON dp.pedido_id = pe.id " +
@@ -49,6 +50,7 @@ public class DetallesPedidoDAO {
                         resultSet.getInt("producto_id"),
                         resultSet.getString("nombre_producto"),
                         resultSet.getInt("cantidad"),
+                        resultSet.getDouble("precio_unitario"),
                         resultSet.getString("notas_especiales"),
                         convertirEstadoDetalleAEnum(resultSet.getString("estado")),
                         resultSet.getTimestamp("hora_pedido")
@@ -64,7 +66,7 @@ public class DetallesPedidoDAO {
 
     public static DetallesPedido obtenerPorId(int id) {
         String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
-                     "dp.cantidad, dp.notas_especiales, dp.estado, dp.hora_pedido " +
+                     "dp.cantidad, dp.precio_unitario, dp.notas_especiales, dp.estado, dp.hora_pedido " +
                      "FROM detalles_pedido dp " +
                      "JOIN productos p ON dp.producto_id = p.id " +
                      "WHERE dp.id = ?";
@@ -81,6 +83,7 @@ public class DetallesPedidoDAO {
                         resultSet.getInt("producto_id"),
                         resultSet.getString("nombre_producto"),
                         resultSet.getInt("cantidad"),
+                        resultSet.getDouble("precio_unitario"),
                         resultSet.getString("notas_especiales"),
                         convertirEstadoDetalleAEnum(resultSet.getString("estado")),
                         resultSet.getTimestamp("hora_pedido")
@@ -95,7 +98,7 @@ public class DetallesPedidoDAO {
 
     public static ArrayList<DetallesPedido> obtenerPorPedido(int pedidoId) {
         String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
-                     "dp.cantidad, dp.notas_especiales, dp.estado, dp.hora_pedido " +
+                     "dp.cantidad, dp.precio_unitario, dp.notas_especiales, dp.estado, dp.hora_pedido " +
                      "FROM detalles_pedido dp " +
                      "JOIN productos p ON dp.producto_id = p.id " +
                      "WHERE dp.pedido_id = ?";
@@ -113,6 +116,7 @@ public class DetallesPedidoDAO {
                         resultSet.getInt("producto_id"),
                         resultSet.getString("nombre_producto"),
                         resultSet.getInt("cantidad"),
+                        resultSet.getDouble("precio_unitario"),
                         resultSet.getString("notas_especiales"),
                         convertirEstadoDetalleAEnum(resultSet.getString("estado")),
                         resultSet.getTimestamp("hora_pedido")

@@ -8,25 +8,28 @@ public class DetallesPedido {
     private int productoId;
     private String nombreProducto;
     private int cantidad;
+    private double precioUnitario;
     private String notasEspeciales;
     private EstadoDetallePedido estado;
     private Timestamp horaPedido;
 
-    public DetallesPedido(int id, int pedidoId, int productoId, String nombreProducto, int cantidad, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
+    public DetallesPedido(int id, int pedidoId, int productoId, String nombreProducto, int cantidad, double precioUnitario, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
         this.id = id;
         this.pedidoId = pedidoId;
         this.productoId = productoId;
         this.nombreProducto = nombreProducto;
         this.cantidad = cantidad;
+        this.precioUnitario = precioUnitario;
         this.notasEspeciales = notasEspeciales;
         this.estado = estado;
         this.horaPedido = horaPedido;
     }
 
-    public DetallesPedido(int pedidoId, int productoId, int cantidad, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
+    public DetallesPedido(int pedidoId, int productoId, int cantidad, double precioUnitario, String notasEspeciales, EstadoDetallePedido estado, Timestamp horaPedido) {
         this.pedidoId = pedidoId;
         this.productoId = productoId;
         this.cantidad = cantidad;
+        this.precioUnitario = precioUnitario;
         this.notasEspeciales = notasEspeciales;
         this.estado = estado;
         this.horaPedido = horaPedido;
@@ -72,6 +75,14 @@ public class DetallesPedido {
         this.cantidad = cantidad;
     }
 
+    public double getPrecioUnitario() {
+        return precioUnitario;
+    }
+
+    public void setPrecioUnitario(double precioUnitario) {
+        this.precioUnitario = precioUnitario;
+    }
+
     public String getNotasEspeciales() {
         return notasEspeciales;
     }
@@ -103,6 +114,7 @@ public class DetallesPedido {
                 ", pedidoId=" + pedidoId +
                 ", productoId=" + productoId +
                 ", cantidad=" + cantidad +
+                ", precioUnitario=" + precioUnitario +
                 ", notasEspeciales='" + notasEspeciales + '\'' +
                 ", estado='" + estado + '\'' +
                 ", horaPedido=" + horaPedido +

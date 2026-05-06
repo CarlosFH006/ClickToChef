@@ -165,6 +165,7 @@ public class FuncionesServidor {
                     pedidoId,
                     item.get("id").getAsInt(),
                     item.get("cantidad").getAsInt(),
+                    item.has("precio") ? item.get("precio").getAsDouble() : 0.0,
                     item.has("notas") ? item.get("notas").getAsString() : "",
                     EstadoDetallePedido.PENDIENTE,
                     new Timestamp(System.currentTimeMillis())
@@ -203,6 +204,7 @@ public class FuncionesServidor {
                     pedidoId,
                     item.get("id").getAsInt(),
                     item.get("cantidad").getAsInt(),
+                    item.has("precio") ? item.get("precio").getAsDouble() : 0.0,
                     item.has("notas") ? item.get("notas").getAsString() : "",
                     EstadoDetallePedido.PENDIENTE,
                     new Timestamp(System.currentTimeMillis())
@@ -484,6 +486,27 @@ public class FuncionesServidor {
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al actualizar capacidad: " + e.getMessage());
             return GeneradorJSON.generarError("Error al actualizar la capacidad: " + e.getMessage());
+        }
+    }
+
+    public static String procesarActualizarPrecioProducto(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("precio")) {
+            return GeneradorJSON.generarError("Payload de ACTUALIZAR_PRECIO_PRODUCTO incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            double precio = payload.get("precio").getAsDouble();
+            if (precio <= 0) return GeneradorJSON.generarError("El precio debe ser mayor que 0");
+            boolean ok = ProductosDAO.actualizarPrecio(id, precio);
+            if (!ok) return GeneradorJSON.generarError("Producto no encontrado");
+            Servidor.broadcast(GeneradorJSON.generarPrecioProductoUpdated(id, precio));
+            System.out.println("[FuncionesServidor] Precio del producto " + id + " actualizado a " + precio);
+            int odooId = ProductosDAO.obtenerOdooId(id);
+            FuncionesOdoo.actualizarPrecioEnOdoo(odooId, precio);
+            return null;
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al actualizar precio: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al actualizar el precio");
         }
     }
 

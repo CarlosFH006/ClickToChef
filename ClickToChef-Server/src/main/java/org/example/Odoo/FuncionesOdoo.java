@@ -273,37 +273,24 @@ public class FuncionesOdoo {
         }
     }
 
-    /**
-     * Crea una factura de venta (account.move tipo out_invoice) en Odoo con los productos del pedido.
-     *
-     * Flujo:
-     *  1. Obtiene los detalles del pedido desde la BD local.
-     *  2. Para cada producto busca su variante en Odoo por nombre.
-     *  3. Construye las líneas de factura con cantidad y precio.
-     *  4. Crea el account.move y lo confirma con action_post().
-     *  5. Devuelve el número de factura (ej: INV/2026/00001) para guardarlo en el ticket.
-     *
-     * Los comandos ORM [(0, 0, vals)] le indican a Odoo que cree registros nuevos
-     * enlazados al one2many invoice_line_ids.
-     *
-     * Si Odoo no está disponible o falla devuelve "ERROR_ODOO" sin lanzar excepción,
-     * para no bloquear el cierre de mesa.
-     */
-    /**
-     * Registra un ingrediente en Odoo (busca por nombre o lo crea) y devuelve el template ID.
-     * Actualiza el stock en Odoo con el valor proporcionado.
-     * Devuelve -1 si Odoo no está disponible o falla.
-     */
-    /**
-     * Actualiza el stock de un ingrediente en Odoo con su nuevo valor actual.
-     * Se llama después de sumar stock en la BD local.
-     * Si odooProductId es 0 o Odoo falla, termina silenciosamente.
-     */
-    /**
-     * Registra un producto del menú en Odoo como servicio (sin stock).
-     * Busca por nombre primero para evitar duplicados.
-     * Devuelve el template ID, o -1 si falla.
-     */
+    public static void actualizarPrecioEnOdoo(int odooTemplateId, double precio) {
+        if (odooTemplateId == 0) return;
+        try {
+            int uid = autenticar();
+            XmlRpcClient models = crearClienteModelos();
+            Map<String, Object> vals = new HashMap<>();
+            vals.put("list_price", precio);
+            models.execute("execute_kw", new Object[]{
+                    db(), uid, password(), "product.template", "write",
+                    new Object[]{new Object[]{odooTemplateId}, vals},
+                    new HashMap<>()
+            });
+            System.out.println("[FuncionesOdoo] Precio actualizado en Odoo (template " + odooTemplateId + ") → " + precio);
+        } catch (Exception e) {
+            System.err.println("[FuncionesOdoo] Error al actualizar precio en Odoo: " + e.getMessage());
+        }
+    }
+
     public static int registrarProductoEnOdoo(String nombre, double precio) {
         try {
             int uid = autenticar();
@@ -379,7 +366,7 @@ public class FuncionesOdoo {
                 Map<String, Object> lineVals = new HashMap<>();
                 lineVals.put("product_id", varianteId);
                 lineVals.put("quantity", (double) detalle.getCantidad());
-                lineVals.put("price_unit", prod.getPrecio());
+                lineVals.put("price_unit", detalle.getPrecioUnitario());
                 lineVals.put("name", prod.getNombre());
                 // Comando ORM (0, 0, vals) → crear nueva línea enlazada al invoice
                 invoiceLines.add(new Object[]{0, 0, lineVals});

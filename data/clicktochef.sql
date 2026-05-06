@@ -49,6 +49,7 @@ CREATE TABLE detalles_pedido (
     pedido_id INT NOT NULL,
     producto_id INT NOT NULL,
     cantidad INT NOT NULL DEFAULT 1,
+    precio_unitario DECIMAL(10,2) NOT NULL DEFAULT 0,
     notas_especiales VARCHAR(255),
     estado ENUM('pendiente', 'en preparacion', 'listo', 'servido') DEFAULT 'pendiente',
     hora_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -150,14 +151,14 @@ INSERT INTO pedidos (id, mesa_id, usuario_id, estado) VALUES
 (1, 1, 2, 'abierta');
 
 INSERT INTO detalles_pedido
-(pedido_id, producto_id, cantidad, notas_especiales, estado) VALUES
-(1, 3, 2, 'Carne muy hecha', 'en preparacion'),
-(1, 5, 2, 'Con hielo', 'listo');
+(pedido_id, producto_id, cantidad, precio_unitario, notas_especiales, estado) VALUES
+(1, 3, 2, 12.50, 'Carne muy hecha', 'en preparacion'),
+(1, 5, 2, 2.50, 'Con hielo', 'listo');
 
-INSERT INTO pedidos (id, mesa_id, usuario_id, estado) VALUES 
+INSERT INTO pedidos (id, mesa_id, usuario_id, estado) VALUES
 (2, 4, 3, 'abierta');
 
-INSERT INTO detalles_pedido 
-(pedido_id, producto_id, cantidad, estado) VALUES 
-(2, 1, 1, 'pendiente'),
-(2, 6, 3, 'pendiente');
+INSERT INTO detalles_pedido
+(pedido_id, producto_id, cantidad, precio_unitario, estado) VALUES
+(2, 1, 1, 8.50, 'pendiente'),
+(2, 6, 3, 4.50, 'pendiente');

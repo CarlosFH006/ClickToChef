@@ -54,9 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <tr class="hover:bg-fondo transition-colors">
                 <td class="px-4 py-3 text-principal font-medium">${cat.id}</td>
                 <td class="px-4 py-3 text-principal">${cat.nombre}</td>
-                <td class="px-4 py-3 text-secundario">—</td>
             </tr>
-        `).join('') || '<tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Sin categorías</td></tr>';
+        `).join('') || '<tr><td colspan="2" class="px-4 py-8 text-center text-secundario text-sm">Sin categorías</td></tr>';
         window._categoriasAdmin = cats.map(c => ({ id: c.id, nombre: c.nombre }));
     });
 
@@ -220,6 +219,14 @@ document.addEventListener('DOMContentLoaded', () => {
             window._productosAdmin = window._productosAdmin.map(p => p.id === id ? { ...p, activo } : p);
             filtrarProductos(null);
         }
+    });
+
+    Api.on('PRECIO_PRODUCTO_UPDATED', ({ id, precio }) => {
+        if (window._productosAdmin) {
+            window._productosAdmin = window._productosAdmin.map(p => p.id === id ? { ...p, precio } : p);
+            filtrarProductos(null);
+        }
+        cerrarModalPrecioProducto();
     });
 
     Api.on('CREAR_INGREDIENTE_RESPONSE', ({ success, mensaje }) => {
@@ -979,6 +986,8 @@ function _renderPedidos(pedidos) {
                     <thead><tr class="text-secundario uppercase tracking-wide">
                         <th class="text-left py-1 pr-4">Producto</th>
                         <th class="text-left py-1 pr-4">Cantidad</th>
+                        <th class="text-left py-1 pr-4">Precio ud.</th>
+                        <th class="text-left py-1 pr-4">Subtotal</th>
                         <th class="text-left py-1 pr-4">Estado</th>
                         <th class="text-left py-1">Notas</th>
                     </tr></thead>
@@ -987,6 +996,8 @@ function _renderPedidos(pedidos) {
                             <tr data-detalle-id="${d.id}">
                                 <td class="py-1 pr-4 text-principal">${d.nombreProducto}</td>
                                 <td class="py-1 pr-4 text-secundario">${d.cantidad}</td>
+                                <td class="py-1 pr-4 text-secundario">${d.precioUnitario != null ? d.precioUnitario.toFixed(2) + ' €' : '—'}</td>
+                                <td class="py-1 pr-4 text-principal font-medium">${d.precioUnitario != null ? (d.precioUnitario * d.cantidad).toFixed(2) + ' €' : '—'}</td>
                                 <td class="py-1 pr-4">${_badgeEstadoDetalle(d.estado)}</td>
                                 <td class="py-1 text-secundario italic">${d.notasEspeciales || '—'}</td>
                             </tr>
@@ -1021,6 +1032,11 @@ function _renderProductos(productos) {
                         Activar
                        </button>`
                 }
+                <button onclick="abrirModalPrecioProducto(${p.id}, '${p.nombre}', ${p.precio})"
+                    class="inline-flex items-center gap-1 text-xs text-secundario border border-borde px-3 py-1 rounded-lg hover:bg-fondo transition-colors">
+                    <ion-icon name="pencil-outline" style="font-size:12px"></ion-icon>
+                    Precio
+                </button>
                 <button onclick="verRecetaProducto(${p.id}, '${p.nombre}')"
                     class="inline-flex items-center gap-1 text-xs text-primary border border-primary/30 px-3 py-1 rounded-lg hover:bg-primary/10 transition-colors">
                     <ion-icon name="list-outline" style="font-size:12px"></ion-icon>
@@ -1029,6 +1045,40 @@ function _renderProductos(productos) {
             </td>
         </tr>
     `).join('') || '<tr><td colspan="6" class="px-4 py-8 text-center text-secundario text-sm">Sin productos</td></tr>';
+}
+
+// --- Modal Editar Precio Producto ---
+
+let _precioProductoId = null;
+
+function abrirModalPrecioProducto(id, nombre, precioActual) {
+    _precioProductoId = id;
+    document.getElementById('modal-precio-titulo').textContent = `${nombre} — precio actual: ${precioActual.toFixed(2)} €`;
+    document.getElementById('nuevo-precio-producto').value = precioActual.toFixed(2);
+    document.getElementById('precio-producto-msg').classList.add('hidden');
+    const modal = document.getElementById('modal-precio-producto');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModalPrecioProducto() {
+    _precioProductoId = null;
+    const modal = document.getElementById('modal-precio-producto');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function submitPrecioProducto() {
+    const precio = parseFloat(document.getElementById('nuevo-precio-producto').value);
+    const msg = document.getElementById('precio-producto-msg');
+    if (isNaN(precio) || precio <= 0) {
+        msg.textContent = 'Introduce un precio mayor que 0';
+        msg.className = 'text-sm text-error';
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+        return;
+    }
+    Api.actualizarPrecioProducto(_precioProductoId, precio);
 }
 
 // --- Lógica de pedidos ---

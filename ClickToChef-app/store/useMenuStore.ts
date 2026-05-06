@@ -11,6 +11,7 @@ interface MenuState {
   setLoading: (loading: boolean) => void;
   setProductoDisponible: (productoId: number, disponible: boolean) => void;
   setProductoActivo: (productoId: number, activo: boolean) => void;
+  setProductoPrecio: (productoId: number, precio: number) => void;
   addCategoria: (id: number, nombre: string) => void;
   addProducto: (categoriaId: number, producto: { id: number; nombre: string; precio: number; disponible: boolean; activo: boolean }) => void;
 }
@@ -51,6 +52,16 @@ export const useMenuStore = create<MenuState>((set) => ({
       ...cat,
       productos: cat.productos.map(p =>
         p.id === productoId ? { ...p, activo } : p
+      )
+    }))
+  })),
+
+  // Cambiar precio de un producto
+  setProductoPrecio: (productoId, precio) => set((state) => ({
+    categorias: state.categorias.map(cat => ({
+      ...cat,
+      productos: cat.productos.map(p =>
+        p.id === productoId ? { ...p, precio } : p
       )
     }))
   })),

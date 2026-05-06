@@ -4,6 +4,7 @@ export interface ProductoPedido {
   precio: number;
   cantidad: number;
   notas?: string;
+  precioUnitario: number;
 }
 
 export interface Pedido {

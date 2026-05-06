@@ -178,6 +178,32 @@ public class ProductosDAO {
         }
     }
 
+    public static int obtenerOdooId(int productoId) {
+        String sql = "SELECT odoo_id FROM productos WHERE id = ?";
+        try {
+            Connection conn = ConexionDB.getConexion();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, productoId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt("odoo_id") : 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener odoo_id del producto", e);
+        }
+    }
+
+    public static boolean actualizarPrecio(int productoId, double precio) {
+        String sql = "UPDATE productos SET precio = ? WHERE id = ?";
+        try {
+            Connection conn = ConexionDB.getConexion();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setDouble(1, precio);
+            ps.setInt(2, productoId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar el precio del producto", e);
+        }
+    }
+
     public static boolean toggleActivo(int productoId, boolean activo) {
         String sql = "UPDATE productos SET activo = ? WHERE id = ?";
         try {

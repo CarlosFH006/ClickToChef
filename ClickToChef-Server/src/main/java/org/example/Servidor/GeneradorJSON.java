@@ -420,6 +420,17 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    //Broadcast cuando cambia el precio de un producto
+    public static String generarPrecioProductoUpdated(int id, double precio) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "PRECIO_PRODUCTO_UPDATED");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("precio", precio);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
     //Broadcast cuando cambia el estado activo de un producto
     public static String generarProductoActivoUpdated(int id, boolean activo) {
         JsonObject respuesta = new JsonObject();

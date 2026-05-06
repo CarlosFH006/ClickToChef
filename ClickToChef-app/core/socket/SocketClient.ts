@@ -290,6 +290,15 @@ class SocketClient {
         }
         break;
 
+      //Actualizar precio de un producto
+      case 'PRECIO_PRODUCTO_UPDATED':
+        if (data.payload) {
+          const { id, precio } = data.payload;
+          console.log(`[Socket] Producto ${id} precio → ${precio}`);
+          useMenuStore.getState().setProductoPrecio(id, precio);
+        }
+        break;
+
       case 'NEW_CATEGORIA':
         if (data.payload) {
           const { id, nombre } = data.payload;
