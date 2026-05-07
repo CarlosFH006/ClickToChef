@@ -13,11 +13,10 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   pedido: Pedidos;
-  getPrecio: (productoId: number) => number;
   total: number;
 }
 
-const CerrarPedidoModal = ({ visible, onClose, pedido, getPrecio, total }: Props) => {
+const CerrarPedidoModal = ({ visible, onClose, pedido, total }: Props) => {
   const [metodoPago, setMetodoPago] = useState<MetodoPago | null>(null);
 
   //Función para cerrar el pedido
@@ -57,7 +56,7 @@ const CerrarPedidoModal = ({ visible, onClose, pedido, getPrecio, total }: Props
                     </Text>
                   </View>
                   <Text className="font-titulo text-sm text-principal ml-3">
-                    {(getPrecio(d.productoId) * d.cantidad).toFixed(2)}€
+                    {(d.precioUnitario * d.cantidad).toFixed(2)}€
                   </Text>
                 </View>
               ))}
