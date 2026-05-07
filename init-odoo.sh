@@ -6,12 +6,17 @@ ADMIN_EMAIL="clicktochef@clicktochef.com"
 ADMIN_PASSWORD="clicktochef"
 FLAG_FILE="/var/lib/odoo/.initialized"
 
+# Arreglar permisos del volumen montado (corre como root)
+echo "[Init] Corrigiendo permisos en /var/lib/odoo..."
+chown -R odoo:odoo /var/lib/odoo
+chmod -R u+rwX /var/lib/odoo
+
 if [ ! -f "$FLAG_FILE" ]; then
     echo "[Init] Primera ejecucion: creando base de datos e instalando modulos..."
-    odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale,account,l10n_es --without-demo=all --stop-after-init
+    runuser -u odoo -- odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale,account,l10n_es --without-demo=all --stop-after-init
 
     echo "[Init] Configurando usuario admin y localizacion española..."
-    odoo shell -c /etc/odoo/odoo.conf -d "$DB_NAME" --no-http << EOF
+    runuser -u odoo -- odoo shell -c /etc/odoo/odoo.conf -d "$DB_NAME" --no-http <<EOF
 import base64, os
 
 # Activar idioma español
@@ -46,4 +51,4 @@ else
 fi
 
 echo "[Init] Iniciando Odoo..."
-exec odoo -c /etc/odoo/odoo.conf
+exec runuser -u odoo -- odoo -c /etc/odoo/odoo.conf
