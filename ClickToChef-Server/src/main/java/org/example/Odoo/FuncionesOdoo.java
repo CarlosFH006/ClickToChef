@@ -99,6 +99,32 @@ public class FuncionesOdoo {
     }
 
     /**
+     * Busca el impuesto de venta del 10% (IVA restauración España) en Odoo.
+     * Devuelve su ID o 0 si no se encuentra.
+     */
+    private static int obtenerImpuesto10(XmlRpcClient models, int uid) {
+        try {
+            Map<String, Object> kwargs = new HashMap<>();
+            kwargs.put("fields", new Object[]{"id"});
+            kwargs.put("limit", 1);
+            Object[] resultado = (Object[]) models.execute("execute_kw", new Object[]{
+                    db(), uid, password(), "account.tax", "search_read",
+                    new Object[]{new Object[]{
+                            new Object[]{"amount", "=", 10.0},
+                            new Object[]{"type_tax_use", "=", "sale"},
+                            new Object[]{"active", "=", true}
+                    }},
+                    kwargs
+            });
+            if (resultado.length == 0) return 0;
+            return (Integer) ((Map<?, ?>) resultado[0]).get("id");
+        } catch (Exception e) {
+            System.err.println("[FuncionesOdoo] No se encontró el impuesto del 10%: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    /**
      * Busca un product.template en Odoo por nombre exacto y tipo.
      * tipo puede ser "consu" (almacenable) o "service".
      * Devuelve el ID del template si existe, o 0 si no se encuentra.
@@ -159,6 +185,10 @@ public class FuncionesOdoo {
             vals.put("type", tipo);
             if (tipo.equals("consu")) vals.put("is_storable", true);
             if (precio > 0) vals.put("list_price", precio);
+            if (tipo.equals("service")) {
+                int taxId = obtenerImpuesto10(models, uid);
+                if (taxId > 0) vals.put("taxes_id", new Object[]{new Object[]{6, 0, new Object[]{taxId}}});
+            }
             Object resultado = models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "product.template", "create",
                     new Object[]{vals},
@@ -258,9 +288,7 @@ public class FuncionesOdoo {
                     new Object[]{new Object[]{new Object[]{"name", "=", "Cliente Final"}}},
                     kwargs
             });
-            if (resultado.length > 0) {
-                return (Integer) ((Map<?, ?>) resultado[0]).get("id");
-            }
+            if (resultado.length > 0) return (Integer) ((Map<?, ?>) resultado[0]).get("id");
             Map<String, Object> vals = new HashMap<>();
             vals.put("name", "Cliente Final");
             vals.put("customer_rank", 1);
@@ -354,6 +382,7 @@ public class FuncionesOdoo {
             for (Productos p : productos) productosMap.put(p.getId(), p);
 
             int partnerId = obtenerPartnerClienteFinal(models, uid);
+            int taxId = obtenerImpuesto10(models, uid);
 
             // Construye las líneas de factura para cada detalle del pedido
             List<Object> invoiceLines = new ArrayList<>();
@@ -368,7 +397,7 @@ public class FuncionesOdoo {
                 lineVals.put("quantity", (double) detalle.getCantidad());
                 lineVals.put("price_unit", detalle.getPrecioUnitario());
                 lineVals.put("name", prod.getNombre());
-                // Comando ORM (0, 0, vals) → crear nueva línea enlazada al invoice
+                lineVals.put("tax_ids", new Object[]{});
                 invoiceLines.add(new Object[]{0, 0, lineVals});
             }
             if (invoiceLines.isEmpty()) return "SIN_PRODUCTOS_ODOO";
@@ -378,7 +407,6 @@ public class FuncionesOdoo {
             invoiceVals.put("move_type", "out_invoice");
             invoiceVals.put("partner_id", partnerId);
             invoiceVals.put("invoice_line_ids", invoiceLines.toArray());
-
             int invoiceId = (Integer) models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "account.move", "create",
                     new Object[]{invoiceVals}, new HashMap<>()

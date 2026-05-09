@@ -498,7 +498,7 @@ function _actualizarStockProductos(noDisponibles) {
     const catId = btnActivo?.id === 'filtro-cat-todos'
         ? null
         : parseInt(btnActivo?.id?.replace('filtro-cat-', ''));
-    filtrarProductos(catId ?? null);
+    filtrarProductos(isNaN(catId) ? null : catId);
 }
 
 // Genera los botones de filtro por estado de pedido
@@ -841,12 +841,14 @@ function _renderMesas(mesas) {
         let boton = '';
         if (m.estado === 'LIBRE') {
             boton = `<button onclick="toggleRetirarMesa(${m.id}, 'RETIRADA')"
-                class="text-xs text-secundario border border-borde px-3 py-1 rounded-lg hover:bg-fondo transition-colors">
+                class="inline-flex items-center gap-1 text-xs text-warning border border-yellow-200 px-3 py-1 rounded-lg hover:bg-yellow-50 transition-colors">
+                <ion-icon name="eye-off-outline" style="font-size:12px"></ion-icon>
                 Retirar
             </button>`;
         } else if (m.estado === 'RETIRADA') {
             boton = `<button onclick="toggleRetirarMesa(${m.id}, 'LIBRE')"
-                class="text-xs text-green-600 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition-colors">
+                class="inline-flex items-center gap-1 text-xs text-green-700 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition-colors">
+                <ion-icon name="eye-outline" style="font-size:12px"></ion-icon>
                 Activar
             </button>`;
         }
@@ -856,14 +858,16 @@ function _renderMesas(mesas) {
                 <td class="px-4 py-3 text-secundario">
                     <span class="font-medium text-principal">${m.capacidad}</span>
                     <span class="text-secundario"> personas</span>
-                    <button onclick="abrirModalCapacidad(${m.id}, ${m.capacidad})"
-                        class="ml-2 inline-flex items-center gap-1 text-xs text-secundario border border-borde px-2 py-0.5 rounded-md hover:border-primary hover:text-primary transition-colors">
-                        <ion-icon name="pencil-outline" style="font-size:12px"></ion-icon>
-                        Editar
-                    </button>
                 </td>
                 <td class="px-4 py-3">${_badgeEstadoMesa(m.estado)}</td>
-                <td class="px-4 py-3 text-right">${boton}</td>
+                <td class="px-4 py-3 text-right flex items-center justify-end gap-2">
+                    <button onclick="abrirModalCapacidad(${m.id}, ${m.capacidad})"
+                        class="inline-flex items-center gap-1 text-xs text-secundario border border-borde px-3 py-1 rounded-lg hover:bg-fondo transition-colors">
+                        <ion-icon name="pencil-outline" style="font-size:12px"></ion-icon>
+                        Capacidad
+                    </button>
+                    ${boton}
+                </td>
             </tr>
         `;
     }).join('');

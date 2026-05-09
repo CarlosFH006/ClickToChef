@@ -32,12 +32,11 @@ const ProductosIndex = () => {
   useEffect(() => {
     //Listener para detectar cuando se sale de la pantalla de productos
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      //Obtener el tipo de acción
+      //Obtener el tipo de acción (POP = botón stack/swipe, GO_BACK = botón físico Android)
       const actionType = e.data.action.type;
-      console.log('Navegación detectada al salir:', actionType);
 
       //Si se sale de la pantalla de productos, se libera la mesa y se limpia el pedido
-      if (actionType === 'POP' && mesaId) {
+      if ((actionType === 'POP' || actionType === 'GO_BACK') && mesaId) {
         const currentItems = useOrderStore.getState().items;
         currentItems.forEach(item => {
           liberarReservaAction(item.id, item.cantidad);
