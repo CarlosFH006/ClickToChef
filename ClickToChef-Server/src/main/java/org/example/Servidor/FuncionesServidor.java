@@ -399,7 +399,9 @@ public class FuncionesServidor {
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
             broadcastNoDisponibles();
             broadcastPedido(pedidoId);
-            broadcastDetallesPedido(pedidoId);
+            for (DetallesPedido d : pedido.getDetalles()) {
+                Servidor.broadcast(GeneradorJSON.generarDetalleDeleted(d.getId()));
+            }
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cancelado, stock restaurado, mesa " + mesaId + " liberada");
             return GeneradorJSON.generarCancelarPedidoResponse(true, pedidoId);
