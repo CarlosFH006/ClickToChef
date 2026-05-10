@@ -177,7 +177,7 @@ public class FuncionesServidor {
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " creado con " + (exitoDetalles ? "éxito" : "errores parciales"));
             broadcastPedido(pedidoId);
-            broadcastDetallesPedido();
+            broadcastDetallesPedido(pedidoId);
 
             return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId);
         } catch (Exception e) {
@@ -216,7 +216,7 @@ public class FuncionesServidor {
 
             if (exitoDetalles) {
                 broadcastPedido(pedidoId);
-                broadcastDetallesPedido();
+                broadcastDetallesPedido(pedidoId);
             }
 
             System.out.println("[FuncionesServidor] Detalles insertados en pedido " + pedidoId + (exitoDetalles ? " con éxito" : " con errores"));
@@ -399,7 +399,7 @@ public class FuncionesServidor {
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
             broadcastNoDisponibles();
             broadcastPedido(pedidoId);
-            broadcastDetallesPedido();
+            broadcastDetallesPedido(pedidoId);
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cancelado, stock restaurado, mesa " + mesaId + " liberada");
             return GeneradorJSON.generarCancelarPedidoResponse(true, pedidoId);
@@ -725,10 +725,10 @@ public class FuncionesServidor {
         System.out.println("[FuncionesServidor] Stock broadcast (" + noDisponibles.size() + " no disponibles)");
     }
 
-    private static void broadcastDetallesPedido() {
-        ArrayList<DetallesPedido> lista = DetallesPedidoDAO.obtenerTodos();
-        WebSocketServidor.broadcastGlobal(GeneradorJSON.generarDetallesPedidoResponse(lista));
-        System.out.println("[FuncionesServidor] Detalles pedido broadcast (" + lista.size() + " detalles)");
+    private static void broadcastDetallesPedido(int pedidoId) {
+        ArrayList<DetallesPedido> lista = DetallesPedidoDAO.obtenerPorPedido(pedidoId);
+        WebSocketServidor.broadcastGlobal(GeneradorJSON.generarDetallesNuevos(lista));
+        System.out.println("[FuncionesServidor] Detalles nuevos broadcast (pedido " + pedidoId + ", " + lista.size() + " detalles)");
     }
 
     private static void broadcastPedido(int id) {

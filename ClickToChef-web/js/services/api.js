@@ -32,6 +32,13 @@ const Api = (() => {
                 break;
             }
 
+            // Nuevos detalles añadidos al crear un pedido.
+            case 'DETALLES_NUEVOS': {
+                const nuevos = msg.payload.map(d => _mapearDetalle(d));
+                _dispatch('DETALLES_NUEVOS', nuevos);
+                break;
+            }
+
             // Actualización en tiempo real cuando cambia el estado de un plato.
             case 'DETALLE_DELETED': {
                 console.log('[Api] DETALLE_DELETED recibido, id:', msg.payload?.id);

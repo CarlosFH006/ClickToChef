@@ -153,6 +153,13 @@ public class GeneradorJSON {
         return gson.toJson(respuesta);
     }
 
+    public static String generarDetallesNuevos(ArrayList<DetallesPedido> lista) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "DETALLES_NUEVOS");
+        respuesta.add("payload", gson.toJsonTree(lista));
+        return gson.toJson(respuesta);
+    }
+
     public static String generarDetalleUpdated(int id, EstadoDetallePedido estado) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "DETALLE_UPDATED");

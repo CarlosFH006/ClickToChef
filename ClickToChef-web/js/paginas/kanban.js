@@ -55,6 +55,16 @@ document.addEventListener('DOMContentLoaded', () => {
         renderKanban();
     });
 
+    //Gestionar nuevos detalles añadidos a la cocina
+    Api.on('DETALLES_NUEVOS', (detalles) => {
+        detalles.forEach(d => {
+            if (!detallesActuales.find(e => e.id === d.id)) {
+                detallesActuales.push(d);
+            }
+        });
+        renderKanban();
+    });
+
     //Gestionar la respuesta de la actualizacion de un detalle
     Api.on('DETALLE_UPDATED', (detalle) => {
         updateDetalle(detalle);
