@@ -233,7 +233,7 @@ public class FuncionesServidor {
         }
 
         int id = payload.get("id").getAsInt();
-        EstadoDetallePedido nuevoEstado = EstadoDetallePedido.valueOf(payload.get("estado").getAsString());
+        EstadoDetallePedido nuevoEstado = EstadoDetallePedido.valueOf(payload.get("estado").getAsString().toUpperCase());
 
         boolean success = DetallesPedidoDAO.updateEstado(id, nuevoEstado);
         if (success) {
@@ -350,7 +350,7 @@ public class FuncionesServidor {
             WebSocketServidor.broadcastGlobal(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
             broadcastPedido(pedidoId);
 
-            String refOdoo = FuncionesOdoo.crearTicketVenta(pedidoId);
+            String refOdoo = FuncionesOdoo.crearTicketVenta(pedidoId, metodoPago.name());
             FuncionesOdoo.descontarStockOdoo(pedidoId);
             TicketsDAO.actualizarReferenciaOdoo(pedidoId, refOdoo);
 
@@ -750,3 +750,4 @@ public class FuncionesServidor {
         System.out.println("[FuncionesServidor] Detalle pedido actualizado broadcast (ID: " + id + ")");
     }
 }
+

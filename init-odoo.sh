@@ -13,7 +13,7 @@ chmod -R u+rwX /var/lib/odoo
 
 if [ ! -f "$FLAG_FILE" ]; then
     echo "[Init] Primera ejecucion: creando base de datos e instalando modulos..."
-    runuser -u odoo -- odoo -c /etc/odoo/odoo.conf -i stock,account,l10n_es --without-demo=all --stop-after-init
+    runuser -u odoo -- odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale,l10n_es --without-demo=all --stop-after-init
 
     echo "[Init] Cargando traduccion al español..."
     runuser -u odoo -- odoo -c /etc/odoo/odoo.conf -d "$DB_NAME" --i18n-import=/dev/null --language=es_ES --stop-after-init 2>/dev/null || true
@@ -54,8 +54,14 @@ if u:
 for user in env['res.users'].search([]):
     user.lang = 'es_ES'
 
+# Crear configuracion del TPV
+pos_config = env['pos.config'].search([], limit=1)
+if not pos_config:
+    pos_config = env['pos.config'].create({'name': 'ClickToChef TPV'})
+    print('[Init] Configuracion TPV creada')
+
 env.cr.commit()
-print('[Init] Configuracion completada: idioma es_ES, pais España, moneda EUR, IVA 10%%')
+print('[Init] Configuracion completada: idioma es_ES, pais España, moneda EUR, TPV creado')
 EOF
 
     touch "$FLAG_FILE"
