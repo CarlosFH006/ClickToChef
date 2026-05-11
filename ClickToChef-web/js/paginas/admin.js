@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
 
     // Verificar que el usuario es ADMIN
     const _usuarioGuardado = localStorage.getItem('usuario');
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-4 py-3 text-secundario">${i.metodoMedida ?? '—'}</td>
                 <td class="px-4 py-3 text-secundario">${i.tipoIngrediente ?? '—'}</td>
                 <td class="px-4 py-3 text-right">
-                    <button onclick="abrirModalSumarStock(${i.id}, '${i.nombre}', ${i.stockActual}, '${i.metodoMedida}')"
+                    <button onclick="abrirModalSumarStock(${i.id}, &quot;${i.nombre}&quot;, ${i.stockActual}, &quot;${i.metodoMedida}&quot;)"
                         class="inline-flex items-center gap-1 text-xs text-green-700 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition-colors">
                         <ion-icon name="add-outline" style="font-size:12px"></ion-icon>
                         Sumar
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-4 py-3 text-principal">${u.username}</td>
                 <td class="px-4 py-3">${_badgeRol(u.rol)}</td>
                 <td class="px-4 py-3 text-right">
-                    <button onclick="abrirModalPassword(${u.id}, '${u.username}')"
+                    <button onclick="abrirModalPassword(${u.id}, &quot;${u.username}&quot;)"
                         class="text-xs text-primary border border-primary/30 px-3 py-1 rounded-lg hover:bg-primary/10 transition-colors">
                         Cambiar contraseña
                     </button>
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actualizar solo la celda de estado en el DOM sin re-renderizar la tabla
         const fila = document.querySelector(`[data-detalle-id="${id}"]`);
         if (fila) {
-            const celdaEstado = fila.children[2];
+            const celdaEstado = fila.children[4];
             if (celdaEstado) celdaEstado.innerHTML = _badgeEstadoDetalle(estado);
         }
     });
@@ -1036,12 +1036,12 @@ function _renderProductos(productos) {
                         Activar
                        </button>`
                 }
-                <button onclick="abrirModalPrecioProducto(${p.id}, '${p.nombre}', ${p.precio})"
+                <button onclick="abrirModalPrecioProducto(${p.id}, &quot;${p.nombre}&quot;, ${p.precio})"
                     class="inline-flex items-center gap-1 text-xs text-secundario border border-borde px-3 py-1 rounded-lg hover:bg-fondo transition-colors">
                     <ion-icon name="pencil-outline" style="font-size:12px"></ion-icon>
                     Precio
                 </button>
-                <button onclick="verRecetaProducto(${p.id}, '${p.nombre}')"
+                <button onclick="verRecetaProducto(${p.id}, &quot;${p.nombre}&quot;)"
                     class="inline-flex items-center gap-1 text-xs text-primary border border-primary/30 px-3 py-1 rounded-lg hover:bg-primary/10 transition-colors">
                     <ion-icon name="list-outline" style="font-size:12px"></ion-icon>
                     Receta
@@ -1092,3 +1092,7 @@ function toggleDetalles(pedidoId) {
     const fila = document.getElementById(`detalles-${pedidoId}`);
     fila?.classList.toggle('hidden');
 }
+
+
+
+
