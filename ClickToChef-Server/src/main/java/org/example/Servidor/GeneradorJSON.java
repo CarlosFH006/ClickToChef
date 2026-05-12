@@ -106,14 +106,13 @@ public class GeneradorJSON {
     }
 
     //Genera la respuesta de crear pedido
-    public static String generarCrearPedidoResponse(boolean success, int pedidoId) {
+    public static String generarCrearPedidoResponse(boolean success, int pedidoId, Pedidos pedido) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "CREAR_PEDIDO_RESPONSE");
-        
         JsonObject payload = new JsonObject();
         payload.addProperty("success", success);
         payload.addProperty("pedidoId", pedidoId);
-        
+        if (pedido != null) payload.add("pedido", gson.toJsonTree(pedido));
         respuesta.add("payload", payload);
         return gson.toJson(respuesta);
     }

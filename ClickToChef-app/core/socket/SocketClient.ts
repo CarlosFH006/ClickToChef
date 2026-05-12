@@ -142,24 +142,7 @@ class SocketClient {
         }
         break;
 
-      //Actualizar lista de pedidos
-      case 'PEDIDOS_UPDATED':
-        if (data.payload) {
-          const { user } = useAuthStore.getState();
-          const pedido = data.payload;
-          if (user && pedido.usuarioId === user.id) {
-            //Si el pedido está cerrado o cancelado, eliminarlo de la lista
-            if (pedido.estado === 'CERRADA' || pedido.estado === 'CANCELADO') {
-              console.log(`[Socket] Pedido ${pedido.id} ${pedido.estado.toLowerCase()}, eliminando de la lista`);
-              usePedidosStore.getState().removePedido(pedido.id);
-            } else {
-              //Si el pedido no está cerrado ni cancelado, añadirlo a la lista
-              console.log(`[Socket] Pedido ${pedido.id} actualizado/añadido`);
-              usePedidosStore.getState().upsertPedido(pedido);
-            }
-          }
-        }
-        break;
+
 
       //Actualizar detalle del pedido
       case 'DETALLE_UPDATED':
@@ -183,9 +166,10 @@ class SocketClient {
 
       //Controlar la respuesta de la creación del pedido
       case 'CREAR_PEDIDO_RESPONSE':
-        const { success: orderSuccess, pedidoId } = data.payload;
+        const { success: orderSuccess, pedidoId, pedido: pedidoNuevo } = data.payload;
         if (orderSuccess) {
           console.log(`[Socket] Pedido ${pedidoId} creado con éxito.`);
+          if (pedidoNuevo) usePedidosStore.getState().upsertPedido(pedidoNuevo);
           Alert.alert("Pedido Confirmado", `El pedido #${pedidoId} ha sido enviado a cocina.`);
         } else {
           Alert.alert("Error", "No se pudo crear el pedido en el servidor.");
@@ -243,6 +227,7 @@ class SocketClient {
       //Controlar la respuesta de la cancelación del pedido
       case 'CANCELAR_PEDIDO_RESPONSE':
         if (data.payload?.success) {
+          usePedidosStore.getState().removePedido(data.payload.pedidoId);
           Alert.alert('Pedido cancelado', `El pedido #${data.payload.pedidoId} ha sido cancelado.`);
           router.back();
         } else {
@@ -329,6 +314,7 @@ class SocketClient {
       //Controlar la respuesta de la finalización de la reserva del producto
       case 'CERRAR_MESA_RESPONSE':
         if (data.payload?.success) {
+          usePedidosStore.getState().removePedido(data.payload.pedidoId);
           Alert.alert('Pedido cerrado', `El pedido #${data.payload.pedidoId} ha sido cerrado correctamente.`);
           router.back();
         } else {

@@ -176,10 +176,11 @@ public class FuncionesServidor {
             }
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " creado con " + (exitoDetalles ? "éxito" : "errores parciales"));
+            Pedidos pedidoCompleto = PedidosDAO.obtenerPedidoPorId(pedidoId);
             broadcastPedido(pedidoId);
             broadcastDetallesPedido(pedidoId);
 
-            return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId);
+            return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId, pedidoCompleto);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al crear pedido: " + e.getMessage());
             return GeneradorJSON.generarError("Error interno al procesar el pedido: " + e.getMessage());
@@ -214,13 +215,14 @@ public class FuncionesServidor {
                 }
             }
 
+            Pedidos pedidoCompleto = exitoDetalles ? PedidosDAO.obtenerPedidoPorId(pedidoId) : null;
             if (exitoDetalles) {
                 broadcastPedido(pedidoId);
                 broadcastDetallesPedido(pedidoId);
             }
 
             System.out.println("[FuncionesServidor] Detalles insertados en pedido " + pedidoId + (exitoDetalles ? " con éxito" : " con errores"));
-            return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId);
+            return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId, pedidoCompleto);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al insertar detalles: " + e.getMessage());
             return GeneradorJSON.generarError("Error interno al insertar detalles: " + e.getMessage());
@@ -735,7 +737,7 @@ public class FuncionesServidor {
 
     private static void broadcastPedido(int id) {
         Pedidos pedido = PedidosDAO.obtenerPedidoPorId(id);
-        Servidor.broadcast(GeneradorJSON.generarPedidosUpdated(pedido));
+        WebSocketServidor.broadcastGlobal(GeneradorJSON.generarPedidosUpdated(pedido));
         System.out.println("[FuncionesServidor] Pedido broadcast (ID: " + id + ")");
     }
 

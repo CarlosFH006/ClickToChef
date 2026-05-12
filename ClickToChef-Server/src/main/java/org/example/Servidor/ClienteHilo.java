@@ -144,6 +144,7 @@ public class ClienteHilo extends Thread {
                             //Si el pedido es exitoso, se elimina la mesa reservada
                             if (respPayload != null && respPayload.has("success") && respPayload.get("success").getAsBoolean()) {
                                 mesaReservadaId = null;
+                                reservasActivas.clear();
                             }
                         } catch (Exception e) {
                             System.err.println("[" + getName() + "] Error al procesar el pedido: " + e.getMessage());
@@ -152,6 +153,17 @@ public class ClienteHilo extends Thread {
                     break;
                 case "INSERTAR_DETALLES":
                     respuesta = FuncionesServidor.procesarInsertarDetalles(payload);
+                    if (respuesta != null) {
+                        try {
+                            JsonObject respJson = gson.fromJson(respuesta, JsonObject.class);
+                            JsonObject respPayload = respJson.getAsJsonObject("payload");
+                            if (respPayload != null && respPayload.has("success") && respPayload.get("success").getAsBoolean()) {
+                                reservasActivas.clear();
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Error al procesar la inserción de detalles: " + e.getMessage());
+                        }
+                    }
                     break;
                 case "UPDATE_ESTADO_DETALLE":
                     respuesta = FuncionesServidor.procesarUpdateEstadoDetalle(payload);
