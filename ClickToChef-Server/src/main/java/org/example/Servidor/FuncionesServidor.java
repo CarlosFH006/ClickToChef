@@ -349,12 +349,13 @@ public class FuncionesServidor {
 
             MesasDAO.actualizarEstadoMesa(mesaId, EstadoMesa.LIBRE);
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
-            WebSocketServidor.broadcastGlobal(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
             broadcastPedido(pedidoId);
 
             String refOdoo = FuncionesOdoo.crearTicketVenta(pedidoId, metodoPago.name());
             FuncionesOdoo.descontarStockOdoo(pedidoId);
             TicketsDAO.actualizarReferenciaOdoo(pedidoId, refOdoo);
+
+            WebSocketServidor.broadcastGlobal(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cerrado, ticket registrado, mesa " + mesaId + " liberada");
             return GeneradorJSON.generarCerrarMesaResponse(ticketCreado && pedidoCerrado, pedidoId, totalImporte);
