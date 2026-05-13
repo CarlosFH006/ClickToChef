@@ -38,7 +38,7 @@ const MesasScreen = () => {
         {/* Header compacto */}
         <View className="flex-row items-center justify-between px-5 pt-2 pb-3">
           <View>
-            <Text className="font-titulo text-xl text-principal">Bienvenido, {user?.username}</Text>
+            <Text className="font-titulo text-xl text-principal">Bienvenido, {user?.nombreCompleto}</Text>
             <Text className="font-cuerpo text-xs text-secundario">Estado actual de las mesas</Text>
           </View>
           <LogOutIconButton />

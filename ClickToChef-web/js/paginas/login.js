@@ -2,6 +2,17 @@ document.addEventListener('DOMContentLoaded', () => {
     //Conectar al websocket
     WebSocketService.connect();
 
+    //Si existe un usuario en localStorage, redirigir al usuario a su pagina correspondiente
+    const _usuario = localStorage.getItem('usuario');
+    if (_usuario) {
+        const user = JSON.parse(_usuario);
+        if (user.rol === 'COCINERO') {
+            window.location.href = 'kanban.html';
+        } else if (user.rol === 'ADMIN') {
+            window.location.href = 'admin.html';
+        }
+    }
+
     //Obtener elementos del DOM
     const btnLogin       = document.getElementById('btn-login');
     const inputUsuario   = document.getElementById('usuario');
