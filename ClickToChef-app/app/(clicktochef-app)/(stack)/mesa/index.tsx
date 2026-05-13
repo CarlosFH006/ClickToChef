@@ -35,7 +35,7 @@ const MesaIndex = () => {
         </View>
 
         
-        <MesaFList mesas={mesas} pedido={true} />
+        <MesaFList mesas={mesas.filter(m => m.estado !== 'RETIRADA')} pedido={true} />
         
       </ScrollView>
 
