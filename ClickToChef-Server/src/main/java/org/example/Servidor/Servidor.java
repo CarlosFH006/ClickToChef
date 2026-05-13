@@ -12,8 +12,7 @@ public class Servidor {
     public static void server(){
         int puerto = Integer.parseInt(ObtenerProperties.obtenerParametro("server.port"));
 
-        try {
-            ServerSocket serverSocket = new ServerSocket(puerto);
+        try (ServerSocket serverSocket = new ServerSocket(puerto)) {
             System.out.println("ServerSocket iniciado en el puerto: " + puerto);
             int numCliente = 1;
             while (true) {
