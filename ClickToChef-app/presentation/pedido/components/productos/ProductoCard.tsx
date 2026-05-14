@@ -8,7 +8,7 @@ import { useProductoActions } from '../../hooks/useProductoActions';
 import { Colors } from '../../../../constants/theme';
 
 interface Props {
-  producto: Producto | ProductoPedido;
+  producto: ProductoPedido;
   showNotas?: boolean;
 }
 
@@ -18,7 +18,7 @@ const ProductoCard = ({ producto, showNotas = false }: Props) => {
   const primary = Colors.light.primary;
 
   //Guardar las notas del producto y si estaban abiertas al volver a entrar
-  const notasActuales = 'notas' in producto ? (producto.notas ?? '') : '';
+  const notasActuales = producto.notas ?? '';
   const [notasOpen, setNotasOpen] = useState(notasActuales.length > 0);
 
   return (

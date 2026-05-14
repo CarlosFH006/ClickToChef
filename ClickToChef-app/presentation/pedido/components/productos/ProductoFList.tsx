@@ -1,19 +1,16 @@
 import React from 'react';
 import { FlatList } from 'react-native';
-import { Producto } from '../../../../type/menu-inetrface';
 import { ProductoPedido } from '../../../../type/pedido-interface';
 import ProductoCard from './ProductoCard';
 
-type ProductoListItem = Producto | ProductoPedido;
-
 interface Props {
-  productos: ProductoListItem[];
+  productos: ProductoPedido[];
   showNotas?: boolean;
 }
 
 const ProductoFList = ({ productos, showNotas = false }: Props) => {
   return (
-    <FlatList<ProductoListItem>
+    <FlatList
       data={productos}
       scrollEnabled={false}
       keyExtractor={(item) => item.id.toString()}

@@ -5,7 +5,7 @@ interface Props extends PressableProps {
     children: string;
     icon?: keyof typeof Ionicons.glyphMap;
     variant?: 'primary' | 'principal' | 'info' | 'success' | 'warning' | 'error';
-    className?: string; // añadido className para que soporte inyección de estilos tailwind
+    className?: string;
 }
 
 const ThemedButton = ({ children, icon, variant = 'principal', className = '', ...rest }: Props) => {

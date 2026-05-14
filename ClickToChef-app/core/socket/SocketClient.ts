@@ -5,6 +5,7 @@ import { useMesaStore } from '../../store/useMesaStore';
 import { useMenuStore } from '../../store/useMenuStore';
 import { usePedidosStore } from '../../store/usePedidosStore';
 import { useOrderStore } from '../../store/useOrderStore';
+import { Pedidos } from '../../type/pedidos-interface';
 
 //Clase Singleton para manejar el Socket
 
@@ -42,7 +43,7 @@ class SocketClient {
     this.client = TcpSocket.createConnection({
       port: this.port,
       host: this.host
-    }, () => {
+    }, () => { //Callback que se ejecuta cuando se establece la conexión
       console.log(`[Socket] Conectado a ${this.host}:${this.port}`);
     });
 
@@ -92,11 +93,11 @@ class SocketClient {
     const { useAuthStore } = require('../../presentation/auth/store/useAuthStore');
     switch (data.type) {
       case 'LOGIN_RESPONSE':
-        const { success, user } = data.payload || {};
-        if (success) {
+        const { success, user, pass } = data.payload || {};
+        if (success && user) {
           //Si el usuario es camarero, cambiar estado a autenticado
           if (user.rol === 'CAMARERO') {
-            useAuthStore.getState().changeStatus(user);
+            useAuthStore.getState().changeStatus(user, pass);
           } else {
             //Si el usuario no es camarero, cambiar estado a no autenticado
             useAuthStore.getState().changeStatus();
@@ -108,6 +109,7 @@ class SocketClient {
         }
         break;
 
+      //Respuesta al solicitar las mesas
       case 'MESAS_RESPONSE':
         if (data.payload?.mesas) {
           console.log('[Socket] Mesas recibidas:', data.payload.mesas.length);
@@ -124,18 +126,20 @@ class SocketClient {
         }
         break;
 
+      //Respuesta al solicitar el menú
       case 'MENU_RESPONSE':
         if (data.payload) {
           useMenuStore.getState().setMenu(data.payload);
         }
         break;
 
+      //Respuesta al solicitar los pedidos de un usuario
       case 'PEDIDOS_USUARIO_RESPONSE':
         if (data.payload) {
           const { user } = useAuthStore.getState();
           if (user) {
             //Filtrar los pedidos del usuario
-            const filtered = (data.payload as any[]).filter(p => p.usuarioId === user.id);
+            const filtered = (data.payload as Pedidos[]).filter(p => p.usuarioId === user.id);
             console.log(`[Socket] PEDIDOS_USUARIO_RESPONSE recibidos:`, filtered.length);
             usePedidosStore.getState().setPedidos(filtered);
           }
@@ -207,7 +211,7 @@ class SocketClient {
         }
         break;
 
-      //Actualizar stock
+      //Actualizar stock, recibe un array con los id de los productos no disponibles
       case 'STOCK_UPDATED':
         if (data.payload) {
           const noDisponibles: number[] = data.payload;
@@ -235,10 +239,11 @@ class SocketClient {
         }
         break;
 
+      //Al reservar la mesa, si no está disponible, mostrar error y volver a pedidos
       case 'UPDATE_MESA_STATUS_RESPONSE':
         if (data.payload && !data.payload.success) {
           Alert.alert('Mesa no disponible', 'Esta mesa ya ha sido reservada por otro usuario.');
-          router.back();
+          router.dismissAll();
         }
         break;
 

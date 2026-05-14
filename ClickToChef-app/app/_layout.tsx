@@ -12,6 +12,7 @@ import '../global.css';
 // Evita que la SplashScreen se oculte automáticamente
 SplashScreen.preventAutoHideAsync();
 
+//Evitar que aparezca el mensaje de los warn, en modo debug
 LogBox.ignoreAllLogs(true);
 
 export default function RootLayout() {

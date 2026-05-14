@@ -43,14 +43,13 @@ const PedidoDetalleScreen = () => {
     );
   }
 
-  const statusColor = getPedidoStatusColor(pedido.estado);
   const puedeCancelar = pedido.estado === 'ABIERTA' &&
     (pedido.detalles?.length === 0 || pedido.detalles?.every(d => d.estado === 'PENDIENTE'));
 
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={[]}>
 
-      {/* Subheader fijo */}
+      {/* Header fijo */}
       <View className="flex-row justify-between items-center px-5 py-3 border-b border-borde">
         <Text className="font-titulo text-base text-principal">Productos</Text>
         <Text className="font-cuerpo text-sm text-secundario">

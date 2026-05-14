@@ -26,7 +26,7 @@ export const usePedidosStore = create<PedidosState>((set) => ({
   //Actualizar el detalle de un pedido
   updateDetallePedido: (detalle) => {
     set((state) => {
-      //Buscar el pedido afectado escaneando los detalles
+      //Comprueba si el pedido afectado esta en algun pedido, y almacena ese pedido
       const pedidoAfectado = state.pedidos.find(p => p.detalles.some(d => d.id === detalle.id));
 
       //Si el detalle está listo, mostrar alerta usando el nombre ya almacenado
@@ -38,8 +38,9 @@ export const usePedidosStore = create<PedidosState>((set) => ({
         );
       }
 
+      //Actualizar el estado de Zustand
       return {
-        //Recorrer los pedidos y hacer merge solo del estado
+        //Esto recorre todos los pedidos, hace una copia del pedido y actualiza el detalle pasado por parámetro, si no es ese detalle, no lo actualiza
         pedidos: state.pedidos.map(p => ({
           ...p,
           detalles: p.detalles.map(d => d.id === detalle.id ? { ...d, estado: detalle.estado } : d)
@@ -50,6 +51,7 @@ export const usePedidosStore = create<PedidosState>((set) => ({
 
   //Eliminar un detalle de su pedido
   removeDetalle: (detalleId) => set((state) => ({
+    //Esto recorre todos los pedidos, hace una copia del pedido y filtra los detalles de ese pedido para eliminar el detalle borrado
     pedidos: state.pedidos.map(p => ({
       ...p,
       detalles: p.detalles.filter(d => d.id !== detalleId)

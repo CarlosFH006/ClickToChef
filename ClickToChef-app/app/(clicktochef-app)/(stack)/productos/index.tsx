@@ -19,11 +19,14 @@ const ProductosIndex = () => {
   const navigation = useNavigation();
 
   const busquedaTrim = busqueda.trim();
-  //Filtrar las categorías que tienen productos activos
+  //Crea una copia de categorias, pero solo con los productos activos
   const categoriasConProductos = categorias
     .map(c => ({ ...c, productos: c.productos.filter(p => p.activo) }))
     .filter(c => c.productos.length > 0);
+  //Crea una copia de categoriasConProductos, pero con todos los productos
   const todosLosProductos = categoriasConProductos.flatMap(c => c.productos);
+  
+  //Filtrar productos por busqueda
   const resultadosBusqueda = todosLosProductos.filter(p =>
     p.nombre.toLowerCase().includes(busquedaTrim.toLowerCase())
   );
@@ -51,16 +54,19 @@ const ProductosIndex = () => {
     return unsubscribe;
   }, [navigation, mesaId]);
 
+  //Cuando se carguen las categorias, seleccionar la primera
   useEffect(() => {
     if (categoriasConProductos.length > 0 && selectedCategoryId === null) {
       setSelectedCategoryId(categoriasConProductos[0].id);
     }
   }, [categoriasConProductos.length]);
 
+  //Obtiene la categoria seleccionada, según su id
   const filteredCategorias = selectedCategoryId === null
     ? categoriasConProductos
     : categoriasConProductos.filter(cat => cat.id === selectedCategoryId);
 
+  //Calcular el total de items del pedido  
   const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
 
   if(isLoading){

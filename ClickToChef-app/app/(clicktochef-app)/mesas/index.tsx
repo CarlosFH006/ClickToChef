@@ -13,10 +13,11 @@ const MesasScreen = () => {
   const { mesas, isLoading } = useMesaStore();
 
   useEffect(() => {
+    //Obtener las mesas
     getMesasAction();
   }, []);
 
-  //Contar mesas por estado
+  //Contar mesas por estado y filtrar las que están retiradas
   const mesasVisibles = mesas.filter(m => m.estado !== 'RETIRADA');
   const estados = {
     libres: mesasVisibles.filter(m => m.estado === 'LIBRE').length,
@@ -24,6 +25,7 @@ const MesasScreen = () => {
     ocupadas: mesasVisibles.filter(m => m.estado === 'OCUPADA').length,
   };
 
+  //Mostrar indicador de carga mientras se obtienen las mesas
   if(isLoading && mesas.length === 0){
     return (
       <View className="flex-1 justify-center items-center">

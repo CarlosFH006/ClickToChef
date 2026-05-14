@@ -112,11 +112,11 @@ INSERT INTO mesas (numero, capacidad, estado) VALUES
 -- USUARIOS
 INSERT INTO usuarios (username, password, nombre_completo, rol) VALUES 
 ('admin', 'admin123', 'Super Administrador', 'admin'),
-('pepe_sala', 'camarero1', 'Pepe García', 'camarero'),
-('ana_sala', 'camarero2', 'Ana López', 'camarero'),
-('carlos_chef', 'cocina1', 'Carlos Martínez', 'cocinero');
+('pepe_sala', 'camarero1', 'Pepe', 'camarero'),
+('ana_sala', 'camarero2', 'Ana', 'camarero'),
+('carlos_chef', 'cocina1', 'Carlos', 'cocinero');
 
--- INGREDIENTES (ACTUALIZADO)
+-- INGREDIENTES
 INSERT INTO ingredientes
 (id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id)
 VALUES

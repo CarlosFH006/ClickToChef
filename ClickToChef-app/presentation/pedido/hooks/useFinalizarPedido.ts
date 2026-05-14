@@ -6,12 +6,15 @@ const useFinalizarPedido = () => {
     const { mesaId, clearOrder } = useOrderStore();
 
     const finalizarPedido = async () => {
+        //Lanzar el action de crear pedido
         const success = await crearPedidoAction();
 
         if (success) {
+            //Si se creó el pedido, actualizar el estado de la mesa
             if (mesaId) {
                 await updateMesaStatusAction(mesaId, 'OCUPADA');
             }
+            //Limpiar el pedido del store
             clearOrder();
         }
 
