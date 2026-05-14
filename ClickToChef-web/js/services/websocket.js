@@ -4,38 +4,47 @@
 const WebSocketService = (() => {
     // Instancia del WebSocket nativo. Null hasta que se llama a connect().
     let ws = null;
-    // Callback que recibirá los mensajes en bruto del servidor. Lo registra api.js.
+    // Callback que recibirá los mensajes en bruto del servidor.
     let onMessageCallback = null;
-    // Callback que recibirá los cambios de estado de la conexión. Lo registra kanban.js.
+    // Callback que recibirá los cambios de estado de la conexión.
     let onStatusChangeCallback = null;
 
     // Abre la conexión WebSocket con el servidor.
     // Si la conexión se pierde, se reintenta automáticamente cada 3 segundos.
     function connect() {
+        //Cambiar el estado a conectando
         _notifyStatus("connecting");
 
+        //Construir la URL del WebSocket desde config.js
         const url = 'ws://'+CONFIG.WS_IP+':'+CONFIG.WS_PORT
+        
+        //Crear la conexión WebSocket
         ws = new WebSocket(url);
 
-        // Conexión establecida correctamente
+        // Si la conexión se establece correctamente
         ws.onopen = () => {
+            //Cambiar el estado a conectado
             _notifyStatus("connected");
         };
 
-        // Conexión cerrada — puede ser por red o por el servidor.
+        // Si la conexión se cierra
         // Reintenta la conexión tras 3 segundos formando un bucle de reconexión.
         ws.onclose = () => {
+            //Cambiar el estado a desconectado
             _notifyStatus("disconnected");
+            //Reconectar despues de 3 segundos
             setTimeout(connect, 3000);
         };
 
-        // Error de conexión — notifica el estado y alerta al usuario.
+        // Si hay un error en la conexión
         ws.onerror = () => {
+            //Cambiar el estado a error
             _notifyStatus("error");
+            //Alertar al usuario
             alert("No hay conexión con el servidor")
         };
 
-        // Mensaje recibido del servidor — pasa los datos en bruto al callback registrado.
+        // Si se recibe un mensaje del servidor, ejecutar el callback registrado
         ws.onmessage = (event) => {
             if (onMessageCallback) onMessageCallback(event.data);
         };
@@ -45,7 +54,7 @@ const WebSocketService = (() => {
     // Acepta string o objeto — si es objeto lo serializa a JSON automáticamente.
     // Devuelve true si el envío fue exitoso, false si la conexión no está disponible.
     function send(data) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
+        if (isConnected()) {
             ws.send(typeof data === "string" ? data : JSON.stringify(data));
             return true;
         }
@@ -59,7 +68,6 @@ const WebSocketService = (() => {
     }
 
     // Registra el callback que recibirá los cambios de estado de la conexión.
-    // Estados posibles: 'connecting', 'connected', 'disconnected', 'error'.
     function onStatusChange(callback) {
         onStatusChangeCallback = callback;
     }

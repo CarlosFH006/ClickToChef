@@ -1,4 +1,10 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+﻿let _mesasAdmin = null;
+let _categoriasAdmin = null;
+let _productosAdmin = null;
+let _ingredientesAdmin = null;
+let _pedidosAdmin = null;
+
+document.addEventListener('DOMContentLoaded', () => {
 
     // Verificar que el usuario es ADMIN
     const _usuarioGuardado = localStorage.getItem('usuario');
@@ -19,10 +25,10 @@
     WebSocketService.onStatusChange((status) => {
         const el = document.getElementById('ws-status');
         const labels = {
-            connecting:   { text: 'Conectando...', cls: 'bg-gray-100 text-secundario' },
-            connected:    { text: 'Conectado',     cls: 'bg-green-100 text-green-700' },
-            disconnected: { text: 'Desconectado',  cls: 'bg-red-100 text-error' },
-            error:        { text: 'Error',          cls: 'bg-red-100 text-error' },
+            connecting: { text: 'Conectando...', cls: 'bg-gray-100 text-secundario' },
+            connected: { text: 'Conectado', cls: 'bg-green-100 text-green-700' },
+            disconnected: { text: 'Desconectado', cls: 'bg-red-100 text-error' },
+            error: { text: 'Error', cls: 'bg-red-100 text-error' },
         };
         const s = labels[status] || labels.disconnected;
         el.textContent = s.text;
@@ -40,14 +46,16 @@
         }
     });
 
+    //Callbacks registrados en api.js
+
     // --- Mesas ---
     // Renderiza la tabla con número, capacidad y estado de cada mesa
     Api.on('MESAS_RESPONSE', (mesas) => {
-        window._mesasAdmin = mesas;
+        _mesasAdmin = mesas;
         _renderMesas(mesas);
     });
 
-    // Todas las categorías (incluye vacías) — tabla de categorías del admin
+    // Todas las categorías (incluye vacías)
     Api.on('CATEGORIAS_ADMIN_RESPONSE', (cats) => {
         const tbodyCat = document.getElementById('tabla-categorias');
         tbodyCat.innerHTML = cats.map(cat => `
@@ -56,7 +64,7 @@
                 <td class="px-4 py-3 text-principal">${cat.nombre}</td>
             </tr>
         `).join('') || '<tr><td colspan="2" class="px-4 py-8 text-center text-secundario text-sm">Sin categorías</td></tr>';
-        window._categoriasAdmin = cats.map(c => ({ id: c.id, nombre: c.nombre }));
+        _categoriasAdmin = cats.map(c => ({ id: c.id, nombre: c.nombre }));
     });
 
     // --- Categorías y Productos ---
@@ -73,20 +81,20 @@
         `;
 
         // Cache de categorías para el autocomplete del modal de producto
-        window._categoriasAdmin = categorias.map(c => ({ id: c.id, nombre: c.nombre }));
+        _categoriasAdmin = categorias.map(c => ({ id: c.id, nombre: c.nombre }));
 
         // Almacena todos los productos con su categoría para poder filtrarlos sin re-fetch
         const todosLosProductos = categorias.flatMap(cat =>
             cat.productos.map(p => ({ ...p, categoria: cat.nombre, categoriaId: cat.id }))
         );
-        window._productosAdmin = todosLosProductos;
+        _productosAdmin = todosLosProductos;
         _renderProductos(todosLosProductos);
     });
 
     // --- Ingredientes ---
     // Muestra id, nombre, stock actual, stock reservado, unidad y tipo
     Api.on('INGREDIENTES_RESPONSE', (ingredientes) => {
-        window._ingredientesAdmin = ingredientes; // cache para el modal de producto
+        _ingredientesAdmin = ingredientes; // cache para el modal de producto
         const tbody = document.getElementById('tabla-ingredientes');
         if (!ingredientes.length) {
             tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-secundario text-sm">Sin ingredientes</td></tr>';
@@ -203,27 +211,20 @@
         }
     });
 
-    Api.on('NEW_PRODUCTO', ({ id, nombre, precio, categoriaId }) => {
-        if (window._productosAdmin) {
-            const cat = (window._categoriasAdmin ?? []).find(c => c.id === categoriaId);
-            window._productosAdmin = [...window._productosAdmin, {
-                id, nombre, precio, disponible: true, activo: true,
-                categoria: cat?.nombre ?? '—', categoriaId
-            }];
-            filtrarProductos(null);
-        }
+    Api.on('NEW_PRODUCTO', () => {
+        Api.getMenu();
     });
 
     Api.on('PRODUCTO_ACTIVO_UPDATED', ({ id, activo }) => {
-        if (window._productosAdmin) {
-            window._productosAdmin = window._productosAdmin.map(p => p.id === id ? { ...p, activo } : p);
+        if (_productosAdmin) {
+            _productosAdmin = _productosAdmin.map(p => p.id === id ? { ...p, activo } : p);
             filtrarProductos(null);
         }
     });
 
     Api.on('PRECIO_PRODUCTO_UPDATED', ({ id, precio }) => {
-        if (window._productosAdmin) {
-            window._productosAdmin = window._productosAdmin.map(p => p.id === id ? { ...p, precio } : p);
+        if (_productosAdmin) {
+            _productosAdmin = _productosAdmin.map(p => p.id === id ? { ...p, precio } : p);
             filtrarProductos(null);
         }
         cerrarModalPrecioProducto();
@@ -278,7 +279,7 @@
 
     // --- Pedidos ---
     Api.on('PEDIDOS_ADMIN_RESPONSE', (pedidos) => {
-        window._pedidosAdmin = pedidos;
+        _pedidosAdmin = pedidos;
         _renderFiltrosEstado(pedidos);
         _renderPedidos(pedidos);
     });
@@ -297,25 +298,25 @@
     });
 
     Api.on('NEW_MESA', ({ id, numero, capacidad, estado }) => {
-        if (window._mesasAdmin) {
-            window._mesasAdmin = [...window._mesasAdmin, { id, numero, capacidad, estado }];
-            _renderMesas(window._mesasAdmin);
+        if (_mesasAdmin) {
+            _mesasAdmin = [..._mesasAdmin, { id, numero, capacidad, estado }];
+            _renderMesas(_mesasAdmin);
         }
         cerrarModalNuevaMesa();
     });
 
     Api.on('MESA_CAPACIDAD_UPDATED', ({ id, capacidad }) => {
-        if (window._mesasAdmin) {
-            window._mesasAdmin = window._mesasAdmin.map(m => m.id === id ? { ...m, capacidad } : m);
-            _renderMesas(window._mesasAdmin);
+        if (_mesasAdmin) {
+            _mesasAdmin = _mesasAdmin.map(m => m.id === id ? { ...m, capacidad } : m);
+            _renderMesas(_mesasAdmin);
         }
         cerrarModalCapacidad();
     });
 
     Api.on('MESA_UPDATED', ({ id, estado }) => {
-        if (window._mesasAdmin) {
-            window._mesasAdmin = window._mesasAdmin.map(m => m.id === id ? { ...m, estado } : m);
-            _renderMesas(window._mesasAdmin);
+        if (_mesasAdmin) {
+            _mesasAdmin = _mesasAdmin.map(m => m.id === id ? { ...m, estado } : m);
+            _renderMesas(_mesasAdmin);
         } else {
             Api.getMesas();
         }
@@ -357,8 +358,8 @@
     // y actualiza el estado en el array en memoria para mantener coherencia
     Api.on('DETALLE_UPDATED', ({ id, estado }) => {
         // Actualizar en memoria
-        if (window._pedidosAdmin) {
-            window._pedidosAdmin = window._pedidosAdmin.map(p => ({
+        if (_pedidosAdmin) {
+            _pedidosAdmin = _pedidosAdmin.map(p => ({
                 ...p,
                 detalles: (p.detalles ?? []).map(d => d.id === id ? { ...d, estado } : d)
             }));
@@ -383,19 +384,27 @@
 
 // --- Navegación entre paneles principales ---
 
-// Muestra el panel seleccionado y oculta el resto
+// Muestra el panel principal indicado
 function mostrarPanel(nombre) {
+    // Oculta todos los paneles
     document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+    // Desactiva todos los botones
     document.querySelectorAll('.panel-btn').forEach(b => b.classList.remove('active'));
+    // Muestra el panel indicado
     document.getElementById('panel-' + nombre).classList.remove('hidden');
+    // Activa el botón indicado
     document.getElementById('btn-' + nombre).classList.add('active');
 }
 
-// Muestra la sub-pestaña seleccionada dentro del panel de Productos
+// Muestra el sub-panel principal indicado
 function mostrarSubPanel(nombre) {
+    // Oculta todos los sub-paneles
     document.querySelectorAll('[id^="subpanel-"]').forEach(p => p.classList.add('hidden'));
+    // Desactiva todos los botones
     document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+    // Muestra el sub-panel indicado
     document.getElementById('subpanel-' + nombre).classList.remove('hidden');
+    // Activa el botón indicado
     document.getElementById('subtab-' + nombre).classList.add('active');
 }
 
@@ -405,7 +414,7 @@ function mostrarSubPanel(nombre) {
 function _badge(texto, tipo) {
     const clases = {
         success: 'bg-green-100 text-green-700',
-        error:   'bg-red-100 text-error',
+        error: 'bg-red-100 text-error',
         warning: 'bg-yellow-100 text-warning',
         primary: 'bg-blue-100 text-primary',
     };
@@ -414,10 +423,10 @@ function _badge(texto, tipo) {
 
 function _badgeEstadoMesa(estado) {
     const mapa = {
-        LIBRE:     ['Libre',     'success'],
-        OCUPADA:   ['Ocupada',   'error'],
+        LIBRE: ['Libre', 'success'],
+        OCUPADA: ['Ocupada', 'error'],
         RESERVADA: ['Reservada', 'warning'],
-        RETIRADA:  ['Retirada',  'primary'],
+        RETIRADA: ['Retirada', 'primary'],
     };
     const [texto, tipo] = mapa[estado] || [estado, 'primary'];
     return _badge(texto, tipo);
@@ -427,7 +436,7 @@ function _badgeRol(rol) {
     const mapa = {
         CAMARERO: ['Camarero', 'primary'],
         COCINERO: ['Cocinero', 'warning'],
-        ADMIN:    ['Admin',    'error'],
+        ADMIN: ['Admin', 'error'],
     };
     const [texto, tipo] = mapa[rol?.toUpperCase()] || [rol, 'primary'];
     return _badge(texto, tipo);
@@ -436,7 +445,7 @@ function _badgeRol(rol) {
 function _badgeMetodoPago(metodo) {
     const mapa = {
         EFECTIVO: ['Efectivo', 'success'],
-        TARJETA:  ['Tarjeta',  'primary'],
+        TARJETA: ['Tarjeta', 'primary'],
     };
     const [texto, tipo] = mapa[metodo?.toUpperCase()] || [metodo, 'primary'];
     return _badge(texto, tipo);
@@ -444,8 +453,8 @@ function _badgeMetodoPago(metodo) {
 
 function _badgeEstadoPedido(estado) {
     const mapa = {
-        ABIERTA:   ['Abierta',   'success'],
-        CERRADA:   ['Cerrada',   'error'],
+        ABIERTA: ['Abierta', 'success'],
+        CERRADA: ['Cerrada', 'error'],
         CANCELADO: ['Cancelado', 'warning'],
     };
     const [texto, tipo] = mapa[estado?.toUpperCase()] || [estado, 'primary'];
@@ -454,10 +463,10 @@ function _badgeEstadoPedido(estado) {
 
 function _badgeEstadoDetalle(estado) {
     const mapa = {
-        PENDIENTE:      ['Pendiente',      'warning'],
+        PENDIENTE: ['Pendiente', 'warning'],
         EN_PREPARACION: ['En preparación', 'primary'],
-        LISTO:          ['Listo',          'success'],
-        SERVIDO:        ['Servido',        'error'],
+        LISTO: ['Listo', 'success'],
+        SERVIDO: ['Servido', 'error'],
     };
     const [texto, tipo] = mapa[estado?.toUpperCase()] || [estado, 'primary'];
     return _badge(texto, tipo);
@@ -476,7 +485,7 @@ function _formatFecha(fecha) {
 
 // Filtra la tabla de productos por categoría y actualiza el botón activo
 function filtrarProductos(categoriaId) {
-    const productos = window._productosAdmin ?? [];
+    const productos = _productosAdmin ?? [];
     const filtrados = categoriaId === null ? productos : productos.filter(p => p.categoriaId === categoriaId);
 
     document.querySelectorAll('.filtro-cat-btn').forEach(b => b.classList.remove('active'));
@@ -489,8 +498,8 @@ function filtrarProductos(categoriaId) {
 // Actualiza la disponibilidad de los productos en memoria y re-renderiza
 // sin hacer una nueva petición al servidor
 function _actualizarStockProductos(noDisponibles) {
-    if (!window._productosAdmin) return;
-    window._productosAdmin = window._productosAdmin.map(p => ({
+    if (!_productosAdmin) return;
+    _productosAdmin = _productosAdmin.map(p => ({
         ...p,
         disponible: !noDisponibles.includes(p.id)
     }));
@@ -603,7 +612,7 @@ function toggleProductoDirecto() {
 
 function filtrarCategorias() {
     const val = document.getElementById('prod-cat-input').value.toLowerCase();
-    const cats = (window._categoriasAdmin ?? []).filter(c => c.nombre.toLowerCase().includes(val));
+    const cats = (_categoriasAdmin ?? []).filter(c => c.nombre.toLowerCase().includes(val));
     const dd = document.getElementById('prod-cat-dropdown');
     if (!cats.length) { dd.classList.add('hidden'); return; }
     dd.innerHTML = cats.map(c => `
@@ -622,7 +631,7 @@ function seleccionarCategoria(id, nombre) {
 function filtrarIngredientesReceta() {
     const val = document.getElementById('receta-ing-input').value.toLowerCase();
     // Solo ingredientes que NO sean producto_terminado
-    const ings = (window._ingredientesAdmin ?? [])
+    const ings = (_ingredientesAdmin ?? [])
         .filter(i => i.tipoIngrediente?.toUpperCase() !== 'PRODUCTO_TERMINADO' && i.nombre.toLowerCase().includes(val));
     const dd = document.getElementById('receta-ing-dropdown');
     if (!ings.length) { dd.classList.add('hidden'); return; }
@@ -640,8 +649,8 @@ function seleccionarIngredienteReceta(id, nombre) {
 }
 
 function addIngredienteReceta() {
-    const id       = parseInt(document.getElementById('receta-ing-id').value);
-    const nombre   = document.getElementById('receta-ing-input').value.trim();
+    const id = parseInt(document.getElementById('receta-ing-id').value);
+    const nombre = document.getElementById('receta-ing-input').value.trim();
     const cantidad = parseFloat(document.getElementById('receta-cantidad').value);
     if (!id || !nombre || isNaN(cantidad) || cantidad <= 0) return;
     if (_recetaActual.find(r => r.ingredienteId === id)) return; // no duplicados
@@ -672,14 +681,15 @@ function _removeIngredienteReceta(index) {
 }
 
 function submitNuevoProducto() {
-    const nombre    = document.getElementById('prod-nombre').value.trim();
-    const precio    = parseFloat(document.getElementById('prod-precio').value);
-    const catId     = parseInt(document.getElementById('prod-cat-id').value);
+    const nombre = document.getElementById('prod-nombre').value.trim();
+    const precioString = document.getElementById('prod-precio').value;
+    const precio = parseFloat(precioString);
+    const catId = parseInt(document.getElementById('prod-cat-id').value);
     const esDirecto = document.getElementById('prod-directo').checked;
-    const msg       = document.getElementById('prod-msg');
+    const msg = document.getElementById('prod-msg');
 
-    if (!nombre || isNaN(precio) || precio <= 0 || !catId) {
-        msg.textContent = 'Rellena nombre, precio y categoría correctamente';
+    if (!nombre || isNaN(precio) || precio <= 0 || !catId || !/^\d+(\.\d{1,2})?$/.test(precioString)) {
+        msg.textContent = 'Rellena nombre, precio válido (máximo 2 decimales) y categoría';
         msg.className = 'text-sm text-error';
         msg.classList.remove('hidden');
         setTimeout(() => msg.classList.add('hidden'), 3000);
@@ -689,9 +699,10 @@ function submitNuevoProducto() {
     const payload = { nombre, precio, categoriaId: catId, esProductoDirecto: esDirecto };
 
     if (esDirecto) {
-        const stock = parseInt(document.getElementById('prod-stock').value);
-        if (isNaN(stock) || stock < 1) {
-            msg.textContent = 'Introduce el stock inicial';
+        const stockString = document.getElementById('prod-stock').value;
+        const stock = parseInt(stockString, 10);
+        if (!/^\d+$/.test(stockString) || stock < 1) {
+            msg.textContent = 'El stock inicial debe ser un número entero mayor que 0';
             msg.className = 'text-sm text-error';
             msg.classList.remove('hidden');
             setTimeout(() => msg.classList.add('hidden'), 3000);
@@ -729,12 +740,16 @@ function cerrarModalIngrediente() {
 
 function submitIngrediente() {
     const nombre = document.getElementById('ing-nombre').value.trim();
-    const stock  = parseFloat(document.getElementById('ing-stock').value);
+    const stockString = document.getElementById('ing-stock').value;
+    const stock = parseFloat(stockString);
     const unidad = document.getElementById('ing-unidad').value;
-    const tipo   = 'materia_prima';
-    const msg     = document.getElementById('ing-msg');
-    if (!nombre || isNaN(stock) || stock < 0) {
-        msg.textContent = 'Rellena todos los campos correctamente';
+    const tipo = 'materia_prima';
+    const msg = document.getElementById('ing-msg');
+    const esUnidad = unidad === 'unidades';
+    if (!nombre || isNaN(stock) || stock < 0 || (esUnidad && !/^\d+$/.test(stockString))) {
+        msg.textContent = !nombre || isNaN(stock) || stock < 0
+            ? 'Rellena todos los campos correctamente'
+            : 'El stock en unidades debe ser un número entero';
         msg.className = 'text-sm text-error';
         msg.classList.remove('hidden');
         setTimeout(() => msg.classList.add('hidden'), 3000);
@@ -816,10 +831,10 @@ function cerrarModalUsuario() {
 }
 
 function submitCrearUsuario() {
-    const username     = document.getElementById('nuevo-username').value.trim();
-    const password     = document.getElementById('nuevo-password').value.trim();
+    const username = document.getElementById('nuevo-username').value.trim();
+    const password = document.getElementById('nuevo-password').value.trim();
     const nombreCompleto = document.getElementById('nuevo-nombre').value.trim();
-    const rol          = document.getElementById('nuevo-rol').value;
+    const rol = document.getElementById('nuevo-rol').value;
     if (!username || !password || !nombreCompleto) {
         const msg = document.getElementById('crear-usuario-msg');
         msg.textContent = 'Rellena todos los campos';
@@ -889,11 +904,13 @@ function cerrarModalNuevaMesa() {
 }
 
 function submitNuevaMesa() {
-    const numero = parseInt(document.getElementById('nueva-mesa-numero').value, 10);
-    const capacidad = parseInt(document.getElementById('nueva-mesa-capacidad').value, 10);
+    const numeroString   = document.getElementById('nueva-mesa-numero').value;
+    const capacidadString = document.getElementById('nueva-mesa-capacidad').value;
+    const numero   = parseInt(numeroString, 10);
+    const capacidad = parseInt(capacidadString, 10);
     const msg = document.getElementById('nueva-mesa-msg');
-    if (isNaN(numero) || numero < 1 || isNaN(capacidad) || capacidad < 1 || capacidad > 99) {
-        msg.textContent = 'Introduce un número de mesa válido y una capacidad entre 1 y 99';
+    if (!/^\d+$/.test(numeroString) || numero < 1 || !/^\d+$/.test(capacidadString) || capacidad < 1 || capacidad > 99) {
+        msg.textContent = 'Introduce un número de mesa válido y una capacidad entera entre 1 y 99';
         msg.className = 'text-sm text-error';
         msg.classList.remove('hidden');
         setTimeout(() => msg.classList.add('hidden'), 3000);
@@ -922,16 +939,17 @@ function cerrarModalCapacidad() {
 }
 
 function submitCapacidad() {
-    const val = parseInt(document.getElementById('nueva-capacidad').value, 10);
+    const capacidadString = document.getElementById('nueva-capacidad').value;
+    const capacidad = parseInt(capacidadString, 10);
     const msg = document.getElementById('capacidad-msg');
-    if (isNaN(val) || val < 1 || val > 99) {
-        msg.textContent = 'Introduce un valor entre 1 y 99';
+    if (!/^\d+$/.test(capacidadString) || capacidad < 1 || capacidad > 99) {
+        msg.textContent = 'Introduce un valor entero entre 1 y 99';
         msg.className = 'text-sm text-error';
         msg.classList.remove('hidden');
         setTimeout(() => msg.classList.add('hidden'), 3000);
         return;
     }
-    Api.sendMessage('ACTUALIZAR_CAPACIDAD_MESA', { id: _capacidadMesaId, capacidad: val });
+    Api.sendMessage('ACTUALIZAR_CAPACIDAD_MESA', { id: _capacidadMesaId, capacidad });
 }
 
 function toggleRetirarMesa(id, nuevoEstado) {
@@ -958,13 +976,13 @@ function filtrarPedidos(estado) {
     const estadoActivo = document.querySelector('#filtros-estado-pedido .filtro-cat-btn.active')?.id?.replace('filtro-pedido-', '') ?? 'TODOS';
     const fechaVal = document.getElementById('filtro-fecha-pedido')?.value;
 
-    const todos = window._pedidosAdmin ?? [];
+    const todos = _pedidosAdmin ?? [];
     const filtrados = todos.filter(p => {
         const coincideEstado = estadoActivo === 'TODOS' || p.estado?.toUpperCase() === estadoActivo;
         if (!fechaVal) return coincideEstado;
         if (!p.fechaCreacion) return false;
         const d = new Date(p.fechaCreacion);
-        const fechaPedido = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const fechaPedido = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         return coincideEstado && fechaPedido === fechaVal;
     });
     _renderPedidos(filtrados);
@@ -1025,17 +1043,17 @@ function _renderProductos(productos) {
             <td class="px-4 py-3">${p.disponible ? _badge('Disponible', 'success') : _badge('No disponible', 'error')}</td>
             <td class="px-4 py-3 text-right flex items-center justify-end gap-2">
                 ${p.activo !== false
-                    ? `<button onclick="Api.toggleProductoActivo(${p.id}, false)"
+            ? `<button onclick="Api.toggleProductoActivo(${p.id}, false)"
                         class="inline-flex items-center gap-1 text-xs text-warning border border-yellow-200 px-3 py-1 rounded-lg hover:bg-yellow-50 transition-colors">
                         <ion-icon name="eye-off-outline" style="font-size:12px"></ion-icon>
                         Desactivar
                        </button>`
-                    : `<button onclick="Api.toggleProductoActivo(${p.id}, true)"
+            : `<button onclick="Api.toggleProductoActivo(${p.id}, true)"
                         class="inline-flex items-center gap-1 text-xs text-green-700 border border-green-200 px-3 py-1 rounded-lg hover:bg-green-50 transition-colors">
                         <ion-icon name="eye-outline" style="font-size:12px"></ion-icon>
                         Activar
                        </button>`
-                }
+        }
                 <button onclick="abrirModalPrecioProducto(${p.id}, &quot;${p.nombre}&quot;, ${p.precio})"
                     class="inline-flex items-center gap-1 text-xs text-secundario border border-borde px-3 py-1 rounded-lg hover:bg-fondo transition-colors">
                     <ion-icon name="pencil-outline" style="font-size:12px"></ion-icon>
@@ -1073,10 +1091,11 @@ function cerrarModalPrecioProducto() {
 }
 
 function submitPrecioProducto() {
-    const precio = parseFloat(document.getElementById('nuevo-precio-producto').value);
+    const precioString = document.getElementById('nuevo-precio-producto').value;
+    const precio = parseFloat(precioString);
     const msg = document.getElementById('precio-producto-msg');
-    if (isNaN(precio) || precio <= 0) {
-        msg.textContent = 'Introduce un precio mayor que 0';
+    if (isNaN(precio) || precio <= 0 || !/^\d+(\.\d{1,2})?$/.test(precioString)) {
+        msg.textContent = 'Introduce un precio válido (máximo 2 decimales)';
         msg.className = 'text-sm text-error';
         msg.classList.remove('hidden');
         setTimeout(() => msg.classList.add('hidden'), 3000);

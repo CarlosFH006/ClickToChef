@@ -254,26 +254,6 @@
         </main>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/services/websocket.js"></script>
-    <script src="js/services/api.js"></script>
-    <script src="js/paginas/admin.js"></script>
-
-    <script>
-        function mostrarPanel(nombre) {
-            document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.panel-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('panel-' + nombre).classList.remove('hidden');
-            document.getElementById('btn-' + nombre).classList.add('active');
-        }
-
-        function mostrarSubPanel(nombre) {
-            document.querySelectorAll('[id^="subpanel-"]').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('subpanel-' + nombre).classList.remove('hidden');
-            document.getElementById('subtab-' + nombre).classList.add('active');
-        }
-    </script>
     <!-- Modal Nuevo Producto -->
     <div id="modal-nuevo-producto" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] flex flex-col">
@@ -610,5 +590,9 @@
         </div>
     </div>
 
+    <script src="js/config.js"></script>
+    <script src="js/services/websocket.js"></script>
+    <script src="js/services/api.js"></script>
+    <script src="js/paginas/admin.js"></script>
 </body>
 </html>
