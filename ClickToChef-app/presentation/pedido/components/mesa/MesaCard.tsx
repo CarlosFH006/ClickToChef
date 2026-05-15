@@ -4,8 +4,8 @@ import { Mesa } from '../../../../type/mesa-interface';
 import { updateMesaStatusAction } from '../../../../core/actions/update-mesa-status-action';
 import { router } from 'expo-router';
 import { useOrderStore } from '../../../../store/useOrderStore';
-import { getMesaStatusColor, getMesaStatusLabel } from '../../helpers/status-colors';
 import { Ionicons } from '@expo/vector-icons';
+import { getMesaStatusColor, getMesaStatusLabel } from '../../helpers/status-colors';
 
 interface Props {
   mesa: Mesa;
@@ -29,9 +29,12 @@ const MesaCard = ({ mesa, pedido = false }: Props) => {
           //Evitar que se pueda navegar dos veces a la misma mesa
           if (navegando.current) return;
           navegando.current = true;
+          //Hacer la llamada a la actualización de la mesa
           const success = await updateMesaStatusAction(mesa.id, 'RESERVADA');
           if (success) {
+            //Guardar mesa seleccionada
             useOrderStore.getState().setMesa(mesa.id);
+            //Navegar a la pantalla de productos
             router.push({ pathname: '/(clicktochef-app)/(stack)/productos', params: { mesaId: mesa.id } });
           }
           setTimeout(() => { navegando.current = false; }, 1000);

@@ -1,4 +1,4 @@
-export type MesaEstado = 'LIBRE' | 'RESERVADA' | 'OCUPADA';
+export type MesaEstado = 'LIBRE' | 'RESERVADA' | 'OCUPADA' | 'RETIRADA';
 
 export interface Mesa {
   id: number;

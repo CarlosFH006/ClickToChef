@@ -16,7 +16,22 @@ let detallesActuales = [];
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Estado del WebSocket en el header
+    // Verificar que el usuario es COCINERO
+    const _usuarioGuardado = localStorage.getItem('usuario');
+    if (!_usuarioGuardado) {
+        alert('Debes iniciar sesión para acceder a esta página.');
+        window.location.href = 'index.html';
+        return;
+    }
+    const _usuarioKanban = JSON.parse(_usuarioGuardado);
+    if (_usuarioKanban.rol !== 'COCINERO') {
+        alert('No tienes permisos para acceder al panel de cocina.');
+        localStorage.removeItem('usuario');
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // Función que se envia por callback a WebSocket para conocer su estado
     WebSocketService.onStatusChange((status) => {
         const el = document.getElementById('ws-status');
         const labels = {
@@ -33,24 +48,35 @@ document.addEventListener('DOMContentLoaded', () => {
         if (status === 'connected') Api.getDetallesPedido();
     });
 
-    //Gestionar la respuesta de los detalles del pedido
+    //Registro de callback en api.js para obtener los detalles de los pedidos
     Api.on('DETALLES_PEDIDO_RESPONSE', (detalles) => {
         detallesActuales = detalles;
         //Renderizar el kanban
         renderKanban();
     });
 
-    //Gestionar la respuesta de la actualizacion de un detalle
+    //Registro de callback en api.js para obtener nuevos detalles añadidos a la cocina
+    Api.on('DETALLES_NUEVOS', (detalles) => {
+        detalles.forEach(d => {
+            if (!detallesActuales.find(e => e.id === d.id)) {
+                detallesActuales.push(d);
+            }
+        });
+        renderKanban();
+    });
+
+    //Registro de callback en api.js para actualizar un detalle
     Api.on('DETALLE_UPDATED', (detalle) => {
         updateDetalle(detalle);
     });
 
+    //Registro de callback en api.js para gestionar un detalle eliminado
     Api.on('DETALLE_DELETED', ({ id }) => {
         detallesActuales = detallesActuales.filter(d => d.id !== id);
         renderKanban();
     });
 
-    // Drop zones — se registran UNA SOLA VEZ
+    // Registro de las drop zones, de las columas de cada estado
     ESTADOS.forEach(estado => {
         //Bucle de registro de columnas
         const col = document.getElementById(`col-${estado}`);
@@ -123,7 +149,7 @@ function renderKanban() {
     //Crear una copia superficial del array, ordenarlo por hora y agregar cada detalle al grupo correspondiente
     detallesActuales
         .slice()
-        .sort((a, b) => new Date(a.hora) - new Date(b.hora))
+        .sort((a, b) => new Date(a.horaPedido) - new Date(b.horaPedido))
         .forEach(detalle => {
             if (grupos[detalle.estado] !== undefined) grupos[detalle.estado].push(detalle);
         });
@@ -143,8 +169,8 @@ function renderKanban() {
 //Crear tarjeta de detalle
 function crearTarjeta(detalle) {
     //Convertir la hora a formato HH:MM
-    const hora = detalle.hora
-        ? new Date(detalle.hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+    const hora = detalle.horaPedido
+        ? new Date(detalle.horaPedido).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
         : '—';
     
     //Crear la tarjeta

@@ -1,4 +1,5 @@
 const CONFIG = {
-    WS_IP: "192.168.3.181",
+    //Obtiene la direccion IP del dispositivo desde el que se accede en el navegador
+    WS_IP: window.location.hostname,
     WS_PORT: "5001"
 };

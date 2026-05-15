@@ -59,6 +59,7 @@ public class ClienteHilo extends Thread {
 
     private void processRequest(String json) {
         try {
+            //JsonObject es un objeto que convierte el texto JSON en un objeto tipo clave valor.
             JsonObject peticion = gson.fromJson(json, JsonObject.class);
 
             if (!peticion.has("type")) {
@@ -68,10 +69,12 @@ public class ClienteHilo extends Thread {
 
             String tipo = peticion.get("type").getAsString();
 
+            //Comprueba que llega un payload, y si llega comprueba que el payload sea tipo JsonObject y lo convierte si no lo pone en null
             JsonObject payload = peticion.has("payload") && peticion.get("payload").isJsonObject()
                     ? peticion.getAsJsonObject("payload") : null;
             String respuesta;
 
+            //Comprueba el tipo de peticion y llama a la funcion correspondiente
             switch (tipo) {
                 case "LOGIN":
                     respuesta = FuncionesServidor.procesarLogin(payload);
@@ -86,6 +89,7 @@ public class ClienteHilo extends Thread {
                         //Si la mesa se reserva, se almacena su ID
                         if ("RESERVADA".equalsIgnoreCase(estado)) {
                             mesaReservadaId = payload.get("id").getAsInt();
+                            //Si la mesa se libera, se elimina su ID almacenado
                         } else if ("LIBRE".equalsIgnoreCase(estado)) {
                             mesaReservadaId = null;
                         }
@@ -105,7 +109,7 @@ public class ClienteHilo extends Thread {
                             JsonObject respPayload = respJson.getAsJsonObject("payload");
                             //Si la reserva es exitosa, se almacenan los productos reservados
                             if (respPayload != null && respPayload.has("success") && respPayload.get("success").getAsBoolean()) {
-                                int prodId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+                                int prodId = payload.get("productoId").getAsInt();
                                 int cant = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
                                 //Se almacenan los productos reservados, sumando las cantidades si ya existían
                                 reservasActivas.merge(prodId, cant, Integer::sum);
@@ -118,7 +122,7 @@ public class ClienteHilo extends Thread {
                 case "LIBERAR_RESERVA":
                     respuesta = FuncionesServidor.procesarLiberarReserva(payload);
                     if (payload != null) {
-                        int prodId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+                        int prodId = payload.get("productoId").getAsInt();
                         int cant = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
                         //Se actualizan las cantidades de los productos reservados, restando las cantidades
                         reservasActivas.merge(prodId, -cant, Integer::sum);
@@ -129,7 +133,7 @@ public class ClienteHilo extends Thread {
                 case "FINALIZAR_RESERVA":
                     respuesta = FuncionesServidor.procesarFinalizarReserva(payload);
                     if (payload != null) {
-                        int prodId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+                        int prodId = payload.get("productoId").getAsInt();
                         int cant = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
                         reservasActivas.merge(prodId, -cant, Integer::sum);
                         reservasActivas.values().removeIf(v -> v <= 0);
@@ -141,9 +145,10 @@ public class ClienteHilo extends Thread {
                         try {
                             JsonObject respJson = gson.fromJson(respuesta, JsonObject.class);
                             JsonObject respPayload = respJson.getAsJsonObject("payload");
-                            //Si el pedido es exitoso, se elimina la mesa reservada
+                            //Si el pedido es exitoso, se elimina la mesa reservada y se vacian las reservas activas
                             if (respPayload != null && respPayload.has("success") && respPayload.get("success").getAsBoolean()) {
                                 mesaReservadaId = null;
+                                reservasActivas.clear();
                             }
                         } catch (Exception e) {
                             System.err.println("[" + getName() + "] Error al procesar el pedido: " + e.getMessage());
@@ -152,6 +157,18 @@ public class ClienteHilo extends Thread {
                     break;
                 case "INSERTAR_DETALLES":
                     respuesta = FuncionesServidor.procesarInsertarDetalles(payload);
+                    if (respuesta != null) {
+                        try {
+                            JsonObject respJson = gson.fromJson(respuesta, JsonObject.class);
+                            JsonObject respPayload = respJson.getAsJsonObject("payload");
+                            //Si la insercion es exitosa, se vacian las reservas activas
+                            if (respPayload != null && respPayload.has("success") && respPayload.get("success").getAsBoolean()) {
+                                reservasActivas.clear();
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Error al procesar la inserción de detalles: " + e.getMessage());
+                        }
+                    }
                     break;
                 case "UPDATE_ESTADO_DETALLE":
                     respuesta = FuncionesServidor.procesarUpdateEstadoDetalle(payload);
@@ -174,14 +191,45 @@ public class ClienteHilo extends Thread {
                 case "CANCELAR_PEDIDO":
                     respuesta = FuncionesServidor.procesarCancelarPedido(payload);
                     break;
+                case "CREAR_MESA":
+                    respuesta = FuncionesServidor.procesarCrearMesa(payload);
+                    break;
+                case "ACTUALIZAR_CAPACIDAD_MESA":
+                    respuesta = FuncionesServidor.procesarActualizarCapacidadMesa(payload);
+                    break;
+                case "CREAR_PRODUCTO_MENU":
+                    respuesta = FuncionesServidor.procesarCrearProductoMenu(payload);
+                    break;
+                case "SUMAR_STOCK":
+                    respuesta = FuncionesServidor.procesarSumarStock(payload);
+                    break;
+                case "CREAR_INGREDIENTE":
+                    respuesta = FuncionesServidor.procesarCrearIngrediente(payload);
+                    break;
+                case "CREAR_CATEGORIA":
+                    respuesta = FuncionesServidor.procesarCrearCategoria(payload);
+                    break;
+                case "CREAR_USUARIO":
+                    respuesta = FuncionesServidor.procesarCrearUsuario(payload);
+                    break;
+                case "CAMBIAR_PASSWORD":
+                    respuesta = FuncionesServidor.procesarCambiarPassword(payload);
+                    break;
                 case "ELIMINAR_DETALLE":
                     respuesta = FuncionesServidor.procesarEliminarDetalle(payload);
+                    break;
+                case "ACTUALIZAR_PRECIO_PRODUCTO":
+                    respuesta = FuncionesServidor.procesarActualizarPrecioProducto(payload);
+                    break;
+                case "TOGGLE_PRODUCTO_ACTIVO":
+                    respuesta = FuncionesServidor.procesarToggleProductoActivo(payload);
                     break;
                 default:
                     System.out.println("[" + getName() + "] Tipo desconocido: " + tipo);
                     respuesta = GeneradorJSON.generarError("Acción no reconocida en el servidor");
             }
 
+            //Si la respuesta no es null, se envia al cliente
             if (respuesta != null) {
                 send(respuesta);
             }
@@ -215,6 +263,7 @@ public class ClienteHilo extends Thread {
         //Si hay reservas activas, liberarlas
         if (!reservasActivas.isEmpty()) {
             System.out.println("[" + getName() + "] Liberando " + reservasActivas.size() + " tipo(s) de reserva por desconexión");
+            //Entry es una interfaz interna de Map que itera cada clave-valor de reservasActivas.
             for (Map.Entry<Integer, Integer> entry : reservasActivas.entrySet()) {
                 try {
                     ProductosDAO.liberarReserva(entry.getKey(), entry.getValue());
@@ -231,6 +280,7 @@ public class ClienteHilo extends Thread {
             try {
                 MesasDAO.actualizarEstadoMesa(mesaReservadaId, EstadoMesa.LIBRE);
                 System.out.println("[" + getName() + "] Mesa " + mesaReservadaId + " liberada por desconexión");
+                //Si se libera la mesa enviar broadcast
                 Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaReservadaId, "LIBRE"));
                 mesaReservadaId = null;
             } catch (Exception e) {
@@ -238,6 +288,7 @@ public class ClienteHilo extends Thread {
             }
         }
         
+        //Si hubo cambios, se actualiza el stock de los productos
         if (huboCambios) {
             ArrayList<Integer> noDisponibles = ProductosDAO.obtenerNoDisponibles();
             Servidor.broadcast(GeneradorJSON.generarStockUpdated(noDisponibles));

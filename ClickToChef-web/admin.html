@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="js/tailwind-config.js"></script>
     <link rel="stylesheet" href="css/styles.css">
+    <script type="module" src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.js"></script>
 </head>
 <body class="bg-fondo min-h-screen">
 
@@ -16,8 +18,8 @@
         <img src="assets/icons/logo-clicktochef.png" alt="ClickToChef" class="w-8 h-8 object-contain">
         <h1 class="text-xl font-bold text-principal">Administración</h1>
         <span id="ws-status" class="ml-auto text-xs px-2 py-1 rounded-full bg-gray-100 text-secundario">Conectando...</span>
-        <a href="index.html" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 text-error text-sm font-semibold hover:bg-red-100 transition-colors duration-150 ml-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        <a href="index.html" onclick="localStorage.removeItem('usuario')" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 text-error text-sm font-semibold hover:bg-red-100 transition-colors duration-150 ml-2">
+            <ion-icon name="log-out-outline" style="font-size:16px"></ion-icon>
             Salir
         </a>
     </header>
@@ -27,23 +29,23 @@
         <!-- Sidebar -->
         <aside class="w-56 bg-superficie border-r border-borde flex flex-col py-4 gap-1 shrink-0">
             <button onclick="mostrarPanel('mesas')"    class="panel-btn active" id="btn-mesas">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
+                <ion-icon name="grid-outline" style="font-size:16px"></ion-icon>
                 Mesas
             </button>
             <button onclick="mostrarPanel('tickets')"  class="panel-btn" id="btn-tickets">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <ion-icon name="receipt-outline" style="font-size:16px"></ion-icon>
                 Tickets
             </button>
             <button onclick="mostrarPanel('pedidos')"  class="panel-btn" id="btn-pedidos">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                <ion-icon name="bag-outline" style="font-size:16px"></ion-icon>
                 Pedidos
             </button>
             <button onclick="mostrarPanel('usuarios')" class="panel-btn" id="btn-usuarios">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <ion-icon name="people-outline" style="font-size:16px"></ion-icon>
                 Usuarios
             </button>
             <button onclick="mostrarPanel('productos')" class="panel-btn" id="btn-productos">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                <ion-icon name="restaurant-outline" style="font-size:16px"></ion-icon>
                 Productos
             </button>
         </aside>
@@ -53,7 +55,13 @@
 
             <!-- Panel Mesas -->
             <section id="panel-mesas" class="panel">
-                <h2 class="text-lg font-bold text-principal mb-4">Mesas</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-principal">Mesas</h2>
+                    <button onclick="abrirModalNuevaMesa()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                        <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
+                        Nueva mesa
+                    </button>
+                </div>
                 <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
                     <table class="w-full text-sm">
                         <thead class="bg-fondo border-b border-borde">
@@ -61,10 +69,11 @@
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Nº</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Capacidad</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Estado</th>
+                                <th class="px-4 py-3"></th>
                             </tr>
                         </thead>
                         <tbody id="tabla-mesas" class="divide-y divide-borde">
-                            <tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                            <tr><td colspan="4" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -94,7 +103,19 @@
 
             <!-- Panel Pedidos -->
             <section id="panel-pedidos" class="panel hidden">
-                <h2 class="text-lg font-bold text-principal mb-4">Pedidos</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-principal">Pedidos</h2>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Fecha</label>
+                        <input type="date" id="filtro-fecha-pedido" onchange="filtrarPedidos(null)"
+                            class="border border-borde rounded-xl px-3 py-1.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                        <button onclick="document.getElementById('filtro-fecha-pedido').value=''; filtrarPedidos(null)"
+                            class="text-xs text-secundario border border-borde px-3 py-1.5 rounded-xl hover:bg-fondo transition-colors">
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+                <div id="filtros-estado-pedido" class="flex gap-2 flex-wrap mb-4"></div>
                 <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
                     <table class="w-full text-sm">
                         <thead class="bg-fondo border-b border-borde">
@@ -115,7 +136,13 @@
 
             <!-- Panel Usuarios -->
             <section id="panel-usuarios" class="panel hidden">
-                <h2 class="text-lg font-bold text-principal mb-4">Usuarios</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-principal">Usuarios</h2>
+                    <button onclick="abrirModalUsuario()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                        <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
+                        Nuevo usuario
+                    </button>
+                </div>
                 <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
                     <table class="w-full text-sm">
                         <thead class="bg-fondo border-b border-borde">
@@ -123,10 +150,11 @@
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">ID</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Usuario</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Rol</th>
+                                <th class="px-4 py-3"></th>
                             </tr>
                         </thead>
                         <tbody id="tabla-usuarios" class="divide-y divide-borde">
-                            <tr><td colspan="3" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                            <tr><td colspan="4" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -144,13 +172,19 @@
                 </div>
 
                 <!-- Sub-panel Categorías -->
-                <div id="subpanel-categorias" class="bg-superficie rounded-2xl border border-borde overflow-hidden">
+                <div id="subpanel-categorias">
+                <div class="flex justify-end mb-3">
+                    <button onclick="abrirModalCategoria()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                        <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
+                        Nueva categoría
+                    </button>
+                </div>
+                <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
                     <table class="w-full text-sm">
                         <thead class="bg-fondo border-b border-borde">
                             <tr>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">ID</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Nombre</th>
-                                <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Productos</th>
                             </tr>
                         </thead>
                         <tbody id="tabla-categorias" class="divide-y divide-borde">
@@ -158,9 +192,16 @@
                         </tbody>
                     </table>
                 </div>
+                </div>
 
                 <!-- Sub-panel Productos -->
                 <div id="subpanel-productos-lista" class="hidden">
+                    <div class="flex justify-end mb-3">
+                        <button onclick="abrirModalNuevoProducto()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                            <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
+                            Nuevo producto
+                        </button>
+                    </div>
                     <div id="filtros-categoria" class="flex flex-wrap gap-2 mb-4"></div>
                     <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
                     <table class="w-full text-sm">
@@ -171,17 +212,25 @@
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Categoría</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Precio</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Disponible</th>
+                                <th class="px-4 py-3"></th>
                             </tr>
                         </thead>
                         <tbody id="tabla-productos" class="divide-y divide-borde">
-                            <tr><td colspan="5" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                            <tr><td colspan="6" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
                         </tbody>
                     </table>
                     </div>
                 </div>
 
                 <!-- Sub-panel Ingredientes -->
-                <div id="subpanel-ingredientes" class="hidden bg-superficie rounded-2xl border border-borde overflow-hidden">
+                <div id="subpanel-ingredientes" class="hidden">
+                <div class="flex justify-end mb-3">
+                    <button onclick="abrirModalIngrediente()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                        <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
+                        Nuevo ingrediente
+                    </button>
+                </div>
+                <div class="bg-superficie rounded-2xl border border-borde overflow-hidden">
                     <table class="w-full text-sm">
                         <thead class="bg-fondo border-b border-borde">
                             <tr>
@@ -191,37 +240,359 @@
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Stock reservado</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Unidad</th>
                                 <th class="text-left px-4 py-3 font-semibold text-secundario uppercase tracking-wide text-xs">Tipo</th>
+                                <th class="px-4 py-3"></th>
                             </tr>
                         </thead>
                         <tbody id="tabla-ingredientes" class="divide-y divide-borde">
-                            <tr><td colspan="6" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
+                            <tr><td colspan="7" class="px-4 py-8 text-center text-secundario text-sm">Cargando...</td></tr>
                         </tbody>
                     </table>
+                </div>
                 </div>
             </section>
 
         </main>
     </div>
 
+    <!-- Modal Nuevo Producto -->
+    <div id="modal-nuevo-producto" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde shrink-0">
+                <h3 class="font-bold text-principal text-base">Nuevo producto</h3>
+                <button onclick="cerrarModalNuevoProducto()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4 overflow-y-auto">
+                <!-- Nombre -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Nombre</label>
+                    <input id="prod-nombre" type="text" placeholder="Ej: Burger Classic"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <!-- Precio -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Precio (€)</label>
+                    <input id="prod-precio" type="number" min="0.01" step="0.01" placeholder="Ej: 12.50"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <!-- Categoría autocomplete -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Categoría</label>
+                    <div class="relative">
+                        <input id="prod-cat-input" type="text" placeholder="Buscar categoría..." autocomplete="off"
+                            oninput="filtrarCategorias()" onfocus="filtrarCategorias()"
+                            class="w-full border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                        <div id="prod-cat-dropdown" class="hidden absolute z-10 w-full bg-superficie border border-borde rounded-xl mt-1 shadow-lg max-h-40 overflow-y-auto"></div>
+                        <input type="hidden" id="prod-cat-id">
+                    </div>
+                </div>
+                <!-- Toggle producto directo -->
+                <label class="flex items-center gap-3 cursor-pointer select-none">
+                    <div class="relative">
+                        <input type="checkbox" id="prod-directo" class="sr-only" onchange="toggleProductoDirecto()">
+                        <div id="toggle-bg" class="w-10 h-5 bg-borde rounded-full transition-colors"></div>
+                        <div id="toggle-dot" class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"></div>
+                    </div>
+                    <span class="text-sm font-medium text-principal">Producto directo <span class="text-secundario font-normal">(sin receta, stock propio)</span></span>
+                </label>
+                <!-- Sección stock (producto directo) -->
+                <div id="section-stock" class="hidden flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Stock inicial (unidades)</label>
+                    <input id="prod-stock" type="number" min="1" step="1" placeholder="Ej: 20"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <!-- Sección receta -->
+                <div id="section-receta" class="flex flex-col gap-3">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Receta</label>
+                    <div class="flex gap-2 items-start">
+                        <div class="flex-1 relative">
+                            <input id="receta-ing-input" type="text" placeholder="Buscar ingrediente..." autocomplete="off"
+                                oninput="filtrarIngredientesReceta()"
+                                class="w-full border border-borde rounded-xl px-3 py-2 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                            <div id="receta-ing-dropdown" class="hidden absolute z-10 w-full bg-superficie border border-borde rounded-xl mt-1 shadow-lg max-h-32 overflow-y-auto"></div>
+                            <input type="hidden" id="receta-ing-id">
+                        </div>
+                        <input id="receta-cantidad" type="number" min="0.01" step="0.01" placeholder="Cant."
+                            class="w-24 border border-borde rounded-xl px-3 py-2 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                        <button onclick="addIngredienteReceta()"
+                            class="px-3 py-2 bg-primary text-white text-sm rounded-xl hover:opacity-90 whitespace-nowrap">
+                            <ion-icon name="add-outline" style="font-size:16px"></ion-icon>
+                        </button>
+                    </div>
+                    <div id="receta-lista" class="flex flex-col gap-1"></div>
+                </div>
+                <span id="prod-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3 shrink-0">
+                <button onclick="cerrarModalNuevoProducto()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
+                <button onclick="submitNuevoProducto()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Crear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ver Receta -->
+    <div id="modal-receta" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-md mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 id="modal-receta-titulo" class="font-bold text-principal text-base">Receta</h3>
+                <button onclick="cerrarModalReceta()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div id="modal-receta-body" class="px-6 py-5">
+                <p class="text-sm text-secundario">Cargando...</p>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end">
+                <button onclick="cerrarModalReceta()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sumar Stock -->
+    <div id="modal-sumar-stock" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-xs mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 class="font-bold text-principal text-base">Sumar stock</h3>
+                <button onclick="cerrarModalSumarStock()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <p id="sumar-stock-titulo" class="text-sm text-secundario"></p>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Cantidad a añadir</label>
+                    <input id="sumar-stock-cantidad" type="number" min="0.01" step="0.01" placeholder="Ej: 5"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <span id="sumar-stock-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3">
+                <button onclick="cerrarModalSumarStock()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
+                <button onclick="submitSumarStock()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Sumar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Precio Producto -->
+    <div id="modal-precio-producto" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-xs mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 class="font-bold text-principal text-base">Editar precio</h3>
+                <button onclick="cerrarModalPrecioProducto()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <p id="modal-precio-titulo" class="text-sm text-secundario"></p>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Nuevo precio (€)</label>
+                    <input id="nuevo-precio-producto" type="number" min="0.01" step="0.01" placeholder="Ej: 12.50"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <span id="precio-producto-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3">
+                <button onclick="cerrarModalPrecioProducto()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
+                <button onclick="submitPrecioProducto()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Ingrediente -->
+    <div id="modal-ingrediente" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-sm mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 class="font-bold text-principal text-base">Nuevo ingrediente</h3>
+                <button onclick="cerrarModalIngrediente()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Nombre</label>
+                    <input id="ing-nombre" type="text" placeholder="Ej: Harina"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Stock inicial</label>
+                    <input id="ing-stock" type="number" min="0" step="0.01" placeholder="Ej: 10"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Unidad de medida</label>
+                    <select id="ing-unidad" class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                        <option value="unidades">Unidades</option>
+                        <option value="kg">Kg</option>
+                        <option value="litros">Litros</option>
+                    </select>
+                </div>
+                <span id="ing-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3">
+                <button onclick="cerrarModalIngrediente()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
+                <button onclick="submitIngrediente()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Crear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nueva Mesa -->
+    <div id="modal-nueva-mesa" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-sm mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 class="font-bold text-principal text-base">Nueva mesa</h3>
+                <button onclick="cerrarModalNuevaMesa()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Número de mesa</label>
+                    <input id="nueva-mesa-numero" type="number" min="1" placeholder="Ej: 6"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Capacidad (1–99)</label>
+                    <input id="nueva-mesa-capacidad" type="number" min="1" max="99" placeholder="Ej: 4"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <p class="text-xs text-secundario">El estado se establecerá automáticamente como <span class="font-semibold text-success">Libre</span>.</p>
+                <span id="nueva-mesa-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3">
+                <button onclick="cerrarModalNuevaMesa()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
+                <button onclick="submitNuevaMesa()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Crear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Capacidad Mesa -->
+    <div id="modal-capacidad" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-xs mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 class="font-bold text-principal text-base">Capacidad de la mesa</h3>
+                <button onclick="cerrarModalCapacidad()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <p id="modal-capacidad-titulo" class="text-sm text-secundario"></p>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Personas (1–99)</label>
+                    <input id="nueva-capacidad" type="number" min="1" max="99" placeholder="Ej: 4"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <span id="capacidad-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3">
+                <button onclick="cerrarModalCapacidad()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
+                <button onclick="submitCapacidad()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nueva Categoría -->
+    <div id="modal-categoria" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-sm mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 class="font-bold text-principal text-base">Nueva categoría</h3>
+                <button onclick="cerrarModalCategoria()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Nombre</label>
+                    <input id="nueva-categoria-nombre" type="text" placeholder="Ej: Postres"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <span id="crear-categoria-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3">
+                <button onclick="cerrarModalCategoria()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">Cancelar</button>
+                <button onclick="submitCrearCategoria()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">Crear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Contraseña -->
+    <div id="modal-password" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-sm mx-4 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 class="font-bold text-principal text-base">Cambiar contraseña</h3>
+                <button onclick="cerrarModalPassword()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <p id="modal-password-nombre" class="text-sm text-secundario"></p>
+                <input id="nueva-password" type="password" placeholder="Nueva contraseña"
+                    class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                <span id="cambiar-password-msg" class="text-sm hidden"></span>
+            </div>
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3">
+                <button onclick="cerrarModalPassword()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="submitCambiarPassword()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Usuario -->
+    <div id="modal-usuario" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-superficie rounded-2xl shadow-xl border border-borde w-full max-w-md mx-4 overflow-hidden">
+            <!-- Cabecera -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-borde">
+                <h3 class="font-bold text-principal text-base">Nuevo usuario</h3>
+                <button onclick="cerrarModalUsuario()" class="text-secundario hover:text-principal transition-colors">
+                    <ion-icon name="close-outline" style="font-size:20px"></ion-icon>
+                </button>
+            </div>
+            <!-- Formulario -->
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Username</label>
+                    <input id="nuevo-username" type="text" placeholder="Ej: pepe_sala"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Contraseña</label>
+                    <input id="nuevo-password" type="password" placeholder="••••••••"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Nombre completo</label>
+                    <input id="nuevo-nombre" type="text" placeholder="Ej: José García"
+                        class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-semibold text-secundario uppercase tracking-wide">Rol</label>
+                    <select id="nuevo-rol" class="border border-borde rounded-xl px-4 py-2.5 text-sm bg-fondo text-principal focus:outline-none focus:border-primary">
+                        <option value="CAMARERO">Camarero</option>
+                        <option value="COCINERO">Cocinero</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
+                <span id="crear-usuario-msg" class="text-sm hidden"></span>
+            </div>
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-borde flex justify-end gap-3">
+                <button onclick="cerrarModalUsuario()" class="px-4 py-2 text-sm text-secundario border border-borde rounded-xl hover:bg-fondo transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="submitCrearUsuario()" class="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity">
+                    Crear usuario
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/config.js"></script>
     <script src="js/services/websocket.js"></script>
     <script src="js/services/api.js"></script>
     <script src="js/paginas/admin.js"></script>
-
-    <script>
-        function mostrarPanel(nombre) {
-            document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.panel-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('panel-' + nombre).classList.remove('hidden');
-            document.getElementById('btn-' + nombre).classList.add('active');
-        }
-
-        function mostrarSubPanel(nombre) {
-            document.querySelectorAll('[id^="subpanel-"]').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('subpanel-' + nombre).classList.remove('hidden');
-            document.getElementById('subtab-' + nombre).classList.add('active');
-        }
-    </script>
 </body>
 </html>

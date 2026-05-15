@@ -3,21 +3,21 @@ package org.example.DTO;
 public class Usuarios {
     private int id;
     private String username;
-    private String passwordHash;
+    private String password;
     private String nombreCompleto;
     private RolUsuario rol;
 
-    public Usuarios(int id, String username, String passwordHash, String nombreCompleto, RolUsuario rol) {
+    public Usuarios(int id, String username, String password, String nombreCompleto, RolUsuario rol) {
         this.id = id;
         this.username = username;
-        this.passwordHash = passwordHash;
+        this.password = password;
         this.nombreCompleto = nombreCompleto;
         this.rol = rol;
     }
 
-    public Usuarios(String username, String passwordHash, String nombreCompleto, RolUsuario rol) {
+    public Usuarios(String username, String password, String nombreCompleto, RolUsuario rol) {
         this.username = username;
-        this.passwordHash = passwordHash;
+        this.password = password;
         this.nombreCompleto = nombreCompleto;
         this.rol = rol;
     }
@@ -38,12 +38,12 @@ public class Usuarios {
         this.username = username;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public String getPassword() {
+        return password;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getNombreCompleto() {
@@ -67,7 +67,6 @@ public class Usuarios {
         return "Usuarios{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
-                ", passwordHash='" + passwordHash + '\'' +
                 ", nombreCompleto='" + nombreCompleto + '\'' +
                 ", rol='" + rol + '\'' +
                 '}';

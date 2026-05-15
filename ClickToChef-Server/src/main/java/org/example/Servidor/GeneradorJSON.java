@@ -3,11 +3,12 @@ package org.example.Servidor;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.example.DTO.Categorias;
+import org.example.DTO.CategoriaPlato;
 import org.example.DTO.DetallesPedido;
 import org.example.DTO.EstadoDetallePedido;
 import org.example.DTO.Ingredientes;
 import org.example.DTO.Mesas;
-import org.example.DTO.CategoriaPlato;
 import org.example.DTO.Pedidos;
 import org.example.DTO.Tickets;
 import org.example.DTO.Usuarios;
@@ -15,11 +16,20 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/*
+    JsonElement - Clase padre
+
+    JsonObject — {}
+    JsonArray — []
+    JsonPrimitive — string, número, boolean
+    JsonNull — null
+*/
+
 //Clase con métodos estaticos para generar los Json de las respuestas
 public class GeneradorJSON {
     private static final Gson gson = new Gson();
 
-    //Respuesta de la reserva del producto
+    //Respuesta de la reserva, liberacion o finalizacion de la reserva del producto
     public static String generarReservaResponse(String type, int productoId, int cantidad, boolean success) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", type);
@@ -72,7 +82,10 @@ public class GeneradorJSON {
         //LinkedHashMap para mantener el orden de la insercción
         Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
 
+        //Recorremos todos los productos y los agrupamos por categoría
         for (CategoriaPlato cp : lista) {
+
+            //Si no existe la categoría, en el Map se añade
             if (!categoriasMap.containsKey(cp.getCategoriaId())) {
                 JsonObject catJson = new JsonObject();
                 catJson.addProperty("id", cp.getCategoriaId());
@@ -81,20 +94,24 @@ public class GeneradorJSON {
                 categoriasMap.put(cp.getCategoriaId(), catJson);
             }
 
+            //Añade el producto a la categoría correspondiente
             JsonObject prodJson = new JsonObject();
             prodJson.addProperty("id", cp.getProductoId());
             prodJson.addProperty("nombre", cp.getProductoNombre());
             prodJson.addProperty("precio", cp.getPrecio());
             prodJson.addProperty("disponible", cp.isDisponible());
+            prodJson.addProperty("activo", cp.isActivo());
 
             categoriasMap.get(cp.getCategoriaId()).getAsJsonArray("productos").add(prodJson);
         }
 
+        //Añade las categorías al payload
         JsonArray payload = new JsonArray();
         for (JsonObject cat : categoriasMap.values()) {
             payload.add(cat);
         }
 
+        //Crea la respuesta
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "MENU_RESPONSE");
         respuesta.add("payload", payload);
@@ -103,14 +120,13 @@ public class GeneradorJSON {
     }
 
     //Genera la respuesta de crear pedido
-    public static String generarCrearPedidoResponse(boolean success, int pedidoId) {
+    public static String generarCrearPedidoResponse(boolean success, int pedidoId, Pedidos pedido) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "CREAR_PEDIDO_RESPONSE");
-        
         JsonObject payload = new JsonObject();
         payload.addProperty("success", success);
         payload.addProperty("pedidoId", pedidoId);
-        
+        if (pedido != null) payload.add("pedido", gson.toJsonTree(pedido));
         respuesta.add("payload", payload);
         return gson.toJson(respuesta);
     }
@@ -146,6 +162,13 @@ public class GeneradorJSON {
     public static String generarDetallesPedidoResponse(ArrayList<DetallesPedido> lista) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "DETALLES_PEDIDO_RESPONSE");
+        respuesta.add("payload", gson.toJsonTree(lista));
+        return gson.toJson(respuesta);
+    }
+
+    public static String generarDetallesNuevos(ArrayList<DetallesPedido> lista) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "DETALLES_NUEVOS");
         respuesta.add("payload", gson.toJsonTree(lista));
         return gson.toJson(respuesta);
     }
@@ -191,6 +214,14 @@ public class GeneradorJSON {
         payload.addProperty("totalImporte", totalImporte);
         payload.addProperty("metodoPago", metodoPago);
         respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta con todas las categorías para el admin (incluye vacías)
+    public static String generarCategoriasAdminResponse(ArrayList<Categorias> lista) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CATEGORIAS_ADMIN_RESPONSE");
+        respuesta.add("payload", gson.toJsonTree(lista));
         return gson.toJson(respuesta);
     }
 
@@ -281,6 +312,152 @@ public class GeneradorJSON {
         JsonObject payload = new JsonObject();
         payload.addProperty("success", success);
         payload.addProperty("id", id);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Respuesta directa al crear una mesa
+    public static String generarCrearMesaResponse(boolean success, String mensaje) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CREAR_MESA_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        if (mensaje != null) payload.addProperty("mensaje", mensaje);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast cuando se crea una nueva mesa
+    public static String generarNuevaMesa(int id, int numero, int capacidad) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "NEW_MESA");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("numero", numero);
+        payload.addProperty("capacidad", capacidad);
+        payload.addProperty("estado", "LIBRE");
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast cuando cambia la capacidad de una mesa
+    public static String generarMesaCapacidadUpdated(int id, int capacidad) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "MESA_CAPACIDAD_UPDATED");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("capacidad", capacidad);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast cuando se crea una nueva categoría
+    public static String generarNuevaCategoria(int id, String nombre) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "NEW_CATEGORIA");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("nombre", nombre);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta de crear categoría
+    public static String generarCrearCategoriaResponse(boolean success, String mensaje) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CREAR_CATEGORIA_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        if (mensaje != null) payload.addProperty("mensaje", mensaje);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta de cambiar contraseña
+    public static String generarCambiarPasswordResponse(boolean success) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CAMBIAR_PASSWORD_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast cuando se crea un nuevo producto del menú
+    public static String generarNuevoProducto(int id, String nombre, double precio, int categoriaId) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "NEW_PRODUCTO");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("nombre", nombre);
+        payload.addProperty("precio", precio);
+        payload.addProperty("categoriaId", categoriaId);
+        payload.addProperty("disponible", true);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta con la receta de un producto
+    public static String generarRecetaProductoResponse(int productoId, ArrayList<?> ingredientes) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "RECETA_PRODUCTO_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("productoId", productoId);
+        payload.add("ingredientes", gson.toJsonTree(ingredientes));
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta de crear producto
+    public static String generarCrearProductoResponse(boolean success, String mensaje) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CREAR_PRODUCTO_MENU_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        if (mensaje != null) payload.addProperty("mensaje", mensaje);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta de crear ingrediente
+    public static String generarCrearIngredienteResponse(boolean success, String mensaje) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CREAR_INGREDIENTE_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        if (mensaje != null) payload.addProperty("mensaje", mensaje);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Genera la respuesta de crear usuario
+    public static String generarCrearUsuarioResponse(boolean success) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "CREAR_USUARIO_RESPONSE");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("success", success);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast cuando cambia el precio de un producto
+    public static String generarPrecioProductoUpdated(int id, double precio) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "PRECIO_PRODUCTO_UPDATED");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("precio", precio);
+        respuesta.add("payload", payload);
+        return gson.toJson(respuesta);
+    }
+
+    //Broadcast cuando cambia el estado activo de un producto
+    public static String generarProductoActivoUpdated(int id, boolean activo) {
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "PRODUCTO_ACTIVO_UPDATED");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("id", id);
+        payload.addProperty("activo", activo);
         respuesta.add("payload", payload);
         return gson.toJson(respuesta);
     }

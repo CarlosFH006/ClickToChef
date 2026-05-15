@@ -5,20 +5,16 @@ import PedidoCard from './PedidoCard';
 
 interface Props {
   pedidos: Pedidos[];
-  onPedidoPress?: (pedido: Pedidos) => void;
 }
 
-const PedidoFList = ({ pedidos, onPedidoPress }: Props) => {
+const PedidoFList = ({ pedidos }: Props) => {
   return (
     <FlatList
       data={pedidos}
       scrollEnabled={false}
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => (
-        <PedidoCard
-          pedido={item}
-          onPress={onPedidoPress}
-        />
+        <PedidoCard pedido={item} />
       )}
       contentContainerStyle={{
         paddingHorizontal: 10,

@@ -25,5 +25,6 @@ export const parseGsonDate = (value: any): Date | null => {
   //Si es AM y son las 12, las convierte a 0
   if (period === 'AM' && hours === 12) hours = 0;
   //Crea la fecha con los datos parseados
+  //,10 para indicar que es un número en base 10, decimal
   return new Date(parseInt(year, 10), MESES[mon], parseInt(day, 10), hours, parseInt(m, 10), parseInt(s, 10));
 };

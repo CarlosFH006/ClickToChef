@@ -26,7 +26,7 @@ const LoginScreen = () => {
     }
 
     login(username, pass);
-    //Si en 5 segundos no se ha autenticado, mostrar error de conexión
+    //Si en 5 segundos no se ha autenticado, mostrar error de conexión y poner el estado en unauthenticated
     setTimeout(() => {
       if (useAuthStore.getState().status === 'checking') {
         useAuthStore.setState({ status: 'unauthenticated' });

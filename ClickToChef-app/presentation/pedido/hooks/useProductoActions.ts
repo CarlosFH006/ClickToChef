@@ -15,8 +15,16 @@ export const useProductoActions = (producto: Producto | ProductoPedido) => {
     //Si no esta disponible, no se puede añadir
     if (!disponible) return;
     if (cantidad === 0) {
-      //Añadir el producto al pedido
-      addItem(producto);
+      //Construir el ProductoPedido con los campos correctos
+      const productoPedido: ProductoPedido = {
+        id: producto.id,
+        nombre: producto.nombre,
+        precio: producto.precio,
+        precioUnitario: producto.precio,
+        cantidad: 1,
+        notas: ''
+      };
+      addItem(productoPedido);
     } else {
       //Actualizar la cantidad del producto
       updateQuantity(producto.id, 1);

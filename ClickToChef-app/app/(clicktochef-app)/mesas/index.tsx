@@ -13,16 +13,19 @@ const MesasScreen = () => {
   const { mesas, isLoading } = useMesaStore();
 
   useEffect(() => {
+    //Obtener las mesas
     getMesasAction();
   }, []);
 
-  //Contar mesas por estado
+  //Contar mesas por estado y filtrar las que están retiradas
+  const mesasVisibles = mesas.filter(m => m.estado !== 'RETIRADA');
   const estados = {
-    libres: mesas.filter(m => m.estado === 'LIBRE').length,
-    reservadas: mesas.filter(m => m.estado === 'RESERVADA').length,
-    ocupadas: mesas.filter(m => m.estado === 'OCUPADA').length,
+    libres: mesasVisibles.filter(m => m.estado === 'LIBRE').length,
+    reservadas: mesasVisibles.filter(m => m.estado === 'RESERVADA').length,
+    ocupadas: mesasVisibles.filter(m => m.estado === 'OCUPADA').length,
   };
 
+  //Mostrar indicador de carga mientras se obtienen las mesas
   if(isLoading && mesas.length === 0){
     return (
       <View className="flex-1 justify-center items-center">
@@ -37,7 +40,7 @@ const MesasScreen = () => {
         {/* Header compacto */}
         <View className="flex-row items-center justify-between px-5 pt-2 pb-3">
           <View>
-            <Text className="font-titulo text-xl text-principal">Bienvenido, {user?.username}</Text>
+            <Text className="font-titulo text-xl text-principal">Bienvenido, {user?.nombreCompleto}</Text>
             <Text className="font-cuerpo text-xs text-secundario">Estado actual de las mesas</Text>
           </View>
           <LogOutIconButton />
@@ -60,7 +63,7 @@ const MesasScreen = () => {
         </View>
 
         
-        <MesaFList mesas={mesas} />
+        <MesaFList mesas={mesasVisibles} />
         
       </ScrollView>
     </SafeAreaView>

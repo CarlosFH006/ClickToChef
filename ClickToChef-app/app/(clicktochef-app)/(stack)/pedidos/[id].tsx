@@ -4,7 +4,6 @@ import { useLocalSearchParams, router, Stack, useNavigation } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { usePedidosStore } from '../../../../store/usePedidosStore';
-import { useMenuStore } from '../../../../store/useMenuStore';
 import DetalleFList from '../../../../presentation/pedido/components/detalles/DetalleFList';
 import CerrarPedidoModal from '../../../../presentation/pedido/components/pedidos/CerrarPedidoModal';
 import { Colors } from '../../../../constants/theme';
@@ -14,7 +13,6 @@ import { cancelarPedidoAction } from '../../../../core/actions/cancelar-pedido-a
 const PedidoDetalleScreen = () => {
   const { id } = useLocalSearchParams();
   const { pedidos } = usePedidosStore();
-  const { categorias } = useMenuStore();
   const [modalVisible, setModalVisible] = useState(false);
   //Use ref para evitar que se pulse dos veces el boton de añadir productos
   const navegando = useRef(false);
@@ -22,13 +20,7 @@ const PedidoDetalleScreen = () => {
 
   const pedido = pedidos.find((p) => p.id === Number(id));
 
-  const productos = categorias.flatMap(c => c.productos);
-  const getPrecio = (productoId: number) => {
-    const precio = productos.find(p => p.id === productoId)?.precio ?? 0;
-    return precio;
-  }
-  //Recorre todos los detalles del pedido y reduce almacena en acc el precio de cada detalle
-  const total = pedido?.detalles?.reduce((acc, d) => acc + getPrecio(d.productoId) * d.cantidad, 0) ?? 0;
+  const total = pedido?.detalles?.reduce((acc, d) => acc + d.precioUnitario * d.cantidad, 0) ?? 0;
 
   useEffect(() => {
     if (pedido) {
@@ -51,14 +43,13 @@ const PedidoDetalleScreen = () => {
     );
   }
 
-  const statusColor = getPedidoStatusColor(pedido.estado);
   const puedeCancelar = pedido.estado === 'ABIERTA' &&
     (pedido.detalles?.length === 0 || pedido.detalles?.every(d => d.estado === 'PENDIENTE'));
 
   return (
     <SafeAreaView className="flex-1 bg-superficie" edges={[]}>
 
-      {/* Subheader fijo */}
+      {/* Header fijo */}
       <View className="flex-row justify-between items-center px-5 py-3 border-b border-borde">
         <Text className="font-titulo text-base text-principal">Productos</Text>
         <Text className="font-cuerpo text-sm text-secundario">
@@ -136,7 +127,6 @@ const PedidoDetalleScreen = () => {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         pedido={pedido}
-        getPrecio={getPrecio}
         total={total}
       />
 

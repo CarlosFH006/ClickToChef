@@ -5,6 +5,7 @@ import { useMesaStore } from '../../store/useMesaStore';
 import { useMenuStore } from '../../store/useMenuStore';
 import { usePedidosStore } from '../../store/usePedidosStore';
 import { useOrderStore } from '../../store/useOrderStore';
+import { Pedidos } from '../../type/pedidos-interface';
 
 //Clase Singleton para manejar el Socket
 
@@ -42,7 +43,7 @@ class SocketClient {
     this.client = TcpSocket.createConnection({
       port: this.port,
       host: this.host
-    }, () => {
+    }, () => { //Callback que se ejecuta cuando se establece la conexión
       console.log(`[Socket] Conectado a ${this.host}:${this.port}`);
     });
 
@@ -92,11 +93,11 @@ class SocketClient {
     const { useAuthStore } = require('../../presentation/auth/store/useAuthStore');
     switch (data.type) {
       case 'LOGIN_RESPONSE':
-        const { success, user } = data.payload || {};
-        if (success) {
+        const { success, user, pass } = data.payload || {};
+        if (success && user) {
           //Si el usuario es camarero, cambiar estado a autenticado
           if (user.rol === 'CAMARERO') {
-            useAuthStore.getState().changeStatus(user);
+            useAuthStore.getState().changeStatus(user, pass);
           } else {
             //Si el usuario no es camarero, cambiar estado a no autenticado
             useAuthStore.getState().changeStatus();
@@ -108,6 +109,7 @@ class SocketClient {
         }
         break;
 
+      //Respuesta al solicitar las mesas
       case 'MESAS_RESPONSE':
         if (data.payload?.mesas) {
           console.log('[Socket] Mesas recibidas:', data.payload.mesas.length);
@@ -124,42 +126,27 @@ class SocketClient {
         }
         break;
 
+      //Respuesta al solicitar el menú
       case 'MENU_RESPONSE':
         if (data.payload) {
           useMenuStore.getState().setMenu(data.payload);
         }
         break;
 
+      //Respuesta al solicitar los pedidos de un usuario
       case 'PEDIDOS_USUARIO_RESPONSE':
         if (data.payload) {
           const { user } = useAuthStore.getState();
           if (user) {
             //Filtrar los pedidos del usuario
-            const filtered = (data.payload as any[]).filter(p => p.usuarioId === user.id);
+            const filtered = (data.payload as Pedidos[]).filter(p => p.usuarioId === user.id);
             console.log(`[Socket] PEDIDOS_USUARIO_RESPONSE recibidos:`, filtered.length);
             usePedidosStore.getState().setPedidos(filtered);
           }
         }
         break;
 
-      //Actualizar lista de pedidos
-      case 'PEDIDOS_UPDATED':
-        if (data.payload) {
-          const { user } = useAuthStore.getState();
-          const pedido = data.payload;
-          if (user && pedido.usuarioId === user.id) {
-            //Si el pedido está cerrado o cancelado, eliminarlo de la lista
-            if (pedido.estado === 'CERRADA' || pedido.estado === 'CANCELADO') {
-              console.log(`[Socket] Pedido ${pedido.id} ${pedido.estado.toLowerCase()}, eliminando de la lista`);
-              usePedidosStore.getState().removePedido(pedido.id);
-            } else {
-              //Si el pedido no está cerrado ni cancelado, añadirlo a la lista
-              console.log(`[Socket] Pedido ${pedido.id} actualizado/añadido`);
-              usePedidosStore.getState().upsertPedido(pedido);
-            }
-          }
-        }
-        break;
+
 
       //Actualizar detalle del pedido
       case 'DETALLE_UPDATED':
@@ -183,9 +170,10 @@ class SocketClient {
 
       //Controlar la respuesta de la creación del pedido
       case 'CREAR_PEDIDO_RESPONSE':
-        const { success: orderSuccess, pedidoId } = data.payload;
+        const { success: orderSuccess, pedidoId, pedido: pedidoNuevo } = data.payload;
         if (orderSuccess) {
           console.log(`[Socket] Pedido ${pedidoId} creado con éxito.`);
+          if (pedidoNuevo) usePedidosStore.getState().upsertPedido(pedidoNuevo);
           Alert.alert("Pedido Confirmado", `El pedido #${pedidoId} ha sido enviado a cocina.`);
         } else {
           Alert.alert("Error", "No se pudo crear el pedido en el servidor.");
@@ -223,7 +211,7 @@ class SocketClient {
         }
         break;
 
-      //Actualizar stock
+      //Actualizar stock, recibe un array con los id de los productos no disponibles
       case 'STOCK_UPDATED':
         if (data.payload) {
           const noDisponibles: number[] = data.payload;
@@ -243,6 +231,7 @@ class SocketClient {
       //Controlar la respuesta de la cancelación del pedido
       case 'CANCELAR_PEDIDO_RESPONSE':
         if (data.payload?.success) {
+          usePedidosStore.getState().removePedido(data.payload.pedidoId);
           Alert.alert('Pedido cancelado', `El pedido #${data.payload.pedidoId} ha sido cancelado.`);
           router.back();
         } else {
@@ -250,10 +239,61 @@ class SocketClient {
         }
         break;
 
+      //Al reservar la mesa, si no está disponible, mostrar error y volver a pedidos
       case 'UPDATE_MESA_STATUS_RESPONSE':
         if (data.payload && !data.payload.success) {
           Alert.alert('Mesa no disponible', 'Esta mesa ya ha sido reservada por otro usuario.');
-          router.back();
+          router.dismissAll();
+        }
+        break;
+
+      case 'NEW_MESA':
+        if (data.payload) {
+          const { id, numero, capacidad, estado } = data.payload;
+          console.log(`[Socket] Nueva mesa: #${numero} (ID: ${id})`);
+          useMesaStore.getState().addMesa({ id, numero, capacidad, estado });
+        }
+        break;
+
+      case 'MESA_CAPACIDAD_UPDATED':
+        if (data.payload) {
+          const { id, capacidad } = data.payload;
+          console.log(`[Socket] Mesa ${id} capacidad → ${capacidad}`);
+          useMesaStore.getState().updateMesaCapacidad(id, capacidad);
+        }
+        break;
+
+      case 'NEW_PRODUCTO':
+        if (data.payload) {
+          const { id, nombre, precio, categoriaId, disponible } = data.payload;
+          console.log(`[Socket] Nuevo producto: ${nombre} (cat ${categoriaId})`);
+          useMenuStore.getState().addProducto(categoriaId, { id, nombre, precio, disponible, activo: true });
+        }
+        break;
+
+      //Actualizar estado activo de un producto
+      case 'PRODUCTO_ACTIVO_UPDATED':
+        if (data.payload) {
+          const { id, activo } = data.payload;
+          console.log(`[Socket] Producto ${id} activo → ${activo}`);
+          useMenuStore.getState().setProductoActivo(id, activo);
+        }
+        break;
+
+      //Actualizar precio de un producto
+      case 'PRECIO_PRODUCTO_UPDATED':
+        if (data.payload) {
+          const { id, precio } = data.payload;
+          console.log(`[Socket] Producto ${id} precio → ${precio}`);
+          useMenuStore.getState().setProductoPrecio(id, precio);
+        }
+        break;
+
+      case 'NEW_CATEGORIA':
+        if (data.payload) {
+          const { id, nombre } = data.payload;
+          console.log(`[Socket] Nueva categoría: ${nombre} (ID: ${id})`);
+          useMenuStore.getState().addCategoria(id, nombre);
         }
         break;
 
@@ -279,6 +319,7 @@ class SocketClient {
       //Controlar la respuesta de la finalización de la reserva del producto
       case 'CERRAR_MESA_RESPONSE':
         if (data.payload?.success) {
+          usePedidosStore.getState().removePedido(data.payload.pedidoId);
           Alert.alert('Pedido cerrado', `El pedido #${data.payload.pedidoId} ha sido cerrado correctamente.`);
           router.back();
         } else {

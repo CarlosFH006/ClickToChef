@@ -14,6 +14,7 @@ export const insertarDetallesAction = async (pedidoId: number) => {
                 items: items.map(item => ({
                     id: item.id,
                     cantidad: item.cantidad,
+                    precio: item.precio,
                     notas: item.notas ?? '',
                 }))
             }

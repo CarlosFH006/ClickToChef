@@ -10,11 +10,12 @@ CREATE TABLE categorias (
 
 CREATE TABLE productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
     descripcion TEXT,
     precio DECIMAL(10, 2) NOT NULL,
     categoria_id INT,
     odoo_id INT,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL
 );
 
@@ -22,13 +23,13 @@ CREATE TABLE mesas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     numero INT NOT NULL UNIQUE,
     capacidad INT DEFAULT 4,
-    estado ENUM('libre', 'ocupada', 'reservada') DEFAULT 'libre'
+    estado ENUM('libre', 'ocupada', 'reservada', 'retirada') DEFAULT 'libre'
 );
 
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     nombre_completo VARCHAR(100) NOT NULL,
     rol ENUM('camarero', 'cocinero', 'admin') NOT NULL
 );
@@ -48,6 +49,7 @@ CREATE TABLE detalles_pedido (
     pedido_id INT NOT NULL,
     producto_id INT NOT NULL,
     cantidad INT NOT NULL DEFAULT 1,
+    precio_unitario DECIMAL(10,2) NOT NULL DEFAULT 0,
     notas_especiales VARCHAR(255),
     estado ENUM('pendiente', 'en preparacion', 'listo', 'servido') DEFAULT 'pendiente',
     hora_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -57,7 +59,7 @@ CREATE TABLE detalles_pedido (
 
 CREATE TABLE ingredientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
     stock_actual DECIMAL(10, 2) NOT NULL,
     stock_reservado DECIMAL(10, 2) NOT NULL DEFAULT 0,
     unidad_medida ENUM('kg', 'litros', 'unidades') NOT NULL DEFAULT 'unidades',
@@ -108,13 +110,13 @@ INSERT INTO mesas (numero, capacidad, estado) VALUES
 (5, 2, 'libre');
 
 -- USUARIOS
-INSERT INTO usuarios (username, password_hash, nombre_completo, rol) VALUES 
+INSERT INTO usuarios (username, password, nombre_completo, rol) VALUES 
 ('admin', 'admin123', 'Super Administrador', 'admin'),
-('pepe_sala', 'camarero1', 'Pepe García', 'camarero'),
-('ana_sala', 'camarero2', 'Ana López', 'camarero'),
-('carlos_chef', 'cocina1', 'Carlos Martínez', 'cocinero');
+('pepe_sala', 'camarero1', 'Pepe', 'camarero'),
+('ana_sala', 'camarero2', 'Ana', 'camarero'),
+('carlos_chef', 'cocina1', 'Carlos', 'cocinero');
 
--- INGREDIENTES (ACTUALIZADO)
+-- INGREDIENTES
 INSERT INTO ingredientes
 (id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id)
 VALUES
@@ -122,10 +124,10 @@ VALUES
 (2,  'Queso Cheddar',         5.00, 0.10, 'kg',       'materia_prima',     102),
 (3,  'Pan Burger',           50.00, 2.00, 'unidades', 'materia_prima',     104),
 (4,  'Patatas',              30.00, 0.00, 'kg',       'materia_prima',     105),
-(5,  'Lata Coca Cola 33cl', 100.00, 2.00, 'unidades', 'producto_terminado',201),
+(5,  'Coca Cola 33cl',      100.00, 2.00, 'unidades', 'producto_terminado',201),
 (6,  'Barril Cerveza IPA',   50.00, 1.50, 'litros',   'materia_prima',     202),
 (7,  'Botella Vino Rioja',   20.00, 0.00, 'unidades', 'materia_prima',     203),
-(8,  'Nachos Bolsa',         20.00, 1.00, 'unidades', 'producto_terminado',301),
+(8,  'Nachos Click',          20.00, 1.00, 'unidades', 'producto_terminado',301),
 (9,  'Alitas Congeladas',   100.00, 0.00, 'unidades', 'materia_prima',     302),
 (10, 'Tarta de Queso Entera', 5.00, 0.00, 'unidades', 'materia_prima',     303),
 (11, 'Hamburguesa Vegana',   15.00, 0.00, 'unidades', 'materia_prima',     304);
@@ -144,23 +146,19 @@ INSERT INTO recetas (producto_id, ingrediente_id, cantidad_necesaria) VALUES
 (7, 10, 0.125),
 (8, 7, 0.15);
 
--- PEDIDOS (sin cambios necesarios)
+-- PEDIDOS
 INSERT INTO pedidos (id, mesa_id, usuario_id, estado) VALUES 
 (1, 1, 2, 'abierta');
 
 INSERT INTO detalles_pedido
-(pedido_id, producto_id, cantidad, notas_especiales, estado) VALUES
-(1, 3, 2, 'Carne muy hecha', 'en preparacion'),
-(1, 5, 2, 'Con hielo', 'listo');
+(pedido_id, producto_id, cantidad, precio_unitario, notas_especiales, estado) VALUES
+(1, 3, 2, 12.50, 'Carne muy hecha', 'en preparacion'),
+(1, 5, 2, 2.50, 'Con hielo', 'listo');
 
-INSERT INTO pedidos (id, mesa_id, usuario_id, estado) VALUES 
+INSERT INTO pedidos (id, mesa_id, usuario_id, estado) VALUES
 (2, 4, 3, 'abierta');
 
-INSERT INTO detalles_pedido 
-(pedido_id, producto_id, cantidad, estado) VALUES 
-(2, 1, 1, 'pendiente'),
-(2, 6, 3, 'pendiente');
-
--- TICKET (sin cambios necesarios)
---INSERT INTO tickets (pedido_id, total_importe, referencia_factura_odoo, metodo_pago) VALUES 
---(1, 30.00, 'INV-2026-001', 'tarjeta');
+INSERT INTO detalles_pedido
+(pedido_id, producto_id, cantidad, precio_unitario, estado) VALUES
+(2, 1, 1, 8.50, 'pendiente'),
+(2, 6, 3, 4.50, 'pendiente');

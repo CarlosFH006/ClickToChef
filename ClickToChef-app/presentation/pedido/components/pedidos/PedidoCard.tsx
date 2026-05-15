@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
+import { router } from 'expo-router';
 import { Pedidos } from '../../../../type/pedidos-interface';
 import { Ionicons } from '@expo/vector-icons';
 import { getPedidoStatusColor, getPedidoStatusIcon, getPedidoStatusLabel } from '../../helpers/status-colors';
@@ -8,10 +9,9 @@ import { Colors } from '../../../../constants/theme';
 
 interface Props {
   pedido: Pedidos;
-  onPress?: (pedido: Pedidos) => void;
 }
 
-const PedidoCard = ({ pedido, onPress }: Props) => {
+const PedidoCard = ({ pedido }: Props) => {
   const statusColor = getPedidoStatusColor(pedido.estado);
 
   //Convertir la fecha del pedido a un formato legible
@@ -27,7 +27,7 @@ const PedidoCard = ({ pedido, onPress }: Props) => {
     <Pressable
       className="mb-3 rounded-2xl bg-superficie border-l-[6px] shadow-sm active:opacity-80 overflow-hidden"
       style={{ borderColor: statusColor }}
-      onPress={() => onPress?.(pedido)}
+      onPress={() => router.push(`/(clicktochef-app)/(stack)/pedidos/${pedido.id}`)}
     >
       <View className="p-4">
         {/* Fila principal: mesa + estado */}

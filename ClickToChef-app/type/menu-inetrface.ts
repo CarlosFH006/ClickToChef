@@ -3,6 +3,7 @@ export interface Producto {
   nombre: string;
   precio: number;
   disponible: boolean;
+  activo: boolean;
 }
 
 export interface Categoria {

@@ -7,6 +7,7 @@ import org.example.Odoo.FuncionesOdoo;
 import org.example.DTO.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Map;
 
 //Funciones para ejecutar en las llamadas de ServerSocket y de WebSocket
 public class FuncionesServidor {
@@ -43,11 +44,17 @@ public class FuncionesServidor {
         EstadoMesa nuevoEstado = EstadoMesa.valueOf(estadoStr.toUpperCase());
 
         System.out.println("[FuncionesServidor] Actualizando mesa " + id + " a " + nuevoEstado);
-        boolean exito = nuevoEstado == EstadoMesa.RESERVADA
-                //Si se reserva la mesa, se ejecuta el método reservarMesa, para que la app reciba la respuesta de la reserva
-                ? MesasDAO.reservarMesa(id)
-                //Si no se reserva la mesa, se ejecuta el método actualizarEstadoMesa
-                : MesasDAO.actualizarEstadoMesa(id, nuevoEstado);
+        boolean exito;
+        if (nuevoEstado == EstadoMesa.RESERVADA) {
+            exito = MesasDAO.reservarMesa(id);
+        } else if (nuevoEstado == EstadoMesa.RETIRADA) {
+            exito = MesasDAO.retirarMesa(id);
+        } else if (nuevoEstado == EstadoMesa.LIBRE) {
+            // activarMesa solo actualiza si estaba RETIRADA; si no, usa el método genérico
+            exito = MesasDAO.activarMesa(id) || MesasDAO.actualizarEstadoMesa(id, nuevoEstado);
+        } else {
+            exito = MesasDAO.actualizarEstadoMesa(id, nuevoEstado);
+        }
 
         if (exito) {
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(id, estadoStr.toUpperCase()));
@@ -73,11 +80,11 @@ public class FuncionesServidor {
     }
 
     public static String procesarReservarProducto(JsonObject payload) {
-        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
+        if (payload == null || !payload.has("productoId")) {
             return GeneradorJSON.generarError("Payload de RESERVAR_PRODUCTO incompleto");
         }
 
-        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        int productoId = payload.get("productoId").getAsInt();
         int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
         System.out.println("[FuncionesServidor] Reservando producto " + productoId + " (cantidad " + cantidad + ")");
 
@@ -90,11 +97,11 @@ public class FuncionesServidor {
     }
 
     public static String procesarLiberarReserva(JsonObject payload) {
-        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
+        if (payload == null || !payload.has("productoId")) {
             return GeneradorJSON.generarError("Payload de LIBERAR_RESERVA incompleto");
         }
 
-        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        int productoId = payload.get("productoId").getAsInt();
         int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
         System.out.println("[FuncionesServidor] Liberando reserva producto " + productoId + " (cantidad " + cantidad + ")");
 
@@ -111,11 +118,11 @@ public class FuncionesServidor {
 
     //Este método es similar al anterior pero confirma la reserva y resta el stock
     public static String procesarFinalizarReserva(JsonObject payload) {
-        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
+        if (payload == null || !payload.has("productoId")) {
             return GeneradorJSON.generarError("Payload de FINALIZAR_RESERVA incompleto");
         }
 
-        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        int productoId = payload.get("productoId").getAsInt();
         int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
         System.out.println("[FuncionesServidor] Finalizando reserva producto " + productoId + " (cantidad " + cantidad + ")");
 
@@ -141,7 +148,7 @@ public class FuncionesServidor {
         System.out.println("[FuncionesServidor] Creando pedido para mesa " + mesaId + " por usuario " + usuarioId);
 
         try {
-            Pedidos nuevoPedido = new Pedidos(mesaId, usuarioId, new java.sql.Timestamp(System.currentTimeMillis()), EstadoPedido.ABIERTA);
+            Pedidos nuevoPedido = new Pedidos(mesaId, usuarioId, new Timestamp(System.currentTimeMillis()), EstadoPedido.ABIERTA);
             int pedidoId = PedidosDAO.insertarPedido(nuevoPedido);
 
             //Si al crear el pedido devuelve un -1 como id muestra el fallo
@@ -157,9 +164,10 @@ public class FuncionesServidor {
                     pedidoId,
                     item.get("id").getAsInt(),
                     item.get("cantidad").getAsInt(),
+                    item.has("precio") ? item.get("precio").getAsDouble() : 0.0,
                     item.has("notas") ? item.get("notas").getAsString() : "",
                     EstadoDetallePedido.PENDIENTE,
-                    new java.sql.Timestamp(System.currentTimeMillis())
+                    new Timestamp(System.currentTimeMillis())
                 );
                 if (!DetallesPedidoDAO.insertarDetallePedido(detalle)) {
                     exitoDetalles = false;
@@ -167,10 +175,11 @@ public class FuncionesServidor {
             }
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " creado con " + (exitoDetalles ? "éxito" : "errores parciales"));
+            Pedidos pedidoCompleto = PedidosDAO.obtenerPedidoPorId(pedidoId);
             broadcastPedido(pedidoId);
-            broadcastDetallesPedido();
+            broadcastDetallesPedido(pedidoId);
 
-            return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId);
+            return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId, pedidoCompleto);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al crear pedido: " + e.getMessage());
             return GeneradorJSON.generarError("Error interno al procesar el pedido: " + e.getMessage());
@@ -195,22 +204,24 @@ public class FuncionesServidor {
                     pedidoId,
                     item.get("id").getAsInt(),
                     item.get("cantidad").getAsInt(),
+                    item.has("precio") ? item.get("precio").getAsDouble() : 0.0,
                     item.has("notas") ? item.get("notas").getAsString() : "",
                     EstadoDetallePedido.PENDIENTE,
-                    new java.sql.Timestamp(System.currentTimeMillis())
+                    new Timestamp(System.currentTimeMillis())
                 );
                 if (!DetallesPedidoDAO.insertarDetallePedido(detalle)) {
                     exitoDetalles = false;
                 }
             }
 
+            Pedidos pedidoCompleto = exitoDetalles ? PedidosDAO.obtenerPedidoPorId(pedidoId) : null;
             if (exitoDetalles) {
                 broadcastPedido(pedidoId);
-                broadcastDetallesPedido();
+                broadcastDetallesPedido(pedidoId);
             }
 
             System.out.println("[FuncionesServidor] Detalles insertados en pedido " + pedidoId + (exitoDetalles ? " con éxito" : " con errores"));
-            return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId);
+            return GeneradorJSON.generarCrearPedidoResponse(exitoDetalles, pedidoId, pedidoCompleto);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al insertar detalles: " + e.getMessage());
             return GeneradorJSON.generarError("Error interno al insertar detalles: " + e.getMessage());
@@ -223,7 +234,7 @@ public class FuncionesServidor {
         }
 
         int id = payload.get("id").getAsInt();
-        EstadoDetallePedido nuevoEstado = EstadoDetallePedido.valueOf(payload.get("estado").getAsString());
+        EstadoDetallePedido nuevoEstado = EstadoDetallePedido.valueOf(payload.get("estado").getAsString().toUpperCase());
 
         boolean success = DetallesPedidoDAO.updateEstado(id, nuevoEstado);
         if (success) {
@@ -242,6 +253,16 @@ public class FuncionesServidor {
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al obtener detalles: " + e.getMessage());
             return GeneradorJSON.generarError("Error al obtener detalles: " + e.getMessage());
+        }
+    }
+
+    public static String procesarGetCategoriasAdmin() {
+        try {
+            ArrayList<Categorias> lista = CategoriasDAO.obtenerTodas();
+            return GeneradorJSON.generarCategoriasAdminResponse(lista);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al obtener categorías admin: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al obtener categorías");
         }
     }
 
@@ -327,12 +348,13 @@ public class FuncionesServidor {
 
             MesasDAO.actualizarEstadoMesa(mesaId, EstadoMesa.LIBRE);
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
-            WebSocketServidor.broadcastGlobal(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
             broadcastPedido(pedidoId);
 
-            String refOdoo = FuncionesOdoo.crearTicketVenta(pedidoId);
+            String refOdoo = FuncionesOdoo.crearTicketVenta(pedidoId, metodoPago.name());
             FuncionesOdoo.descontarStockOdoo(pedidoId);
             TicketsDAO.actualizarReferenciaOdoo(pedidoId, refOdoo);
+
+            WebSocketServidor.broadcastGlobal(GeneradorJSON.generarTicketCreado(pedidoId, totalImporte, payload.get("metodoPago").getAsString().toUpperCase()));
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cerrado, ticket registrado, mesa " + mesaId + " liberada");
             return GeneradorJSON.generarCerrarMesaResponse(ticketCreado && pedidoCerrado, pedidoId, totalImporte);
@@ -379,7 +401,9 @@ public class FuncionesServidor {
             Servidor.broadcast(GeneradorJSON.generarMesaUpdated(mesaId, "LIBRE"));
             broadcastNoDisponibles();
             broadcastPedido(pedidoId);
-            broadcastDetallesPedido();
+            for (DetallesPedido d : pedido.getDetalles()) {
+                Servidor.broadcast(GeneradorJSON.generarDetalleDeleted(d.getId()));
+            }
 
             System.out.println("[FuncionesServidor] Pedido " + pedidoId + " cancelado, stock restaurado, mesa " + mesaId + " liberada");
             return GeneradorJSON.generarCancelarPedidoResponse(true, pedidoId);
@@ -423,6 +447,287 @@ public class FuncionesServidor {
         }
     }
 
+    public static String procesarCrearMesa(JsonObject payload) {
+        if (payload == null || !payload.has("numero") || !payload.has("capacidad")) {
+            return GeneradorJSON.generarError("Payload de CREAR_MESA incompleto");
+        }
+        try {
+            int numero = payload.get("numero").getAsInt();
+            int capacidad = payload.get("capacidad").getAsInt();
+            if (numero < 1 || capacidad < 1 || capacidad > 99) {
+                return GeneradorJSON.generarError("Número o capacidad inválidos");
+            }
+            Mesas mesa = new Mesas(numero, capacidad, EstadoMesa.LIBRE);
+            int id = MesasDAO.insertarMesa(mesa);
+            if (id == -1) return GeneradorJSON.generarCrearMesaResponse(false, "No se pudo crear la mesa (¿número duplicado?)");
+            Servidor.broadcast(GeneradorJSON.generarNuevaMesa(id, numero, capacidad));
+            System.out.println("[FuncionesServidor] Mesa " + numero + " creada con ID: " + id);
+            return GeneradorJSON.generarCrearMesaResponse(true, null);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear mesa: " + e.getMessage());
+            return GeneradorJSON.generarCrearMesaResponse(false, "El número de mesa ya existe");
+        }
+    }
+
+    public static String procesarActualizarCapacidadMesa(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("capacidad")) {
+            return GeneradorJSON.generarError("Payload de ACTUALIZAR_CAPACIDAD_MESA incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            int capacidad = payload.get("capacidad").getAsInt();
+            if (capacidad < 1 || capacidad > 99) {
+                return GeneradorJSON.generarError("La capacidad debe estar entre 1 y 99");
+            }
+            boolean success = MesasDAO.actualizarCapacidadMesa(id, capacidad);
+            if (success) {
+                Servidor.broadcast(GeneradorJSON.generarMesaCapacidadUpdated(id, capacidad));
+                System.out.println("[FuncionesServidor] Capacidad mesa " + id + " → " + capacidad);
+            }
+            return success
+                    ? null
+                    : GeneradorJSON.generarError("No se pudo actualizar la capacidad de la mesa " + id);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al actualizar capacidad: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al actualizar la capacidad: " + e.getMessage());
+        }
+    }
+
+    public static String procesarActualizarPrecioProducto(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("precio")) {
+            return GeneradorJSON.generarError("Payload de ACTUALIZAR_PRECIO_PRODUCTO incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            double precio = payload.get("precio").getAsDouble();
+            if (precio <= 0) return GeneradorJSON.generarError("El precio debe ser mayor que 0");
+            boolean ok = ProductosDAO.actualizarPrecio(id, precio);
+            if (!ok) return GeneradorJSON.generarError("Producto no encontrado");
+            Servidor.broadcast(GeneradorJSON.generarPrecioProductoUpdated(id, precio));
+            System.out.println("[FuncionesServidor] Precio del producto " + id + " actualizado a " + precio);
+            int odooId = ProductosDAO.obtenerOdooId(id);
+            FuncionesOdoo.actualizarPrecioEnOdoo(odooId, precio);
+            return null;
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al actualizar precio: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al actualizar el precio");
+        }
+    }
+
+    public static String procesarToggleProductoActivo(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("activo")) {
+            return GeneradorJSON.generarError("Payload de TOGGLE_PRODUCTO_ACTIVO incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            boolean activo = payload.get("activo").getAsBoolean();
+            boolean ok = ProductosDAO.toggleActivo(id, activo);
+            if (!ok) return GeneradorJSON.generarError("Producto no encontrado");
+            Servidor.broadcast(GeneradorJSON.generarProductoActivoUpdated(id, activo));
+            return null;
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al togglear producto: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al cambiar estado del producto");
+        }
+    }
+
+    public static String procesarCrearCategoria(JsonObject payload) {
+        if (payload == null || !payload.has("nombre")) {
+            return GeneradorJSON.generarError("Payload de CREAR_CATEGORIA incompleto");
+        }
+        try {
+            String nombre = payload.get("nombre").getAsString().trim();
+            if (nombre.isEmpty()) return GeneradorJSON.generarError("El nombre de la categoría no puede estar vacío");
+            int id = CategoriasDAO.insertarCategoria(new Categorias(nombre));
+            if (id == -1) return GeneradorJSON.generarCrearCategoriaResponse(false, "No se pudo crear la categoría");
+            Servidor.broadcast(GeneradorJSON.generarNuevaCategoria(id, nombre));
+            System.out.println("[FuncionesServidor] Categoría '" + nombre + "' creada con ID: " + id);
+            return GeneradorJSON.generarCrearCategoriaResponse(true, null);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear categoría: " + e.getMessage());
+            return GeneradorJSON.generarCrearCategoriaResponse(false, "La categoría ya existe o el nombre es inválido");
+        }
+    }
+
+    public static String procesarCambiarPassword(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("password")) {
+            return GeneradorJSON.generarError("Payload de CAMBIAR_PASSWORD incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            String password = payload.get("password").getAsString();
+            boolean success = UsuariosDAO.cambiarPassword(id, password);
+            System.out.println("[FuncionesServidor] Contraseña del usuario " + id + (success ? " cambiada" : " no cambiada"));
+            return GeneradorJSON.generarCambiarPasswordResponse(success);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al cambiar contraseña: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al cambiar la contraseña: " + e.getMessage());
+        }
+    }
+
+    public static String procesarSumarStock(JsonObject payload) {
+        if (payload == null || !payload.has("id") || !payload.has("cantidad")) {
+            return GeneradorJSON.generarError("Payload de SUMAR_STOCK incompleto");
+        }
+        try {
+            int id = payload.get("id").getAsInt();
+            double cantidad = payload.get("cantidad").getAsDouble();
+            if (cantidad <= 0) return GeneradorJSON.generarError("La cantidad debe ser mayor que 0");
+
+            IngredientesDAO.sumarStock(id, cantidad);
+
+            Ingredientes ing = IngredientesDAO.obtenerPorId(id);
+            if (ing != null) {
+                FuncionesOdoo.sumarStockOdoo(ing.getOdooProductId(), ing.getStockActual());
+            }
+
+            broadcastIngredientes();
+            broadcastNoDisponibles();
+
+            System.out.println("[FuncionesServidor] Stock sumado al ingrediente " + id + ": +" + cantidad);
+            return null;
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al sumar stock: " + e.getMessage());
+            return GeneradorJSON.generarError("Error al sumar stock: " + e.getMessage());
+        }
+    }
+
+    public static String procesarGetRecetaProducto(JsonObject payload) {
+        if (payload == null || !payload.has("productoId")) {
+            return GeneradorJSON.generarError("Payload de GET_RECETA_PRODUCTO incompleto");
+        }
+        try {
+            int productoId = payload.get("productoId").getAsInt();
+            ArrayList<Map<String, Object>> ingredientes = RecetasDAO.obtenerPorProductoConIngrediente(productoId);
+            return GeneradorJSON.generarRecetaProductoResponse(productoId, ingredientes);
+        } catch (Exception e) {
+            return GeneradorJSON.generarError("Error al obtener receta: " + e.getMessage());
+        }
+    }
+
+    public static String procesarCrearProductoMenu(JsonObject payload) {
+        if (payload == null || !payload.has("nombre") || !payload.has("precio") || !payload.has("categoriaId")) {
+            return GeneradorJSON.generarCrearProductoResponse(false, "Payload incompleto");
+        }
+        try {
+            String nombre = payload.get("nombre").getAsString().trim();
+            double precio = payload.get("precio").getAsDouble();
+            int categoriaId = payload.get("categoriaId").getAsInt();
+            boolean esDirecto = payload.has("esProductoDirecto") && payload.get("esProductoDirecto").getAsBoolean();
+
+            int ingredienteDirectoId = -1;
+
+            if (esDirecto) {
+                double stock = payload.has("stockInicial") ? payload.get("stockInicial").getAsDouble() : 0;
+                Ingredientes ing = new Ingredientes(0, nombre, stock, 0,
+                        MetodoMedida.UNIDAD,
+                        TipoIngrediente.PRODUCTO_TERMINADO, 0);
+                int ingId = IngredientesDAO.insertarIngrediente(ing);
+                if (ingId == -1) return GeneradorJSON.generarCrearProductoResponse(false, "Error al crear el ingrediente");
+                int odooIngId = FuncionesOdoo.registrarIngredienteEnOdoo(ingId, nombre, stock);
+                if (odooIngId != -1) IngredientesDAO.actualizarOdooProductId(ingId, odooIngId);
+                ingredienteDirectoId = ingId;
+            }
+
+            Productos prod = new Productos(0, nombre, "", precio, categoriaId, 0);
+            int productoId = ProductosDAO.insertarProducto(prod);
+            if (productoId == -1) return GeneradorJSON.generarCrearProductoResponse(false, "Error al insertar el producto");
+
+            if (esDirecto && ingredienteDirectoId != -1) {
+                RecetasDAO.insertarReceta(new Recetas(productoId, ingredienteDirectoId, 1.0));
+            } else if (!esDirecto && payload.has("receta")) {
+                JsonArray receta = payload.getAsJsonArray("receta");
+                for (int i = 0; i < receta.size(); i++) {
+                    JsonObject item = receta.get(i).getAsJsonObject();
+                    RecetasDAO.insertarReceta(new Recetas(
+                            productoId,
+                            item.get("ingredienteId").getAsInt(),
+                            item.get("cantidad").getAsDouble()
+                    ));
+                }
+            }
+
+            int odooId = FuncionesOdoo.registrarProductoEnOdoo(nombre, precio);
+            if (odooId != -1) ProductosDAO.actualizarOdooId(productoId, odooId);
+
+            Servidor.broadcast(GeneradorJSON.generarNuevoProducto(productoId, nombre, precio, categoriaId));
+            if (esDirecto) broadcastNoDisponibles();
+
+            System.out.println("[FuncionesServidor] Producto '" + nombre + "' creado con ID: " + productoId);
+            return GeneradorJSON.generarCrearProductoResponse(true, null);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear producto: " + e.getMessage());
+            return GeneradorJSON.generarCrearProductoResponse(false, e.getMessage());
+        }
+    }
+
+    public static String procesarCrearIngrediente(JsonObject payload) {
+        if (payload == null || !payload.has("nombre") || !payload.has("stockActual")
+                || !payload.has("unidadMedida") || !payload.has("tipo")) {
+            return GeneradorJSON.generarCrearIngredienteResponse(false, "Payload incompleto");
+        }
+        try {
+            String nombre = payload.get("nombre").getAsString().trim();
+            double stockActual = payload.get("stockActual").getAsDouble();
+            String unidadStr = payload.get("unidadMedida").getAsString().toLowerCase();
+            String tipoStr = payload.get("tipo").getAsString().toLowerCase();
+
+            MetodoMedida unidad;
+            switch (unidadStr) {
+                case "kg": 
+                    unidad = MetodoMedida.KG; 
+                    break;
+                case "litros": 
+                    unidad = MetodoMedida.LITROS; 
+                    break;
+                default: 
+                    unidad = MetodoMedida.UNIDAD; 
+                    break;
+            }
+            TipoIngrediente tipo = tipoStr.equals("producto_terminado")
+                    ? TipoIngrediente.PRODUCTO_TERMINADO
+                    : TipoIngrediente.MATERIA_PRIMA;
+
+            Ingredientes ing = new Ingredientes(0, nombre, stockActual, 0, unidad, tipo, 0);
+            int id = IngredientesDAO.insertarIngrediente(ing);
+            if (id == -1) return GeneradorJSON.generarCrearIngredienteResponse(false, "No se pudo insertar el ingrediente");
+
+            int odooId = FuncionesOdoo.registrarIngredienteEnOdoo(id, nombre, stockActual);
+            if (odooId != -1) IngredientesDAO.actualizarOdooProductId(id, odooId);
+
+            broadcastIngredientes();
+            broadcastNoDisponibles();
+
+            System.out.println("[FuncionesServidor] Ingrediente '" + nombre + "' creado con ID: " + id);
+            return GeneradorJSON.generarCrearIngredienteResponse(true, null);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear ingrediente: " + e.getMessage());
+            return GeneradorJSON.generarCrearIngredienteResponse(false, e.getMessage());
+        }
+    }
+
+    public static String procesarCrearUsuario(JsonObject payload) {
+        if (payload == null || !payload.has("username") || !payload.has("password")
+                || !payload.has("nombreCompleto") || !payload.has("rol")) {
+            return GeneradorJSON.generarError("Payload de CREAR_USUARIO incompleto");
+        }
+        try {
+            RolUsuario rol = RolUsuario.valueOf(payload.get("rol").getAsString().toUpperCase());
+            Usuarios usuario = new Usuarios(
+                    payload.get("username").getAsString(),
+                    payload.get("password").getAsString(),
+                    payload.get("nombreCompleto").getAsString(),
+                    rol
+            );
+            boolean success = UsuariosDAO.insertarUsuario(usuario);
+            System.out.println("[FuncionesServidor] Usuario '" + usuario.getUsername() + "' " + (success ? "creado" : "no creado"));
+            return GeneradorJSON.generarCrearUsuarioResponse(success);
+        } catch (Exception e) {
+            System.err.println("[FuncionesServidor] Error al crear usuario: " + e.getMessage());
+            return GeneradorJSON.generarCrearUsuarioResponse(false);
+        }
+    }
+
     //Funciones de broadcast
     private static void broadcastNoDisponibles() {
         ArrayList<Integer> noDisponibles = ProductosDAO.obtenerNoDisponibles();
@@ -430,15 +735,15 @@ public class FuncionesServidor {
         System.out.println("[FuncionesServidor] Stock broadcast (" + noDisponibles.size() + " no disponibles)");
     }
 
-    private static void broadcastDetallesPedido() {
-        ArrayList<DetallesPedido> lista = DetallesPedidoDAO.obtenerTodos();
-        WebSocketServidor.broadcastGlobal(GeneradorJSON.generarDetallesPedidoResponse(lista));
-        System.out.println("[FuncionesServidor] Detalles pedido broadcast (" + lista.size() + " detalles)");
+    private static void broadcastDetallesPedido(int pedidoId) {
+        ArrayList<DetallesPedido> lista = DetallesPedidoDAO.obtenerPorPedido(pedidoId);
+        WebSocketServidor.broadcastGlobal(GeneradorJSON.generarDetallesNuevos(lista));
+        System.out.println("[FuncionesServidor] Detalles nuevos broadcast (pedido " + pedidoId + ", " + lista.size() + " detalles)");
     }
 
     private static void broadcastPedido(int id) {
         Pedidos pedido = PedidosDAO.obtenerPedidoPorId(id);
-        Servidor.broadcast(GeneradorJSON.generarPedidosUpdated(pedido));
+        WebSocketServidor.broadcastGlobal(GeneradorJSON.generarPedidosUpdated(pedido));
         System.out.println("[FuncionesServidor] Pedido broadcast (ID: " + id + ")");
     }
 
@@ -453,3 +758,4 @@ public class FuncionesServidor {
         System.out.println("[FuncionesServidor] Detalle pedido actualizado broadcast (ID: " + id + ")");
     }
 }
+

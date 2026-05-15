@@ -4,6 +4,7 @@ export interface DetallePedido {
   productoId: number;
   nombreProducto: string;
   cantidad: number;
+  precioUnitario: number;
   notasEspeciales: string;
   estado: 'PENDIENTE' | 'EN_COCINA' | 'LISTO' | 'SERVIDO';
   horaPedido: string;

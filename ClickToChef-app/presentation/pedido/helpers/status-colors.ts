@@ -8,6 +8,7 @@ export const getMesaStatusColor = (estado: MesaEstado): string => {
     case 'LIBRE':     return '#4ade80';
     case 'RESERVADA': return '#fbbf24';
     case 'OCUPADA':   return '#f87171';
+    case 'RETIRADA':  return '#94a3b8';
     default:          return '#94a3b8';
   }
 };
@@ -35,6 +36,7 @@ export const getMesaStatusLabel = (estado: MesaEstado): string => {
     case 'LIBRE':     return 'Libre';
     case 'RESERVADA': return 'Reservada';
     case 'OCUPADA':   return 'Ocupada';
+    case 'RETIRADA':  return 'Retirada';
     default:          return estado;
   }
 };
@@ -50,31 +52,30 @@ export const getPedidoStatusLabel = (estado: Pedidos['estado']): string => {
 
 export const getDetalleStatusColor = (estado: string): string => {
   switch (estado) {
-    case 'PENDIENTE': return '#94a3b8';
+    case 'PENDIENTE':      return '#94a3b8';
     case 'EN_PREPARACION': return '#fbbf24';
-    case 'LISTO':     return '#4ade80';
-    case 'SERVIDO':   return '#3b82f6';
-    default:          return '#94a3b8';
+    case 'LISTO':          return '#4ade80';
+    case 'SERVIDO':        return '#3b82f6';
+    default:               return '#94a3b8';
   }
 };
 
 export const getDetalleStatusIcon = (estado: string) => {
   switch (estado) {
-    case 'PENDIENTE': return 'time-outline';
+    case 'PENDIENTE':      return 'time-outline';
     case 'EN_PREPARACION': return 'flame-outline';
-    case 'LISTO':     return 'restaurant-outline';
-    case 'SERVIDO':   return 'checkmark-done-outline';
-    default:          return 'help-circle-outline';
+    case 'LISTO':          return 'restaurant-outline';
+    case 'SERVIDO':        return 'checkmark-done-outline';
+    default:               return 'help-circle-outline';
   }
 };
 
 export const getDetalleStatusLabel = (estado: string): string => {
   switch (estado) {
-    case 'PENDIENTE': return 'Pendiente';
+    case 'PENDIENTE':      return 'Pendiente';
     case 'EN_PREPARACION': return 'En Preparación';
-    case 'LISTO':     return 'Listo';
-    case 'SERVIDO':   return 'Servido';
-    default:          return estado;
+    case 'LISTO':          return 'Listo';
+    case 'SERVIDO':        return 'Servido';
+    default:               return estado;
   }
 };
-

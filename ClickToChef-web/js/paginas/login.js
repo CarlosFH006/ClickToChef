@@ -2,9 +2,20 @@ document.addEventListener('DOMContentLoaded', () => {
     //Conectar al websocket
     WebSocketService.connect();
 
+    //Si existe un usuario en localStorage, redirigir al usuario a su pagina correspondiente
+    const _usuario = localStorage.getItem('usuario');
+    if (_usuario) {
+        const user = JSON.parse(_usuario);
+        if (user.rol === 'COCINERO') {
+            window.location.href = 'kanban.html';
+        } else if (user.rol === 'ADMIN') {
+            window.location.href = 'admin.html';
+        }
+    }
+
     //Obtener elementos del DOM
-    const btnLogin       = document.getElementById('btn-login');
-    const inputUsuario   = document.getElementById('usuario');
+    const btnLogin = document.getElementById('btn-login');
+    const inputUsuario = document.getElementById('usuario');
     const inputContrasena = document.getElementById('contrasena');
 
     //Comprobar los inputs para habilitar o deshabilitar el boton
@@ -12,28 +23,30 @@ document.addEventListener('DOMContentLoaded', () => {
         //Si los inputs estan vacios, deshabilitar el boton, si no, habilitarlo
         btnLogin.disabled = inputUsuario.value.trim() === '' || inputContrasena.value.trim() === '';
     }
-    //Agregar eventos a los campos
+    //Agregar evento de checkInputs a los inputs del formulario de login
     inputUsuario.addEventListener('input', checkInputs);
     inputContrasena.addEventListener('input', checkInputs);
     
-    //Enviar con Enter
+    //Añade un event listener para poder enviar al pulsar la tecla enter en un campo
     [inputUsuario, inputContrasena].forEach(el => {
         el.addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
     });
     //Agregar evento al boton
     btnLogin.addEventListener('click', login);
 
-    //Gestionar la respuesta del login
+    //Registro de callback en api.js para gestionar la respuesta del login
     Api.on('LOGIN_RESPONSE', (payload) => {
         //Si el login es exitoso
+        //Comprobar el rol del usuario y si es correcto, redirigirlo a su pagina correspondiente y almacenarlo en el localStorage
         if (payload.success) {
             const user = payload.user;
-            //Redirigir al usuario a la página correspondiente según su rol
             if (user.rol === 'CAMARERO') {
                 alert('El camarero no puede acceder a esta página');
             } else if (user.rol === 'COCINERO') {
+                localStorage.setItem('usuario', JSON.stringify({ username: user.username, rol: user.rol }));
                 window.location.href = 'kanban.html';
             } else if (user.rol === 'ADMIN') {
+                localStorage.setItem('usuario', JSON.stringify({ username: user.username, rol: user.rol }));
                 window.location.href = 'admin.html';
             }
         } else {

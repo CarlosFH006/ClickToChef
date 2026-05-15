@@ -12,10 +12,13 @@ const MesaIndex = () => {
   const { mesas, isLoading } = useMesaStore();
 
   useEffect(() => {
+    //Limpiar el pedido por si tubiera algo de antes
     useOrderStore.getState().clearOrder();
+    //Obtener las mesas
     getMesasAction();
   }, []);
 
+  //Mostrar indicador de carga mientras se obtienen las mesas
   if(isLoading && mesas.length === 0){
     return (
       <View className="flex-1 justify-center items-center">
@@ -35,7 +38,7 @@ const MesaIndex = () => {
         </View>
 
         
-        <MesaFList mesas={mesas} pedido={true} />
+        <MesaFList mesas={mesas.filter(m => m.estado !== 'RETIRADA')} pedido={true} />
         
       </ScrollView>
 

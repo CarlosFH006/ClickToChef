@@ -23,16 +23,14 @@ const Api = (() => {
                 _dispatch('LOGIN_RESPONSE', msg.payload);
                 break;
 
-            // Lista completa de detalles activos solicitada por la cocina.
-            case 'DETALLES_PEDIDO_RESPONSE': {
-                console.log('[Api] DETALLES_PEDIDO_RESPONSE recibido, items:', msg.payload?.length);
-                const detalles = msg.payload.map(d => _mapearDetalle(d));
-                console.log('[Api] Primer detalle:', detalles[0]);
-                _dispatch('DETALLES_PEDIDO_RESPONSE', detalles);
+            case 'DETALLES_PEDIDO_RESPONSE':
+                _dispatch('DETALLES_PEDIDO_RESPONSE', msg.payload);
                 break;
-            }
 
-            // Actualización en tiempo real cuando cambia el estado de un plato.
+            case 'DETALLES_NUEVOS':
+                _dispatch('DETALLES_NUEVOS', msg.payload);
+                break;
+
             case 'DETALLE_DELETED': {
                 console.log('[Api] DETALLE_DELETED recibido, id:', msg.payload?.id);
                 _dispatch('DETALLE_DELETED', msg.payload);
@@ -45,60 +43,100 @@ const Api = (() => {
                 break;
             }
 
-            // Confirmación del servidor tras cambiar el estado de un detalle.
             case 'UPDATE_ESTADO_DETALLE_RESPONSE':
                 _dispatch('UPDATE_ESTADO_DETALLE_RESPONSE', msg.payload);
                 break;
 
-            // Actualización en tiempo real del estado de una mesa.
             case 'MESA_UPDATED':
                 _dispatch('MESA_UPDATED', msg.payload);
                 break;
 
-            // Actualización en tiempo real de disponibilidad de productos.
             case 'STOCK_UPDATED':
                 _dispatch('STOCK_UPDATED', msg.payload ?? []);
                 break;
 
-            // Nuevo pedido creado o actualizado en tiempo real.
             case 'PEDIDOS_UPDATED':
                 _dispatch('PEDIDOS_UPDATED', msg.payload);
                 break;
 
-            // Nuevo ticket creado al cerrar una mesa.
             case 'TICKET_CREADO':
                 _dispatch('TICKET_CREADO', msg.payload);
                 break;
 
-            // Lista de mesas para el panel de administración.
             case 'MESAS_RESPONSE':
                 _dispatch('MESAS_RESPONSE', msg.payload?.mesas ?? []);
                 break;
 
-            // Menú completo para el panel de productos del administrador.
             case 'MENU_RESPONSE':
                 _dispatch('MENU_RESPONSE', msg.payload);
                 break;
 
-            // Pedidos abiertos con sus detalles para el panel de administración.
             case 'PEDIDOS_ADMIN_RESPONSE':
                 _dispatch('PEDIDOS_ADMIN_RESPONSE', msg.payload ?? []);
                 break;
 
-            // Lista de usuarios sin contraseña para el panel de administración.
             case 'USUARIOS_RESPONSE':
                 _dispatch('USUARIOS_RESPONSE', msg.payload ?? []);
                 break;
 
-            // Lista de ingredientes para el panel de administración.
             case 'INGREDIENTES_RESPONSE':
                 _dispatch('INGREDIENTES_RESPONSE', msg.payload ?? []);
                 break;
 
-            // Lista de tickets para el panel de administración.
-            // El mapeo al modelo Ticket lo hace admin.js para no depender de esa clase aquí.
             case 'TICKETS_RESPONSE':
                 _dispatch('TICKETS_RESPONSE', msg.payload ?? []);
+                break;
+
+            case 'CREAR_MESA_RESPONSE':
+                _dispatch('CREAR_MESA_RESPONSE', msg.payload);
+                break;
+
+            case 'NEW_PRODUCTO':
+                _dispatch('NEW_PRODUCTO', msg.payload);
+                break;
+
+            case 'RECETA_PRODUCTO_RESPONSE':
+                _dispatch('RECETA_PRODUCTO_RESPONSE', msg.payload);
+                break;
+
+            case 'CREAR_PRODUCTO_MENU_RESPONSE':
+                _dispatch('CREAR_PRODUCTO_MENU_RESPONSE', msg.payload);
+                break;
+
+            case 'NEW_MESA':
+                _dispatch('NEW_MESA', msg.payload);
+                break;
+
+            case 'MESA_CAPACIDAD_UPDATED':
+                _dispatch('MESA_CAPACIDAD_UPDATED', msg.payload);
+                break;
+
+            case 'CREAR_INGREDIENTE_RESPONSE':
+                _dispatch('CREAR_INGREDIENTE_RESPONSE', msg.payload);
+                break;
+
+            case 'CATEGORIAS_ADMIN_RESPONSE':
+                _dispatch('CATEGORIAS_ADMIN_RESPONSE', msg.payload ?? []);
+                break;
+
+            case 'CREAR_CATEGORIA_RESPONSE':
+                _dispatch('CREAR_CATEGORIA_RESPONSE', msg.payload);
+                break;
+
+            case 'PRODUCTO_ACTIVO_UPDATED':
+                _dispatch('PRODUCTO_ACTIVO_UPDATED', msg.payload);
+                break;
+
+            case 'PRECIO_PRODUCTO_UPDATED':
+                _dispatch('PRECIO_PRODUCTO_UPDATED', msg.payload);
+                break;
+
+            case 'CAMBIAR_PASSWORD_RESPONSE':
+                _dispatch('CAMBIAR_PASSWORD_RESPONSE', msg.payload);
+                break;
+
+            case 'CREAR_USUARIO_RESPONSE':
+                _dispatch('CREAR_USUARIO_RESPONSE', msg.payload);
                 break;
 
             case 'SERVER_ERROR':
@@ -111,41 +149,29 @@ const Api = (() => {
         }
     }
 
-    //Funcion privada para mapear los detalles de los pedidos que vienen del servidor
-    function _mapearDetalle(d) {
-        return new DetallePedido({
-            id:              d.id,
-            pedidoId:        d.pedidoId,
-            productoId:      d.productoId,
-            nombreProducto:  d.nombreProducto,
-            cantidad:        d.cantidad,
-            notasEspeciales: d.notasEspeciales,
-            estado:          d.estado,
-            hora:            d.horaPedido
-        });
-    }
-
     // Ejecuta el callback registrado para un tipo de mensaje, si existe.
-    // Solo puede haber un handler activo por tipo — el último registrado sobreescribe al anterior.
     function _dispatch(type, payload) {
         if (handlers[type]) handlers[type](payload);
     }
 
-    // Permite a cada página suscribirse a un tipo de mensaje concreto.
+    // Función para que las paginas registren su callback para un tipo de mensaje concreto
+    // Solo puede haber un handler activo por tipo — el último registrado sobreescribe al anterior.
     function on(type, callback) {
         handlers[type] = callback;
     }
 
-    // Envío genérico de mensajes al servidor a través del WebSocket.
+    // Función de envío de mensajes al servidor a través del WebSocket
     function sendMessage(type, payload) {
         return WebSocketService.send({ type, payload });
     }
 
+    //Acciones de envio al websocket
+    
     //Envio de mensaje de login
     function login(username, pass) {
         return sendMessage('LOGIN', { username, pass });
     }
-
+    
     //Envio de mensaje para obtener los detalles de los pedidos activos
     function getDetallesPedido() {
         sendMessage('GET_DETALLES_PEDIDO', null);
@@ -181,11 +207,61 @@ const Api = (() => {
         sendMessage('GET_USUARIOS', null);
     }
 
+    //Envio de mensaje para obtener todas las categorías (incluye vacías)
+    function getCategoriasAdmin() {
+        sendMessage('GET_CATEGORIAS_ADMIN', null);
+    }
+
     //Envio de mensaje para obtener los pedidos abiertos con sus detalles
     function getPedidosAdmin() {
         sendMessage('GET_PEDIDOS_ADMIN', null);
     }
 
+    //Envio de mensaje para obtener la receta de un producto
+    function getRecetaProducto(productoId) {
+        sendMessage('GET_RECETA_PRODUCTO', { productoId });
+    }
+
+    //Envio de mensaje para crear un producto del menú
+    function crearProductoMenu(data) {
+        sendMessage('CREAR_PRODUCTO_MENU', data);
+    }
+
+    //Envio de mensaje para sumar stock a un ingrediente
+    function sumarStock(id, cantidad) {
+        sendMessage('SUMAR_STOCK', { id, cantidad });
+    }
+
+    //Envio de mensaje para crear un nuevo ingrediente
+    function crearIngrediente(nombre, stockActual, unidadMedida, tipo) {
+        sendMessage('CREAR_INGREDIENTE', { nombre, stockActual, unidadMedida, tipo });
+    }
+
+    //Envio de mensaje para crear una nueva categoría
+    function crearCategoria(nombre) {
+        sendMessage('CREAR_CATEGORIA', { nombre });
+    }
+
+    //Envio de mensaje para crear un nuevo usuario
+    function crearUsuario(username, password, nombreCompleto, rol) {
+        sendMessage('CREAR_USUARIO', { username, password, nombreCompleto, rol });
+    }
+
+    //Envio de mensaje para cambiar la contraseña de un usuario
+    function cambiarPassword(id, password) {
+        sendMessage('CAMBIAR_PASSWORD', { id, password });
+    }
+
+    //Envio de mensaje para cambiar el estado de un producto
+    function toggleProductoActivo(id, activo) {
+        sendMessage('TOGGLE_PRODUCTO_ACTIVO', { id, activo });
+    }
+
+    //Envio de mensaje para actualizar el precio de un producto
+    function actualizarPrecioProducto(id, precio) {
+        sendMessage('ACTUALIZAR_PRECIO_PRODUCTO', { id, precio });
+    }
+
     //Exportar las funciones publicas
-    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin };
+    return { on, sendMessage, login, getDetallesPedido, updateEstadoDetalle, getMesas, getMenu, getTickets, getIngredientes, getUsuarios, getPedidosAdmin, getCategoriasAdmin, crearUsuario, cambiarPassword, crearCategoria, crearIngrediente, sumarStock, crearProductoMenu, getRecetaProducto, toggleProductoActivo, actualizarPrecioProducto };
 })();

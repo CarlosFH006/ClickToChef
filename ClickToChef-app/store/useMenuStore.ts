@@ -10,6 +10,10 @@ interface MenuState {
   setMenu: (categorias: Categoria[]) => void;
   setLoading: (loading: boolean) => void;
   setProductoDisponible: (productoId: number, disponible: boolean) => void;
+  setProductoActivo: (productoId: number, activo: boolean) => void;
+  setProductoPrecio: (productoId: number, precio: number) => void;
+  addCategoria: (id: number, nombre: string) => void;
+  addProducto: (categoriaId: number, producto: { id: number; nombre: string; precio: number; disponible: boolean; activo: boolean }) => void;
 }
 
 export const useMenuStore = create<MenuState>((set) => ({
@@ -19,15 +23,42 @@ export const useMenuStore = create<MenuState>((set) => ({
   setMenu: (categorias) => set({ categorias, isLoading: false }),
   setLoading: (loading) => set({ isLoading: loading }),
 
+  addCategoria: (id, nombre) => set((state) => ({
+    categorias: [...state.categorias, { id, nombre, productos: [] }]
+  })),
+
+  addProducto: (categoriaId, producto) => set((state) => ({
+    categorias: state.categorias.map(c =>
+      c.id === categoriaId ? { ...c, productos: [...c.productos, producto] } : c
+    )
+  })),
+
   // Cambiar disponibilidad de un producto
   setProductoDisponible: (productoId, disponible) => set((state) => ({
-    //Recorrer las categorías del menu
     categorias: state.categorias.map(cat => ({
       ...cat,
-      //Recorrer los productos de cada categoría
       productos: cat.productos.map(p =>
-        //Si el producto es el que se busca, cambiar su disponibilidad
         p.id === productoId ? { ...p, disponible } : p
+      )
+    }))
+  })),
+
+  // Cambiar estado activo de un producto
+  setProductoActivo: (productoId, activo) => set((state) => ({
+    categorias: state.categorias.map(cat => ({
+      ...cat,
+      productos: cat.productos.map(p =>
+        p.id === productoId ? { ...p, activo } : p
+      )
+    }))
+  })),
+
+  // Cambiar precio de un producto
+  setProductoPrecio: (productoId, precio) => set((state) => ({
+    categorias: state.categorias.map(cat => ({
+      ...cat,
+      productos: cat.productos.map(p =>
+        p.id === productoId ? { ...p, precio } : p
       )
     }))
   })),

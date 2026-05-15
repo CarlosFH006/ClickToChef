@@ -8,6 +8,7 @@ public class Productos {
     private double precio;
     private int categoriaId;
     private int odooId;
+    private boolean activo = true;
 
     public Productos(int id, String nombre, String descripcion, double precio, int categoriaId, int odooId) {
         this.id = id;
@@ -80,6 +81,14 @@ public class Productos {
 
     public void setOdooId(int odooId) {
         this.odooId = odooId;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 
     @Override

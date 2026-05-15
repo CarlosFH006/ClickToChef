@@ -14,6 +14,7 @@ export const getMesasAction = async () => {
     return true;
   } catch (error) {
     console.error("Error en getMesasAction:", error);
+    useMesaStore.getState().setLoading(false);
     return false;
   }
 };

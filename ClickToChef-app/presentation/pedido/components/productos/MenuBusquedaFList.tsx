@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import { Producto } from '../../../../type/menu-inetrface';
 import MenuCard from './MenuCard';
 
@@ -20,11 +20,13 @@ const MenuBusquedaFList = ({ productos, busqueda }: Props) => {
   }
 
   return (
-    <View>
-      {productos.map(producto => (
-        <MenuCard key={producto.id} producto={producto} />
-      ))}
-    </View>
+    <FlatList
+      data={productos}
+      keyExtractor={(item) => item.id.toString()}
+      scrollEnabled={false}
+      showsVerticalScrollIndicator={false}
+      renderItem={({ item }) => <MenuCard producto={item} />}
+    />
   );
 };
 

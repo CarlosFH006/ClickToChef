@@ -7,9 +7,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RecetasDAO {
 
+    //Query que inserta una receta.
     public static boolean insertarReceta(Recetas receta) {
         String sql = "INSERT INTO recetas (producto_id, ingrediente_id, cantidad_necesaria) VALUES (?, ?, ?)";
 
@@ -25,6 +28,37 @@ public class RecetasDAO {
         }
     }
 
+    //Query que obtiene una receta por su producto.
+    public static ArrayList<Map<String, Object>> obtenerPorProductoConIngrediente(int productoId) {
+        String sql = """
+                SELECT r.cantidad_necesaria,
+                       i.id AS ingrediente_id, i.nombre, i.unidad_medida, i.tipo
+                FROM recetas r
+                JOIN ingredientes i ON r.ingrediente_id = i.id
+                WHERE r.producto_id = ?
+                """;
+        ArrayList<Map<String, Object>> resultado = new ArrayList<>();
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, productoId);
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> fila = new HashMap<>();
+                fila.put("ingredienteId", rs.getInt("ingrediente_id"));
+                fila.put("nombre", rs.getString("nombre"));
+                fila.put("cantidad", rs.getDouble("cantidad_necesaria"));
+                fila.put("unidadMedida", rs.getString("unidad_medida"));
+                fila.put("tipo", rs.getString("tipo"));
+                resultado.add(fila);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener la receta del producto " + productoId, e);
+        }
+        return resultado;
+    }
+
+    //Query que obtiene todas las recetas.
     public static ArrayList<Recetas> obtenerTodas() {
         String sql = "SELECT producto_id, ingrediente_id, cantidad_necesaria FROM recetas";
         ArrayList<Recetas> recetas = new ArrayList<>();

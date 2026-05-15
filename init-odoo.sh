@@ -4,31 +4,35 @@ set -e
 DB_NAME="clicktochefDB"
 ADMIN_EMAIL="clicktochef@clicktochef.com"
 ADMIN_PASSWORD="clicktochef"
+FLAG_FILE="/var/lib/odoo/.initialized"
 
-echo "[Init] Comprobando si la base de datos existe..."
-DB_EXISTS=$(python3 -c "
-import psycopg2, sys
-try:
-    conn = psycopg2.connect(host='db_odoo', dbname='postgres', user='odoo', password='odoo')
-    cur = conn.cursor()
-    cur.execute(\"SELECT 1 FROM pg_database WHERE datname='$DB_NAME'\")
-    print('yes' if cur.fetchone() else 'no')
-    conn.close()
-except Exception as e:
-    print('no')
-" 2>/dev/null)
+# Arreglar permisos del volumen montado (corre como root)
+echo "[Init] Corrigiendo permisos en /var/lib/odoo..."
+chown -R odoo:odoo /var/lib/odoo
+chmod -R u+rwX /var/lib/odoo
 
-if [ "$DB_EXISTS" != "yes" ]; then
-    echo "[Init] Creando base de datos e instalando modulos..."
-    odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale,account,l10n_es --without-demo=all --stop-after-init
+if [ ! -f "$FLAG_FILE" ]; then
+    echo "[Init] Primera ejecucion: creando base de datos e instalando modulos..."
+    runuser -u odoo -- odoo -c /etc/odoo/odoo.conf -i stock,point_of_sale,l10n_es --without-demo=all --stop-after-init
 
-    echo "[Init] Configurando usuario admin y localizacion española..."
-    odoo shell -c /etc/odoo/odoo.conf -d "$DB_NAME" --no-http << EOF
-# Activar idioma español
+    echo "[Init] Cargando traduccion al español..."
+    runuser -u odoo -- odoo -c /etc/odoo/odoo.conf -d "$DB_NAME" --i18n-import=/dev/null --language=es_ES --stop-after-init 2>/dev/null || true
+    runuser -u odoo -- odoo -c /etc/odoo/odoo.conf -d "$DB_NAME" --load-language=es_ES --stop-after-init
+
+    echo "[Init] Configurando usuario admin, localizacion española e impuestos..."
+    runuser -u odoo -- odoo shell -c /etc/odoo/odoo.conf -d "$DB_NAME" --no-http <<EOF
+import base64, os
+
+# Activar idioma español y establecerlo como idioma por defecto del sistema
 env['res.lang']._activate_lang('es_ES')
+lang = env['res.lang'].search([('code', '=', 'es_ES')], limit=1)
+if lang:
+    lang.active = True
+
+# Establecer es_ES como idioma por defecto en los parámetros del sistema
+env['ir.config_parameter'].sudo().set_param('lang', 'es_ES')
 
 # Configurar compañía: nombre, país España, moneda Euro y zona horaria
-import base64, os
 company = env.company
 company.name = 'ClickToChef'
 company.country_id = env.ref('base.es')
@@ -46,12 +50,25 @@ if u:
     u._change_password('$ADMIN_PASSWORD')
     print('[Init] Usuario configurado: $ADMIN_EMAIL')
 
+# Forzar idioma español en todos los usuarios existentes
+for user in env['res.users'].search([]):
+    user.lang = 'es_ES'
+
+# Crear configuracion del TPV
+pos_config = env['pos.config'].search([], limit=1)
+if not pos_config:
+    pos_config = env['pos.config'].create({'name': 'ClickToChef TPV'})
+    print('[Init] Configuracion TPV creada')
+
 env.cr.commit()
-print('[Init] Localizacion española configurada: idioma es_ES, pais España, moneda EUR')
+print('[Init] Configuracion completada: idioma es_ES, pais España, moneda EUR, TPV creado')
 EOF
+
+    touch "$FLAG_FILE"
+    echo "[Init] Inicializacion completada."
 else
-    echo "[Init] La base de datos ya existe, omitiendo inicializacion."
+    echo "[Init] Sistema ya inicializado, arrancando directamente..."
 fi
 
 echo "[Init] Iniciando Odoo..."
-exec odoo -c /etc/odoo/odoo.conf
+exec runuser -u odoo -- odoo -c /etc/odoo/odoo.conf

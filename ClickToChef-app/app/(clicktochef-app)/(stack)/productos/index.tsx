@@ -18,21 +18,28 @@ const ProductosIndex = () => {
   const { mesaId, pedidoId } = useLocalSearchParams();
   const navigation = useNavigation();
 
-  const todosLosProductos = categorias.flatMap(c => c.productos);
+  const busquedaTrim = busqueda.trim();
+  //Crea una copia de categorias, pero solo con los productos activos
+  const categoriasConProductos = categorias
+    .map(c => ({ ...c, productos: c.productos.filter(p => p.activo) }))
+    .filter(c => c.productos.length > 0);
+  //Crea una copia de categoriasConProductos, pero con todos los productos
+  const todosLosProductos = categoriasConProductos.flatMap(c => c.productos);
+  
+  //Filtrar productos por busqueda
   const resultadosBusqueda = todosLosProductos.filter(p =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    p.nombre.toLowerCase().includes(busquedaTrim.toLowerCase())
   );
 
   //Al salir de la pantalla de productos, se libera la mesa y se limpia el pedido
   useEffect(() => {
     //Listener para detectar cuando se sale de la pantalla de productos
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      //Obtener el tipo de acción
+      //Obtener el tipo de acción (POP = botón stack/swipe, GO_BACK = botón físico Android)
       const actionType = e.data.action.type;
-      console.log('Navegación detectada al salir:', actionType);
 
       //Si se sale de la pantalla de productos, se libera la mesa y se limpia el pedido
-      if (actionType === 'POP' && mesaId) {
+      if ((actionType === 'POP' || actionType === 'GO_BACK') && mesaId) {
         const currentItems = useOrderStore.getState().items;
         currentItems.forEach(item => {
           liberarReservaAction(item.id, item.cantidad);
@@ -47,16 +54,19 @@ const ProductosIndex = () => {
     return unsubscribe;
   }, [navigation, mesaId]);
 
+  //Cuando se carguen las categorias, seleccionar la primera
   useEffect(() => {
-    if (categorias.length > 0 && selectedCategoryId === null) {
-      setSelectedCategoryId(categorias[0].id);
+    if (categoriasConProductos.length > 0 && selectedCategoryId === null) {
+      setSelectedCategoryId(categoriasConProductos[0].id);
     }
-  }, [categorias]);
+  }, [categoriasConProductos.length]);
 
+  //Obtiene la categoria seleccionada, según su id
   const filteredCategorias = selectedCategoryId === null
-    ? categorias
-    : categorias.filter(cat => cat.id === selectedCategoryId);
+    ? categoriasConProductos
+    : categoriasConProductos.filter(cat => cat.id === selectedCategoryId);
 
+  //Calcular el total de items del pedido  
   const totalItems = items.reduce((acc, item) => acc + item.cantidad, 0);
 
   if(isLoading){
@@ -95,12 +105,12 @@ const ProductosIndex = () => {
       </View>
 
       {/* Categorías estáticas — ocultas al buscar */}
-      {busqueda === '' && (
+      {busquedaTrim === '' && (
         <View className="py-2 mb-2">
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
-            data={categorias}
+            data={categoriasConProductos}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={{ paddingHorizontal: 20 }}
             renderItem={({ item }) => (
@@ -123,7 +133,7 @@ const ProductosIndex = () => {
 
       {/* Lista scrollable */}
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {busqueda === '' ? (
+        {busquedaTrim === '' ? (
           <CategoriaFList categorias={filteredCategorias} />
         ) : (
           <MenuFList productos={resultadosBusqueda} busqueda={busqueda} />

@@ -7,23 +7,27 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class CategoriasDAO {
 
-    public static boolean insertarCategoria(Categorias categoria) {
+    //Query que inserta una categoria.
+    public static int insertarCategoria(Categorias categoria) {
         String sql = "INSERT INTO categorias (nombre) VALUES (?)";
-
         try {
             Connection conexion = ConexionDB.getConexion();
-            PreparedStatement statement = conexion.prepareStatement(sql);
+            PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, categoria.getNombre());
-            return statement.executeUpdate() > 0;
+            if (statement.executeUpdate() == 0) return -1;
+            ResultSet keys = statement.getGeneratedKeys();
+            return keys.next() ? keys.getInt(1) : -1;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar la categoria", e);
         }
     }
 
+    //Query que devuelve todas las categorias.
     public static ArrayList<Categorias> obtenerTodas() {
         String sql = "SELECT id, nombre FROM categorias";
         ArrayList<Categorias> categorias = new ArrayList<>();
@@ -46,6 +50,7 @@ public class CategoriasDAO {
         return categorias;
     }
 
+    //Query que devuelve todas las categorias con todos sus productos, indicando si estan disponibles o no.
     public static ArrayList<CategoriaPlato> categoriasplatos() {
         //Case sirve para crear una variable booleana en una consulta, devuelve true o false segun la condición del when.
         
@@ -57,6 +62,7 @@ public class CategoriasDAO {
                     p.id AS producto_id,
                     p.nombre AS producto_nombre,
                     p.precio,
+                    p.activo,
                     CASE
                         WHEN EXISTS (
                             SELECT 1
@@ -84,7 +90,8 @@ public class CategoriasDAO {
                         resultSet.getInt("producto_id"),
                         resultSet.getString("producto_nombre"),
                         resultSet.getDouble("precio"),
-                        resultSet.getBoolean("disponible")
+                        resultSet.getBoolean("disponible"),
+                        resultSet.getBoolean("activo")
                 );
                 categoriasPlatos.add(categoriaPlato);
             }

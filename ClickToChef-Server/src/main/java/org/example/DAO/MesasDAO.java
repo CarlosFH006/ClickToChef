@@ -7,25 +7,29 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class MesasDAO {
 
-    public static boolean insertarMesa(Mesas mesa) {
+    //Query que inserta una mesa.
+    public static int insertarMesa(Mesas mesa) {
         String sql = "INSERT INTO mesas (numero, capacidad, estado) VALUES (?, ?, ?)";
-
         try {
             Connection conexion = ConexionDB.getConexion();
-            PreparedStatement statement = conexion.prepareStatement(sql);
+            PreparedStatement statement = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setInt(1, mesa.getNumero());
             statement.setInt(2, mesa.getCapacidad());
             statement.setString(3, convertirEstadoMesaADB(mesa.getEstado()));
-            return statement.executeUpdate() > 0;
+            if (statement.executeUpdate() == 0) return -1;
+            ResultSet keys = statement.getGeneratedKeys();
+            return keys.next() ? keys.getInt(1) : -1;
         } catch (SQLException e) {
             throw new RuntimeException("Error al insertar la mesa", e);
         }
     }
 
+    //Query que devuelve todas las mesas.
     public static ArrayList<Mesas> obtenerTodas() {
         String sql = "SELECT id, numero, capacidad, estado FROM mesas";
         ArrayList<Mesas> mesas = new ArrayList<>();
@@ -50,6 +54,7 @@ public class MesasDAO {
         return mesas;
     }
 
+    //Query que actualiza el estado de una mesa.
     public static boolean actualizarEstadoMesa(int id, EstadoMesa nuevoEstado) {
         String sql = "UPDATE mesas SET estado = ? WHERE id = ?";
 
@@ -64,7 +69,48 @@ public class MesasDAO {
         }
     }
 
-    public static synchronized boolean reservarMesa(int id) {
+    //Query que actualiza la capacidad de una mesa.
+    public static boolean actualizarCapacidadMesa(int id, int capacidad) {
+        String sql = "UPDATE mesas SET capacidad = ? WHERE id = ?";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, capacidad);
+            statement.setInt(2, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar la capacidad de la mesa", e);
+        }
+    }
+
+    //Query que retira una mesa.
+    public static boolean retirarMesa(int id) {
+        String sql = "UPDATE mesas SET estado = 'retirada' WHERE id = ? AND estado = 'libre'";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al retirar la mesa", e);
+        }
+    }
+
+    //Query que activa una mesa.
+    public static boolean activarMesa(int id) {
+        String sql = "UPDATE mesas SET estado = 'libre' WHERE id = ? AND estado = 'retirada'";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al activar la mesa", e);
+        }
+    }
+
+    //Query que reserva una mesa.
+    public static boolean reservarMesa(int id) {
         String sql = "UPDATE mesas SET estado = 'reservada' WHERE id = ? AND estado = 'libre'";
 
         try {

@@ -16,8 +16,10 @@ const PedidosScreen = () => {
 
   //Cargar menu y pedidos del usuario
   useEffect(() => {
+    //Obtener el menu
+    getMenuAction();
+    //Obtener pedidos del usuario
     if (user?.id) {
-      getMenuAction();
       getPedidosUsuarioAction(user.id);
     }
   }, [user]);
@@ -69,10 +71,7 @@ const PedidosScreen = () => {
               </Text>
             </View>
           ) : (
-            <PedidoFList
-              pedidos={pedidos}
-              onPedidoPress={(p) => router.push(`/(clicktochef-app)/(stack)/pedidos/${p.id}`)}
-            />
+            <PedidoFList pedidos={pedidos} />
           )}
         </View>
       </ScrollView>

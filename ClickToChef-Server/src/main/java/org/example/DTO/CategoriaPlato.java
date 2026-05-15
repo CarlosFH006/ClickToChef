@@ -9,14 +9,16 @@ public class CategoriaPlato {
     private String productoNombre;
     private double precio;
     private boolean disponible;
+    private boolean activo;
 
-    public CategoriaPlato(int categoriaId, String categoriaNombre, int productoId, String productoNombre, double precio, boolean disponible) {
+    public CategoriaPlato(int categoriaId, String categoriaNombre, int productoId, String productoNombre, double precio, boolean disponible, boolean activo) {
         this.categoriaId = categoriaId;
         this.categoriaNombre = categoriaNombre;
         this.productoId = productoId;
         this.productoNombre = productoNombre;
         this.precio = precio;
         this.disponible = disponible;
+        this.activo = activo;
     }
 
     public int getCategoriaId() {
@@ -65,5 +67,13 @@ public class CategoriaPlato {
 
     public void setDisponible(boolean disponible) {
         this.disponible = disponible;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 }

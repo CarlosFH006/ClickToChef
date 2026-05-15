@@ -5,30 +5,28 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class WebSocketServidor extends WebSocketServer {
 
-    private static final CopyOnWriteArrayList<WebSocket> clientes = new CopyOnWriteArrayList<>();
     private static WebSocketServidor instance;
 
     public WebSocketServidor(int puerto) {
         super(new InetSocketAddress(puerto));
+
+        //Se almacena la instancia, para usarla en el metodo estatico de broadcastGlobal
         instance=this;
     }
 
-    //Cuando un cliente se conecta
+    //Cuando un cliente se conecta, ClientHandSake es el HTTP inicial que envia el cliente al hacer la conexión.
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        clientes.add(conn);
         System.out.println("WS cliente conectado: " + conn.getRemoteSocketAddress());
     }
 
     //Cuando se pierde la conexión con un cliente
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        clientes.remove(conn);
-        System.out.println("WS cliente desconectado");
+        System.out.println("WS cliente desconectado por: "+reason+" | Codigo: "+code);
     }
 
     //Recibir mensaje de un cliente

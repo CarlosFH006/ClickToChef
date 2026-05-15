@@ -11,14 +11,15 @@ import java.util.ArrayList;
 
 public class UsuariosDAO {
 
+    //Query que inserta un usuario.
     public static boolean insertarUsuario(Usuarios usuario) {
-        String sql = "INSERT INTO usuarios (username, password_hash, nombre_completo, rol) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO usuarios (username, password, nombre_completo, rol) VALUES (?, ?, ?, ?)";
 
         try {
             Connection conexion = ConexionDB.getConexion();
             PreparedStatement statement = conexion.prepareStatement(sql);
             statement.setString(1, usuario.getUsername());
-            statement.setString(2, usuario.getPasswordHash());
+            statement.setString(2, usuario.getPassword());
             statement.setString(3, usuario.getNombreCompleto());
             statement.setString(4, convertirRolUsuarioADB(usuario.getRol()));
             return statement.executeUpdate() > 0;
@@ -27,8 +28,9 @@ public class UsuariosDAO {
         }
     }
 
+    //Query que obtiene todos los usuarios.
     public static ArrayList<Usuarios> obtenerTodos() {
-        String sql = "SELECT id, username, password_hash, nombre_completo, rol FROM usuarios";
+        String sql = "SELECT id, username, password, nombre_completo, rol FROM usuarios";
         ArrayList<Usuarios> usuarios = new ArrayList<>();
 
         try {
@@ -39,7 +41,7 @@ public class UsuariosDAO {
                 Usuarios usuario = new Usuarios(
                         resultSet.getInt("id"),
                         resultSet.getString("username"),
-                        resultSet.getString("password_hash"),
+                        resultSet.getString("password"),
                         resultSet.getString("nombre_completo"),
                         convertirRolUsuarioAEnum(resultSet.getString("rol"))
                 );
@@ -52,6 +54,7 @@ public class UsuariosDAO {
         return usuarios;
     }
 
+    //Query que obtiene todos los usuarios sin contraseña.
     public static ArrayList<Usuarios> obtenerTodosSinPassword() {
         String sql = "SELECT id, username, nombre_completo, rol FROM usuarios";
         ArrayList<Usuarios> usuarios = new ArrayList<>();
@@ -77,6 +80,20 @@ public class UsuariosDAO {
         return usuarios;
     }
 
+    //Query que cambia la contraseña de un usuario.
+    public static boolean cambiarPassword(int id, String nuevaPassword) {
+        String sql = "UPDATE usuarios SET password = ? WHERE id = ?";
+        try {
+            Connection conexion = ConexionDB.getConexion();
+            PreparedStatement statement = conexion.prepareStatement(sql);
+            statement.setString(1, nuevaPassword);
+            statement.setInt(2, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al cambiar la contraseña", e);
+        }
+    }
+
     private static String convertirRolUsuarioADB(RolUsuario rolUsuario) {
         return rolUsuario.name().toLowerCase();
     }
@@ -85,8 +102,9 @@ public class UsuariosDAO {
         return RolUsuario.valueOf(valorBD.toUpperCase());
     }
 
+    //Query que realiza el login.
     public static Usuarios login(String username, String password) {
-        String sql = "SELECT id, username, password_hash, nombre_completo, rol FROM usuarios WHERE username = ? AND password_hash = ?";
+        String sql = "SELECT id, username, password, nombre_completo, rol FROM usuarios WHERE username = ? AND password = ?";
 
         try {
             Connection conexion = ConexionDB.getConexion();
@@ -98,7 +116,7 @@ public class UsuariosDAO {
                 return new Usuarios(
                         resultSet.getInt("id"),
                         resultSet.getString("username"),
-                        resultSet.getString("password_hash"),
+                        resultSet.getString("password"),
                         resultSet.getString("nombre_completo"),
                         convertirRolUsuarioAEnum(resultSet.getString("rol"))
                 );

@@ -63,6 +63,9 @@ public class WebSocketHandler {
                 case "GET_DETALLES_PEDIDO":
                     respuesta = FuncionesServidor.procesarGetDetallesPedido();
                     break;
+                case "GET_CATEGORIAS_ADMIN":
+                    respuesta = FuncionesServidor.procesarGetCategoriasAdmin();
+                    break;
                 case "GET_PEDIDOS_ADMIN":
                     respuesta = FuncionesServidor.procesarGetPedidosAdmin();
                     break;
@@ -77,6 +80,39 @@ public class WebSocketHandler {
                     break;
                 case "CERRAR_MESA":
                     respuesta = FuncionesServidor.procesarCerrarMesa(payload);
+                    break;
+                case "CREAR_MESA":
+                    respuesta = FuncionesServidor.procesarCrearMesa(payload);
+                    break;
+                case "ACTUALIZAR_CAPACIDAD_MESA":
+                    respuesta = FuncionesServidor.procesarActualizarCapacidadMesa(payload);
+                    break;
+                case "GET_RECETA_PRODUCTO":
+                    respuesta = FuncionesServidor.procesarGetRecetaProducto(payload);
+                    break;
+                case "CREAR_PRODUCTO_MENU":
+                    respuesta = FuncionesServidor.procesarCrearProductoMenu(payload);
+                    break;
+                case "SUMAR_STOCK":
+                    respuesta = FuncionesServidor.procesarSumarStock(payload);
+                    break;
+                case "CREAR_INGREDIENTE":
+                    respuesta = FuncionesServidor.procesarCrearIngrediente(payload);
+                    break;
+                case "ACTUALIZAR_PRECIO_PRODUCTO":
+                    respuesta = FuncionesServidor.procesarActualizarPrecioProducto(payload);
+                    break;
+                case "TOGGLE_PRODUCTO_ACTIVO":
+                    respuesta = FuncionesServidor.procesarToggleProductoActivo(payload);
+                    break;
+                case "CREAR_CATEGORIA":
+                    respuesta = FuncionesServidor.procesarCrearCategoria(payload);
+                    break;
+                case "CREAR_USUARIO":
+                    respuesta = FuncionesServidor.procesarCrearUsuario(payload);
+                    break;
+                case "CAMBIAR_PASSWORD":
+                    respuesta = FuncionesServidor.procesarCambiarPassword(payload);
                     break;
                 default:
                     System.out.println("[WebSocket] Tipo desconocido: " + tipo);
