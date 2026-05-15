@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 public class UsuariosDAO {
 
+    //Query que inserta un usuario.
     public static boolean insertarUsuario(Usuarios usuario) {
         String sql = "INSERT INTO usuarios (username, password, nombre_completo, rol) VALUES (?, ?, ?, ?)";
 
@@ -27,6 +28,7 @@ public class UsuariosDAO {
         }
     }
 
+    //Query que obtiene todos los usuarios.
     public static ArrayList<Usuarios> obtenerTodos() {
         String sql = "SELECT id, username, password, nombre_completo, rol FROM usuarios";
         ArrayList<Usuarios> usuarios = new ArrayList<>();
@@ -52,6 +54,7 @@ public class UsuariosDAO {
         return usuarios;
     }
 
+    //Query que obtiene todos los usuarios sin contraseña.
     public static ArrayList<Usuarios> obtenerTodosSinPassword() {
         String sql = "SELECT id, username, nombre_completo, rol FROM usuarios";
         ArrayList<Usuarios> usuarios = new ArrayList<>();
@@ -77,6 +80,7 @@ public class UsuariosDAO {
         return usuarios;
     }
 
+    //Query que cambia la contraseña de un usuario.
     public static boolean cambiarPassword(int id, String nuevaPassword) {
         String sql = "UPDATE usuarios SET password = ? WHERE id = ?";
         try {
@@ -98,6 +102,7 @@ public class UsuariosDAO {
         return RolUsuario.valueOf(valorBD.toUpperCase());
     }
 
+    //Query que realiza el login.
     public static Usuarios login(String username, String password) {
         String sql = "SELECT id, username, password, nombre_completo, rol FROM usuarios WHERE username = ? AND password = ?";
 

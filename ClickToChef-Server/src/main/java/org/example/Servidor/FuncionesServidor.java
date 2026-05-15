@@ -7,7 +7,6 @@ import org.example.Odoo.FuncionesOdoo;
 import org.example.DTO.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 //Funciones para ejecutar en las llamadas de ServerSocket y de WebSocket
@@ -81,11 +80,11 @@ public class FuncionesServidor {
     }
 
     public static String procesarReservarProducto(JsonObject payload) {
-        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
+        if (payload == null || !payload.has("productoId")) {
             return GeneradorJSON.generarError("Payload de RESERVAR_PRODUCTO incompleto");
         }
 
-        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        int productoId = payload.get("productoId").getAsInt();
         int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
         System.out.println("[FuncionesServidor] Reservando producto " + productoId + " (cantidad " + cantidad + ")");
 
@@ -98,11 +97,11 @@ public class FuncionesServidor {
     }
 
     public static String procesarLiberarReserva(JsonObject payload) {
-        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
+        if (payload == null || !payload.has("productoId")) {
             return GeneradorJSON.generarError("Payload de LIBERAR_RESERVA incompleto");
         }
 
-        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        int productoId = payload.get("productoId").getAsInt();
         int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
         System.out.println("[FuncionesServidor] Liberando reserva producto " + productoId + " (cantidad " + cantidad + ")");
 
@@ -119,11 +118,11 @@ public class FuncionesServidor {
 
     //Este método es similar al anterior pero confirma la reserva y resta el stock
     public static String procesarFinalizarReserva(JsonObject payload) {
-        if (payload == null || (!payload.has("productoId") && !payload.has("id"))) {
+        if (payload == null || !payload.has("productoId")) {
             return GeneradorJSON.generarError("Payload de FINALIZAR_RESERVA incompleto");
         }
 
-        int productoId = payload.has("productoId") ? payload.get("productoId").getAsInt() : payload.get("id").getAsInt();
+        int productoId = payload.get("productoId").getAsInt();
         int cantidad = payload.has("cantidad") ? payload.get("cantidad").getAsInt() : 1;
         System.out.println("[FuncionesServidor] Finalizando reserva producto " + productoId + " (cantidad " + cantidad + ")");
 
@@ -539,7 +538,7 @@ public class FuncionesServidor {
         try {
             String nombre = payload.get("nombre").getAsString().trim();
             if (nombre.isEmpty()) return GeneradorJSON.generarError("El nombre de la categoría no puede estar vacío");
-            int id = CategoriasDAO.insertarCategoria(new org.example.DTO.Categorias(nombre));
+            int id = CategoriasDAO.insertarCategoria(new Categorias(nombre));
             if (id == -1) return GeneradorJSON.generarCrearCategoriaResponse(false, "No se pudo crear la categoría");
             Servidor.broadcast(GeneradorJSON.generarNuevaCategoria(id, nombre));
             System.out.println("[FuncionesServidor] Categoría '" + nombre + "' creada con ID: " + id);
@@ -599,7 +598,7 @@ public class FuncionesServidor {
         }
         try {
             int productoId = payload.get("productoId").getAsInt();
-            List<Map<String, Object>> ingredientes = RecetasDAO.obtenerPorProductoConIngrediente(productoId);
+            ArrayList<Map<String, Object>> ingredientes = RecetasDAO.obtenerPorProductoConIngrediente(productoId);
             return GeneradorJSON.generarRecetaProductoResponse(productoId, ingredientes);
         } catch (Exception e) {
             return GeneradorJSON.generarError("Error al obtener receta: " + e.getMessage());
@@ -611,10 +610,10 @@ public class FuncionesServidor {
             return GeneradorJSON.generarCrearProductoResponse(false, "Payload incompleto");
         }
         try {
-            String nombre       = payload.get("nombre").getAsString().trim();
-            double precio       = payload.get("precio").getAsDouble();
-            int categoriaId     = payload.get("categoriaId").getAsInt();
-            boolean esDirecto   = payload.has("esProductoDirecto") && payload.get("esProductoDirecto").getAsBoolean();
+            String nombre = payload.get("nombre").getAsString().trim();
+            double precio = payload.get("precio").getAsDouble();
+            int categoriaId = payload.get("categoriaId").getAsInt();
+            boolean esDirecto = payload.has("esProductoDirecto") && payload.get("esProductoDirecto").getAsBoolean();
 
             int ingredienteDirectoId = -1;
 
@@ -668,16 +667,23 @@ public class FuncionesServidor {
             return GeneradorJSON.generarCrearIngredienteResponse(false, "Payload incompleto");
         }
         try {
-            String nombre      = payload.get("nombre").getAsString().trim();
+            String nombre = payload.get("nombre").getAsString().trim();
             double stockActual = payload.get("stockActual").getAsDouble();
-            String unidadStr   = payload.get("unidadMedida").getAsString().toLowerCase();
-            String tipoStr     = payload.get("tipo").getAsString().toLowerCase();
+            String unidadStr = payload.get("unidadMedida").getAsString().toLowerCase();
+            String tipoStr = payload.get("tipo").getAsString().toLowerCase();
 
-            MetodoMedida unidad = switch (unidadStr) {
-                case "kg"     -> MetodoMedida.KG;
-                case "litros" -> MetodoMedida.LITROS;
-                default       -> MetodoMedida.UNIDAD;
-            };
+            MetodoMedida unidad;
+            switch (unidadStr) {
+                case "kg": 
+                    unidad = MetodoMedida.KG; 
+                    break;
+                case "litros": 
+                    unidad = MetodoMedida.LITROS; 
+                    break;
+                default: 
+                    unidad = MetodoMedida.UNIDAD; 
+                    break;
+            }
             TipoIngrediente tipo = tipoStr.equals("producto_terminado")
                     ? TipoIngrediente.PRODUCTO_TERMINADO
                     : TipoIngrediente.MATERIA_PRIMA;
@@ -689,8 +695,8 @@ public class FuncionesServidor {
             int odooId = FuncionesOdoo.registrarIngredienteEnOdoo(id, nombre, stockActual);
             if (odooId != -1) IngredientesDAO.actualizarOdooProductId(id, odooId);
 
-            broadcastIngredientes(); // actualiza la tabla del admin directamente
-            broadcastNoDisponibles(); // notifica disponibilidad a la app
+            broadcastIngredientes();
+            broadcastNoDisponibles();
 
             System.out.println("[FuncionesServidor] Ingrediente '" + nombre + "' creado con ID: " + id);
             return GeneradorJSON.generarCrearIngredienteResponse(true, null);
@@ -708,7 +714,6 @@ public class FuncionesServidor {
         try {
             RolUsuario rol = RolUsuario.valueOf(payload.get("rol").getAsString().toUpperCase());
             Usuarios usuario = new Usuarios(
-                    0,
                     payload.get("username").getAsString(),
                     payload.get("password").getAsString(),
                     payload.get("nombreCompleto").getAsString(),
@@ -719,7 +724,7 @@ public class FuncionesServidor {
             return GeneradorJSON.generarCrearUsuarioResponse(success);
         } catch (Exception e) {
             System.err.println("[FuncionesServidor] Error al crear usuario: " + e.getMessage());
-            return GeneradorJSON.generarError("Error al crear el usuario: " + e.getMessage());
+            return GeneradorJSON.generarCrearUsuarioResponse(false);
         }
     }
 

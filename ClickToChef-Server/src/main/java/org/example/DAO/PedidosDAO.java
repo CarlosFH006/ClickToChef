@@ -12,6 +12,7 @@ import java.sql.Statement;
 
 public class PedidosDAO {
 
+    //Query que inserta un pedido.
     public static int insertarPedido(Pedidos pedido) {
         String sql = "INSERT INTO pedidos (mesa_id, usuario_id, fecha_creacion, estado) VALUES (?, ?, ?, ?)";
 
@@ -39,6 +40,7 @@ public class PedidosDAO {
         }
     }
 
+    //Query que devuelve todos los pedidos con sus detalles.
     public static ArrayList<Pedidos> obtenerTodos() {
         String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos ORDER BY fecha_creacion DESC";
         ArrayList<Pedidos> pedidos = new ArrayList<>();
@@ -68,6 +70,7 @@ public class PedidosDAO {
         return pedidos;
     }
 
+    //Query que devuelve los pedidos de un usuario que esten abiertos.
     public static ArrayList<Pedidos> obtenerPorUsuario(int usuarioId) {
         String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE usuario_id = ? AND estado = 'abierta'";
         ArrayList<Pedidos> pedidos = new ArrayList<>();
@@ -98,6 +101,7 @@ public class PedidosDAO {
         return pedidos;
     }
 
+    //Query que devuelve un pedido por su id con sus detalles.
     public static Pedidos obtenerPedidoPorId(int id) {
         String sql = "SELECT id, mesa_id, usuario_id, fecha_creacion, estado FROM pedidos WHERE id = ?";
         Pedidos pedido = null;
@@ -127,6 +131,7 @@ public class PedidosDAO {
         return pedido;
     }
 
+    //Query que cambia el estado de un pedido a "cerrada".
     public static boolean cerrarPedido(int id) {
         String sql = "UPDATE pedidos SET estado = 'cerrada' WHERE id = ?";
 
@@ -140,6 +145,7 @@ public class PedidosDAO {
         }
     }
 
+    //Query que cambia el estado de un pedido a "cancelado".
     public static boolean cancelarPedido(int id) {
         String sql = "UPDATE pedidos SET estado = 'cancelado' WHERE id = ? AND estado = 'abierta'";
 

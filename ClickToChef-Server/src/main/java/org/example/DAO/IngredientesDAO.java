@@ -14,11 +14,12 @@ import java.util.ArrayList;
 public class IngredientesDAO {
 
     private static String convertirMetodoMedidaADB(MetodoMedida metodo) {
-        return switch (metodo) {
-            case KG     -> "kg";
-            case LITROS -> "litros";
-            case UNIDAD -> "unidades";
-        };
+        switch (metodo) {
+            case KG: return "kg";
+            case LITROS: return "litros";
+            case UNIDAD: return "unidades";
+            default: return "unidades";
+        }
     }
 
     private static String convertirTipoIngredienteADB(TipoIngrediente tipo) {
@@ -27,21 +28,22 @@ public class IngredientesDAO {
 
     private static MetodoMedida parsearMetodoMedida(String valor) {
         if (valor == null) return MetodoMedida.UNIDAD;
-        return switch (valor.toLowerCase()) {
-            case "kg" -> MetodoMedida.KG;
-            case "litros" -> MetodoMedida.LITROS;
-            default -> MetodoMedida.UNIDAD;
-        };
+        switch (valor.toLowerCase()) {
+            case "kg": return MetodoMedida.KG;
+            case "litros": return MetodoMedida.LITROS;
+            default: return MetodoMedida.UNIDAD;
+        }
     }
 
     private static TipoIngrediente parsearTipoIngrediente(String valor) {
         if (valor == null) return TipoIngrediente.MATERIA_PRIMA;
-        return switch (valor.toLowerCase()) {
-            case "producto_terminado" -> TipoIngrediente.PRODUCTO_TERMINADO;
-            default -> TipoIngrediente.MATERIA_PRIMA;
-        };
+        switch (valor.toLowerCase()) {
+            case "producto_terminado": return TipoIngrediente.PRODUCTO_TERMINADO;
+            default: return TipoIngrediente.MATERIA_PRIMA;
+        }
     }
 
+    //Query que inserta un ingrediente.
     public static int insertarIngrediente(Ingredientes ingrediente) {
         String sql = "INSERT INTO ingredientes (nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id) VALUES (?, ?, ?, ?, ?, ?)";
         try {
@@ -61,6 +63,7 @@ public class IngredientesDAO {
         }
     }
 
+    //Query que devuelve todos los ingredientes.
     public static ArrayList<Ingredientes> obtenerTodos() {
         String sql = "SELECT id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id FROM ingredientes";
         ArrayList<Ingredientes> ingredientes = new ArrayList<>();
@@ -88,6 +91,7 @@ public class IngredientesDAO {
         return ingredientes;
     }
 
+    //Query que suma stock a un ingrediente.
     public static boolean sumarStock(int id, double cantidad) {
         String sql = "UPDATE ingredientes SET stock_actual = stock_actual + ? WHERE id = ?";
         try {
@@ -101,6 +105,7 @@ public class IngredientesDAO {
         }
     }
 
+    //Query que obtiene un ingrediente por su id.
     public static Ingredientes obtenerPorId(int id) {
         String sql = "SELECT id, nombre, stock_actual, stock_reservado, unidad_medida, tipo, odoo_product_id FROM ingredientes WHERE id = ?";
         try {
@@ -123,6 +128,7 @@ public class IngredientesDAO {
         return null;
     }
 
+    //Query que actualiza el odoo_product_id de un ingrediente.
     public static boolean actualizarOdooProductId(int ingredienteId, int odooProductId) {
         String sql = "UPDATE ingredientes SET odoo_product_id = ? WHERE id = ?";
 

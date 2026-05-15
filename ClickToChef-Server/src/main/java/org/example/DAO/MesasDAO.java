@@ -12,6 +12,7 @@ import java.util.ArrayList;
 
 public class MesasDAO {
 
+    //Query que inserta una mesa.
     public static int insertarMesa(Mesas mesa) {
         String sql = "INSERT INTO mesas (numero, capacidad, estado) VALUES (?, ?, ?)";
         try {
@@ -28,6 +29,7 @@ public class MesasDAO {
         }
     }
 
+    //Query que devuelve todas las mesas.
     public static ArrayList<Mesas> obtenerTodas() {
         String sql = "SELECT id, numero, capacidad, estado FROM mesas";
         ArrayList<Mesas> mesas = new ArrayList<>();
@@ -52,6 +54,7 @@ public class MesasDAO {
         return mesas;
     }
 
+    //Query que actualiza el estado de una mesa.
     public static boolean actualizarEstadoMesa(int id, EstadoMesa nuevoEstado) {
         String sql = "UPDATE mesas SET estado = ? WHERE id = ?";
 
@@ -66,6 +69,7 @@ public class MesasDAO {
         }
     }
 
+    //Query que actualiza la capacidad de una mesa.
     public static boolean actualizarCapacidadMesa(int id, int capacidad) {
         String sql = "UPDATE mesas SET capacidad = ? WHERE id = ?";
         try {
@@ -79,6 +83,7 @@ public class MesasDAO {
         }
     }
 
+    //Query que retira una mesa.
     public static boolean retirarMesa(int id) {
         String sql = "UPDATE mesas SET estado = 'retirada' WHERE id = ? AND estado = 'libre'";
         try {
@@ -91,6 +96,7 @@ public class MesasDAO {
         }
     }
 
+    //Query que activa una mesa.
     public static boolean activarMesa(int id) {
         String sql = "UPDATE mesas SET estado = 'libre' WHERE id = ? AND estado = 'retirada'";
         try {
@@ -103,7 +109,8 @@ public class MesasDAO {
         }
     }
 
-    public static synchronized boolean reservarMesa(int id) {
+    //Query que reserva una mesa.
+    public static boolean reservarMesa(int id) {
         String sql = "UPDATE mesas SET estado = 'reservada' WHERE id = ? AND estado = 'libre'";
 
         try {

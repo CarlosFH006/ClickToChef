@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 public class TicketsDAO {
 
+    //Query que inserta un ticket.
     public static boolean insertarTicket(Tickets ticket) {
         String sql = "INSERT INTO tickets (pedido_id, total_importe, fecha_pago, referencia_factura_odoo, metodo_pago) VALUES (?, ?, ?, ?, ?)";
 
@@ -28,6 +29,7 @@ public class TicketsDAO {
         }
     }
 
+    //Query que devuelve todos los tickets.
     public static ArrayList<Tickets> obtenerTodos() {
         String sql = "SELECT id, pedido_id, total_importe, fecha_pago, referencia_factura_odoo, metodo_pago FROM tickets";
         ArrayList<Tickets> tickets = new ArrayList<>();
@@ -54,6 +56,7 @@ public class TicketsDAO {
         return tickets;
     }
 
+    //Query que actualiza la referencia Odoo de un ticket.
     public static boolean actualizarReferenciaOdoo(int pedidoId, String referencia) {
         String sql = "UPDATE tickets SET referencia_factura_odoo = ? WHERE pedido_id = ?";
         try {

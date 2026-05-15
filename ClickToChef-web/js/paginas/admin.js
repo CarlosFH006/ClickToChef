@@ -80,9 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('')}
         `;
 
-        // Cache de categorías para el autocomplete del modal de producto
-        _categoriasAdmin = categorias.map(c => ({ id: c.id, nombre: c.nombre }));
-
         // Almacena todos los productos con su categoría para poder filtrarlos sin re-fetch
         const todosLosProductos = categorias.flatMap(cat =>
             cat.productos.map(p => ({ ...p, categoria: cat.nombre, categoriaId: cat.id }))
@@ -94,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Ingredientes ---
     // Muestra id, nombre, stock actual, stock reservado, unidad y tipo
     Api.on('INGREDIENTES_RESPONSE', (ingredientes) => {
-        _ingredientesAdmin = ingredientes; // cache para el modal de producto
+        _ingredientesAdmin = ingredientes;
         const tbody = document.getElementById('tabla-ingredientes');
         if (!ingredientes.length) {
             tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-secundario text-sm">Sin ingredientes</td></tr>';
@@ -284,7 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
         _renderPedidos(pedidos);
     });
 
-    // El panel reacciona a los broadcasts del servidor sin que el usuario haga nada
 
     // Mesa cambió de estado → refrescar tabla de mesas
     Api.on('CREAR_MESA_RESPONSE', ({ success, mensaje }) => {
@@ -344,8 +340,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('nuevo-password').value = '';
             document.getElementById('nuevo-nombre').value = '';
             document.getElementById('nuevo-rol').value = 'CAMARERO';
+            msg.textContent = '✓ Usuario creado correctamente';
+            msg.className = 'text-sm text-green-600';
+            msg.classList.remove('hidden');
             Api.getUsuarios();
-            setTimeout(() => cerrarModalUsuario(), 800);
+            setTimeout(() => cerrarModalUsuario(), 1500);
         } else {
             msg.textContent = 'Error: el usuario ya existe o los datos son inválidos';
             msg.className = 'text-sm text-error';
@@ -510,7 +509,6 @@ function _actualizarStockProductos(noDisponibles) {
     filtrarProductos(isNaN(catId) ? null : catId);
 }
 
-// Genera los botones de filtro por estado de pedido
 let _sumarStockId = null;
 
 function abrirModalSumarStock(id, nombre, stockActual, unidad) {

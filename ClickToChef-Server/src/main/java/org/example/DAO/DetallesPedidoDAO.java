@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 public class DetallesPedidoDAO {
 
+    //Query que inserta un detalle de pedido.
     public static boolean insertarDetallePedido(DetallesPedido detallePedido) {
         String sql = "INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, precio_unitario, notas_especiales, estado, hora_pedido) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -30,13 +31,16 @@ public class DetallesPedidoDAO {
         }
     }
 
+    //Query que devuelve todos los detalles de pedido que no esten servidos y que el pedido este abierto.
     public static ArrayList<DetallesPedido> obtenerTodos() {
-        String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
-                     "dp.cantidad, dp.precio_unitario, dp.notas_especiales, dp.estado, dp.hora_pedido " +
-                     "FROM detalles_pedido dp " +
-                     "JOIN productos p ON dp.producto_id = p.id " +
-                     "JOIN pedidos pe ON dp.pedido_id = pe.id " +
-                     "WHERE dp.estado <> 'servido' AND pe.estado = 'abierta'";
+        String sql = """
+                    SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto,
+                    dp.cantidad, dp.precio_unitario, dp.notas_especiales, dp.estado, dp.hora_pedido
+                    FROM detalles_pedido dp
+                    JOIN productos p ON dp.producto_id = p.id
+                    JOIN pedidos pe ON dp.pedido_id = pe.id
+                    WHERE dp.estado <> 'servido' AND pe.estado = 'abierta'
+                    """;
         ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
         try {
@@ -64,12 +68,15 @@ public class DetallesPedidoDAO {
         return detalles;
     }
 
+    //Query que devuelve un detalle de pedido por su id.
     public static DetallesPedido obtenerPorId(int id) {
-        String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
-                     "dp.cantidad, dp.precio_unitario, dp.notas_especiales, dp.estado, dp.hora_pedido " +
-                     "FROM detalles_pedido dp " +
-                     "JOIN productos p ON dp.producto_id = p.id " +
-                     "WHERE dp.id = ?";
+        String sql = """
+                SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto,
+                dp.cantidad, dp.precio_unitario, dp.notas_especiales, dp.estado, dp.hora_pedido
+                FROM detalles_pedido dp
+                JOIN productos p ON dp.producto_id = p.id
+                WHERE dp.id = ?
+                """;
 
         try {
             Connection conexion = ConexionDB.getConexion();
@@ -96,12 +103,15 @@ public class DetallesPedidoDAO {
         return null;
     }
 
+    //Query que devuelve los detalles de pedido por su id de pedido.
     public static ArrayList<DetallesPedido> obtenerPorPedido(int pedidoId) {
-        String sql = "SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto, " +
-                     "dp.cantidad, dp.precio_unitario, dp.notas_especiales, dp.estado, dp.hora_pedido " +
-                     "FROM detalles_pedido dp " +
-                     "JOIN productos p ON dp.producto_id = p.id " +
-                     "WHERE dp.pedido_id = ?";
+        String sql = """
+                SELECT dp.id, dp.pedido_id, dp.producto_id, p.nombre AS nombre_producto,
+                dp.cantidad, dp.precio_unitario, dp.notas_especiales, dp.estado, dp.hora_pedido
+                FROM detalles_pedido dp
+                JOIN productos p ON dp.producto_id = p.id
+                WHERE dp.pedido_id = ?
+                """;
         ArrayList<DetallesPedido> detalles = new ArrayList<>();
 
         try {
@@ -130,6 +140,7 @@ public class DetallesPedidoDAO {
         return detalles;
     }
 
+    //Query que actualiza el estado de un detalle de pedido.
     public static boolean updateEstado(int id, EstadoDetallePedido nuevoEstado) {
         String sql = "UPDATE detalles_pedido SET estado = ? WHERE id = ?";
 
@@ -143,7 +154,8 @@ public class DetallesPedidoDAO {
             throw new RuntimeException("Error al actualizar el estado del detalle del pedido", e);
         }
     }
-
+    
+    //Query que elimina un detalle de pedido por su id.
     public static boolean eliminarDetalle(int id) {
         String sql = "DELETE FROM detalles_pedido WHERE id = ?";
         try {
@@ -155,7 +167,7 @@ public class DetallesPedidoDAO {
             throw new RuntimeException("Error al eliminar el detalle del pedido", e);
         }
     }
-
+    
     private static String convertirEstadoDetalleADB(EstadoDetallePedido estadoDetallePedido) {
         return estadoDetallePedido.name().toLowerCase().replace('_', ' ');
     }

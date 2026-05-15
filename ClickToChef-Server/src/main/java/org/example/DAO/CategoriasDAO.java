@@ -12,6 +12,7 @@ import java.util.ArrayList;
 
 public class CategoriasDAO {
 
+    //Query que inserta una categoria.
     public static int insertarCategoria(Categorias categoria) {
         String sql = "INSERT INTO categorias (nombre) VALUES (?)";
         try {
@@ -26,6 +27,7 @@ public class CategoriasDAO {
         }
     }
 
+    //Query que devuelve todas las categorias.
     public static ArrayList<Categorias> obtenerTodas() {
         String sql = "SELECT id, nombre FROM categorias";
         ArrayList<Categorias> categorias = new ArrayList<>();
@@ -48,6 +50,7 @@ public class CategoriasDAO {
         return categorias;
     }
 
+    //Query que devuelve todas las categorias con todos sus productos, indicando si estan disponibles o no.
     public static ArrayList<CategoriaPlato> categoriasplatos() {
         //Case sirve para crear una variable booleana en una consulta, devuelve true o false segun la condición del when.
         

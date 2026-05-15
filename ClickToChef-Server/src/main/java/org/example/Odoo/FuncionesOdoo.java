@@ -34,8 +34,8 @@ import java.util.Map;
 public class FuncionesOdoo {
 
     // Lee los parámetros de conexión desde config.properties
-    private static String urlOdoo() { return ObtenerProperties.obtenerParametro("odoo.url"); }
-    private static String db()      { return ObtenerProperties.obtenerParametro("odoo.db"); }
+    private static String urlOdoo(){ return ObtenerProperties.obtenerParametro("odoo.url"); }
+    private static String db(){ return ObtenerProperties.obtenerParametro("odoo.db"); }
     private static String username(){ return ObtenerProperties.obtenerParametro("odoo.user"); }
     private static String password(){ return ObtenerProperties.obtenerParametro("odoo.password"); }
 
@@ -47,12 +47,18 @@ public class FuncionesOdoo {
     private static int autenticar() {
         try {
             XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+            //Configura la URL del servidor
             config.setServerURL(new URL(urlOdoo() + "/xmlrpc/2/common"));
+            //Habilita las extensiones, que no estan habilitadas por defecto, por ejemplo tipos de datos adicionales
             config.setEnabledForExtensions(true);
+            //Crea el cliente y le establece la configuración
             XmlRpcClient client = new XmlRpcClient();
             client.setConfig(config);
+            //Intenta hacer login en Odoo
             Object result = client.execute("authenticate", new Object[]{db(), username(), password(), new HashMap<>()});
+            //Comprueba si el resultado es un entero, si no lo es significa que el inicio de sesión devolvio false
             if (!(result instanceof Integer)) throw new RuntimeException("Autenticación fallida en Odoo");
+            //Devuelve el UID, para identificar al usuario en las siguientes llamadas
             return (Integer) result;
         } catch (Exception e) {
             throw new RuntimeException("Error al autenticar en Odoo", e);
@@ -84,14 +90,19 @@ public class FuncionesOdoo {
      */
     private static int obtenerLocationStock(XmlRpcClient models, int uid) {
         try {
+            //Creamos los argumentos para la llamada a Odoo.
             Map<String, Object> kwargs = new HashMap<>();
+            //Le decimos que campos queremos obtener
             kwargs.put("fields", new Object[]{"lot_stock_id"});
+            //Le decimos que solo queremos 1 resultado
             kwargs.put("limit", 1);
+            //Llamamos al modelo stock.warehouse y usamos su método search_read para buscar registros.
             Object[] resultado = (Object[]) models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "stock.warehouse", "search_read",
                     new Object[]{new Object[]{}},
                     kwargs
             });
+            //Si no se encuentra ningun warehouse, lanza una excepción.
             if (resultado.length == 0) throw new RuntimeException("No se encontró ningún almacén en Odoo");
             // lot_stock_id es un Many2one → Odoo lo devuelve como [id, nombre]
             Object[] lotStock = (Object[]) ((Map<?, ?>) resultado[0]).get("lot_stock_id");
@@ -164,6 +175,7 @@ public class FuncionesOdoo {
             kwargs.put("limit", 1);
             Object[] resultado = (Object[]) models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "product.template", "search_read",
+                    // Nivel 1: Lista de argumentos | Nivel 2: Filtro (Domain) | Nivel 3: Condición específica [id = odooId]
                     new Object[]{new Object[]{new Object[]{"id", "=", odooId}}},
                     kwargs
             });
@@ -186,17 +198,22 @@ public class FuncionesOdoo {
             Map<String, Object> vals = new HashMap<>();
             vals.put("name", nombre);
             vals.put("type", tipo);
+            //Si el tipo es "consu", establecemos is_storable a true.
             if (tipo.equals("consu")) vals.put("is_storable", true);
+            //Si el precio es mayor que 0, establecemos el precio de venta.
             if (precio > 0) vals.put("list_price", precio);
+            //Si el tipo es "service", obtenemos el impuesto del 10% y lo asignamos al producto.
             if (tipo.equals("service")) {
                 int taxId = obtenerImpuesto10(models, uid);
-                if (taxId > 0) vals.put("taxes_id", new Object[]{new Object[]{6, 0, new Object[]{taxId}}});
+                if (taxId > 0) vals.put("taxes_id", new Object[]{new Object[]{6, 0, new Object[]{taxId}}}); //6 Significa que es un set, el 0 es porque se esperan 3 posiciones pero no se usa
             }
+            //Llamamos al modelo product.template y usamos su método create para crear un nuevo producto.
             Object resultado = models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "product.template", "create",
                     new Object[]{vals},
                     new HashMap<>()
             });
+            //El resultado es el ID del producto creado.
             return (Integer) resultado;
         } catch (Exception e) {
             throw new RuntimeException("Error al crear producto en Odoo: " + nombre, e);
@@ -242,6 +259,7 @@ public class FuncionesOdoo {
         try {
             Map<String, Object> kwargs = new HashMap<>();
             kwargs.put("fields", new Object[]{"id", "quantity"});
+            //Busca el registro de stock para el producto y la ubicación dados.
             Object[] quants = (Object[]) models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "stock.quant", "search_read",
                     new Object[]{new Object[]{
@@ -253,17 +271,17 @@ public class FuncionesOdoo {
 
             if (quants.length > 0) {
                 Map<?, ?> quant = (Map<?, ?>) quants[0];
-                double stockOdoo = ((Number) quant.get("quantity")).doubleValue();
-                if (Math.abs(stockOdoo - stock) > 0.001) {
-                    Map<String, Object> vals = new HashMap<>();
-                    vals.put("quantity", stock);
-                    models.execute("execute_kw", new Object[]{
-                            db(), uid, password(), "stock.quant", "write",
-                            new Object[]{new Object[]{(Integer) quant.get("id")}, vals},
-                            new HashMap<>()
-                    });
-                }
+                Map<String, Object> vals = new HashMap<>();
+                vals.put("quantity", stock);
+                //Si la cantidad es distinta de 0, actualiza el registro de stock.
+                models.execute("execute_kw", new Object[]{
+                        db(), uid, password(), "stock.quant", "write",
+                        new Object[]{new Object[]{(Integer) quant.get("id")}, vals},
+                        new HashMap<>()
+                });
+                
             } else {
+                //Si no existe el registro de stock, lo crea.
                 Map<String, Object> vals = new HashMap<>();
                 vals.put("product_id", odooProductId);
                 vals.put("location_id", locationId);
@@ -320,6 +338,7 @@ public class FuncionesOdoo {
                     db(), uid, password(), "pos.session", "search_read",
                     new Object[]{new Object[]{
                             new Object[]{"state", "in", new Object[]{"opened", "opening_control"}},
+                            //Se excluyen las sesiones de "rescue", que son las que se recuperan cuando hay un error y se vuelven a crear.
                             new Object[]{"rescue", "=", false}
                     }},
                     kwargs
@@ -340,18 +359,24 @@ public class FuncionesOdoo {
             Map<String, Object> kwargs = new HashMap<>();
             kwargs.put("fields", new Object[]{"id"});
             kwargs.put("limit", 1);
+            //Se busca la primera configuración de TPV disponible.
             Object[] configs = (Object[]) models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "pos.config", "search_read",
                     new Object[]{new Object[]{}}, kwargs
             });
+            //Si no hay ninguna configuración de TPV disponible, se lanza una excepción.
             if (configs.length == 0) throw new RuntimeException("No hay ninguna configuración de TPV en Odoo");
             int configId = (Integer) ((Map<?, ?>) configs[0]).get("id");
+
+            //Creamos una nueva sesión de TPV con la configuración disponible.
             Map<String, Object> sessionVals = new HashMap<>();
             sessionVals.put("config_id", configId);
+            //Creamos la nueva sesion y obtenemos su ID.
             int sessionId = (Integer) models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "pos.session", "create",
                     new Object[]{sessionVals}, new HashMap<>()
             });
+            //Abrimos la nueva sesión de TPV.
             models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "pos.session", "action_pos_session_open",
                     new Object[]{new Object[]{sessionId}}, new HashMap<>()
@@ -370,6 +395,7 @@ public class FuncionesOdoo {
      */
     private static int obtenerMetodoPago(XmlRpcClient models, int uid, int sessionId, String metodoPago) {
         try {
+            //Obtiene todos los métodos de pago de la sesión TPV.
             Map<String, Object> kwargs = new HashMap<>();
             kwargs.put("fields", new Object[]{"payment_method_ids"});
             Object[] resultado = (Object[]) models.execute("execute_kw", new Object[]{
@@ -478,7 +504,9 @@ public class FuncionesOdoo {
 
             ArrayList<Productos> productos = ProductosDAO.obtenerTodos();
             Map<Integer, Productos> productosMap = new HashMap<>();
-            for (Productos p : productos) productosMap.put(p.getId(), p);
+            for (Productos p : productos) {
+                productosMap.put(p.getId(), p);
+            }
 
             int sessionId = obtenerSesionTPVAbierta(models, uid);
             int partnerId = obtenerPartnerClienteFinal(models, uid);
@@ -491,35 +519,63 @@ public class FuncionesOdoo {
             double totalConIva = 0;
             for (DetallesPedido detalle : detalles) {
                 Productos prod = productosMap.get(detalle.getProductoId());
+                //Si el producto no existe, lo salta.
                 if (prod == null) continue;
+                //Busca el producto en Odoo por su nombre.
                 int templateId = buscarProductoOdooPorNombre(models, uid, prod.getNombre(), "service");
+                //Si el producto no existe en Odoo, lo salta.
                 if (templateId == 0) continue;
+                //Obtiene la variante del producto.
                 int varianteId = obtenerProductoVarianteId(models, uid, templateId);
+                //Calcula el precio sin IVA.
                 double precioSinIva = Math.round(detalle.getPrecioUnitario() / 1.10 * 100.0) / 100.0;
+                //Calcula el total sin IVA.
                 double lineaTotalSinIva = precioSinIva * detalle.getCantidad();
+                //Calcula el total con IVA.
                 double lineaTotalConIva = detalle.getPrecioUnitario() * detalle.getCantidad();
+                //Suma el total sin IVA.
                 totalSinIva += lineaTotalSinIva;
+                //Suma el total con IVA.
                 totalConIva += lineaTotalConIva;
+                //Crea las líneas del pedido TPV.
                 Map<String, Object> lineVals = new HashMap<>();
+                //Añade el producto.
                 lineVals.put("product_id", varianteId);
+                //Añade la cantidad.
+                lineVals.put("qty", (double) detalle.getCantidad());
+                //Añade el precio sin IVA.
+                lineVals.put("price_unit", precioSinIva);
+                //Añade el total sin IVA.
+                lineVals.put("price_subtotal", lineaTotalSinIva);
+                //Añade el total con IVA.
+                lineVals.put("price_subtotal_incl", lineaTotalConIva);
                 lineVals.put("qty", (double) detalle.getCantidad());
                 lineVals.put("price_unit", precioSinIva);
                 lineVals.put("price_subtotal", lineaTotalSinIva);
                 lineVals.put("price_subtotal_incl", lineaTotalConIva);
                 if (taxId > 0) lineVals.put("tax_ids", new Object[]{new Object[]{6, 0, new Object[]{taxId}}});
+                //Valor 0 es la operación de crear.
                 orderLines.add(new Object[]{0, 0, lineVals});
             }
             if (orderLines.isEmpty()) return "SIN_PRODUCTOS_ODOO";
 
             // Crea el pos.order
             Map<String, Object> orderVals = new HashMap<>();
+            //Añade la sesión del TPV.
             orderVals.put("session_id", sessionId);
+            //Añade el cliente.
             orderVals.put("partner_id", partnerId);
+            //Añade las líneas del pedido TPV.
             orderVals.put("lines", orderLines.toArray());
+            //Añade el total con IVA.
             orderVals.put("amount_total", totalConIva);
+            //Añade el total del IVA
             orderVals.put("amount_tax", totalConIva - totalSinIva);
+            //Añade el total del pago.
             orderVals.put("amount_paid", totalConIva);
+            //Significa el cambio o la vuelta.
             orderVals.put("amount_return", 0.0);
+            //Crea el pedido en Odoo.
             int orderId = (Integer) models.execute("execute_kw", new Object[]{
                     db(), uid, password(), "pos.order", "create",
                     new Object[]{orderVals}, new HashMap<>()
@@ -579,8 +635,9 @@ public class FuncionesOdoo {
             ArrayList<Ingredientes> ingredientes = IngredientesDAO.obtenerTodos();
 
             Map<Integer, Ingredientes> ingredientesMap = new HashMap<>();
-            for (Ingredientes ing : ingredientes) ingredientesMap.put(ing.getId(), ing);
-
+            for (Ingredientes ing : ingredientes) {
+                ingredientesMap.put(ing.getId(), ing);
+            }
             // Acumula el consumo total por ingrediente recorriendo detalles × recetas
             Map<Integer, Double> consumo = new HashMap<>();
             for (DetallesPedido detalle : detalles) {

@@ -14,14 +14,22 @@ import org.example.DTO.Tickets;
 import org.example.DTO.Usuarios;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+
+/*
+    JsonElement - Clase padre
+
+    JsonObject — {}
+    JsonArray — []
+    JsonPrimitive — string, número, boolean
+    JsonNull — null
+*/
 
 //Clase con métodos estaticos para generar los Json de las respuestas
 public class GeneradorJSON {
     private static final Gson gson = new Gson();
 
-    //Respuesta de la reserva del producto
+    //Respuesta de la reserva, liberacion o finalizacion de la reserva del producto
     public static String generarReservaResponse(String type, int productoId, int cantidad, boolean success) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", type);
@@ -74,7 +82,10 @@ public class GeneradorJSON {
         //LinkedHashMap para mantener el orden de la insercción
         Map<Integer, JsonObject> categoriasMap = new LinkedHashMap<>();
 
+        //Recorremos todos los productos y los agrupamos por categoría
         for (CategoriaPlato cp : lista) {
+
+            //Si no existe la categoría, en el Map se añade
             if (!categoriasMap.containsKey(cp.getCategoriaId())) {
                 JsonObject catJson = new JsonObject();
                 catJson.addProperty("id", cp.getCategoriaId());
@@ -83,6 +94,7 @@ public class GeneradorJSON {
                 categoriasMap.put(cp.getCategoriaId(), catJson);
             }
 
+            //Añade el producto a la categoría correspondiente
             JsonObject prodJson = new JsonObject();
             prodJson.addProperty("id", cp.getProductoId());
             prodJson.addProperty("nombre", cp.getProductoNombre());
@@ -93,11 +105,13 @@ public class GeneradorJSON {
             categoriasMap.get(cp.getCategoriaId()).getAsJsonArray("productos").add(prodJson);
         }
 
+        //Añade las categorías al payload
         JsonArray payload = new JsonArray();
         for (JsonObject cat : categoriasMap.values()) {
             payload.add(cat);
         }
 
+        //Crea la respuesta
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "MENU_RESPONSE");
         respuesta.add("payload", payload);
@@ -384,7 +398,7 @@ public class GeneradorJSON {
     }
 
     //Genera la respuesta con la receta de un producto
-    public static String generarRecetaProductoResponse(int productoId, List<?> ingredientes) {
+    public static String generarRecetaProductoResponse(int productoId, ArrayList<?> ingredientes) {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "RECETA_PRODUCTO_RESPONSE");
         JsonObject payload = new JsonObject();
